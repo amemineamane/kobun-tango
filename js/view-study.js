@@ -25,6 +25,15 @@
     var shuffled = K.store.getPref('studyShuffle', true);
     if (shuffled) deck = U.shuffle(deck);
 
+    // ホームの「続きから」用に、いま学習しているデッキの条件を覚えておく
+    if (deck.length) {
+      K.store.setRecent('deck', {
+        query: U.buildQuery(state),
+        label: C.deckLabel(state),
+        count: deck.length
+      });
+    }
+
     var i = 0;
     var flipped = false;
     var done = { known: 0, weak: 0 };

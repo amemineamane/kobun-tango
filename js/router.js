@@ -5,6 +5,8 @@
  * location.hash を使う。単語詳細に直リンクできる（#/word/12）。
  *
  * 対応パス:
+ *   #/                 ホーム（既定。ハッシュ無しで開いたときもここ）
+ *   #/help             使い方（?to=history などで節までスクロール）
  *   #/words            単語一覧（?q= &level= &pos= &row= &work= &status= &sort= を取る）
  *   #/word/:id         単語詳細（:id は words.js の id）
  *   #/works            作品一覧
@@ -27,6 +29,8 @@
   var U = K.util;
 
   var ROUTES = [
+    { pattern: '/', view: 'home' },
+    { pattern: '/help', view: 'help' },
     { pattern: '/words', view: 'words' },
     { pattern: '/word/:id', view: 'word' },
     { pattern: '/works', view: 'works' },
@@ -54,7 +58,7 @@
     parse: function () {
       var hash = location.hash || '';
       if (hash.charAt(0) === '#') hash = hash.slice(1);
-      if (!hash) hash = '/words';
+      if (!hash) hash = '/';
       var qi = hash.indexOf('?');
       var path = qi < 0 ? hash : hash.slice(0, qi);
       var query = U.parseQuery(qi < 0 ? '' : hash.slice(qi));
@@ -89,7 +93,11 @@
         container.appendChild(U.el('div', { class: 'notice' }, [
           U.el('h2', { text: 'ページが見つかりません' }),
           U.el('p', { text: route.path + ' に対応する画面はありません。' }),
-          U.el('p', {}, [U.el('a', { href: '#/words', text: '単語一覧へ戻る' })])
+          U.el('p', {}, [
+            U.el('a', { href: '#/', text: 'ホームへ戻る' }),
+            '　/　',
+            U.el('a', { href: '#/words', text: '単語一覧へ' })
+          ])
         ]));
       } else {
         try {
@@ -110,6 +118,7 @@
 
     updateNav: function (route) {
       var map = {
+        home: 'home', help: 'help',
         words: 'words', word: 'words',
         works: 'works', work: 'works',
         passages: 'passages', passage: 'passages',

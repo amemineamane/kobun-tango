@@ -39,6 +39,17 @@
     '段階': '程度の等級でつながる語'
   };
 
+  /** 「S 最重要：共通テストで必ず問われる中核語（114 語）」の 1 行 */
+  function levelNote(word) {
+    var lv = K.index.getLevel(word.level);
+    if (!lv) return null;
+    return el('p', { class: 'word-level-note muted' }, [
+      el('b', { text: word.level + ' ' + lv.label }),
+      '：' + lv.desc + '　',
+      el('a', { href: '#/words?level=' + lv.code, text: lv.code + ' の ' + lv.count + ' 語を一覧で見る →' })
+    ]);
+  }
+
   function render(params, query, container) {
     var word = K.index.getWord(params.id);
     if (!word) {
@@ -65,7 +76,6 @@
     section.appendChild(el('header', { class: 'word-head' }, [
       el('div', { class: 'word-head-badges' }, [
         C.levelBadge(word),
-        el('span', { class: 'badge level-label', text: word.levelLabel }),
         C.posBadge(word),
         el('span', { class: 'badge row', text: word.kanaRow }),
         C.statusBadge(word.id)
@@ -74,7 +84,9 @@
         el('span', { class: 'word-title-kana', text: word.kana }),
         word.kanji ? el('span', { class: 'word-title-kanji', text: '〔' + word.kanji + '〕' }) : null
       ]),
-      el('p', { class: 'word-romaji muted', text: word.romaji + '　/　見出し形：' + word.headwords.join('・') })
+      el('p', { class: 'word-romaji muted', text: word.romaji + '　/　見出し形：' + word.headwords.join('・') }),
+      // 重要度は記号だけでは伝わらない。このランクが何を意味するかを 1 行で添える
+      levelNote(word)
     ]));
 
     /* --- 語義 ------------------------------------------------------ */

@@ -5,6 +5,8 @@
  *   kobun.v1.progress … { "<学習キー>": { status, seen, correct, wrong, updatedAt } }
  *   kobun.v1.prefs    … 画面の設定（フィルタの記憶など）
  *   kobun.v1.quizlog  … クイズの結果履歴（最新 50 件）
+ *   kobun.v1.recent   … 最後に開いた場所（ホームの「続きから」）
+ *                       { passage: {...}, deck: {...} }
  *
  * 【学習キー】2 種類ある。どちらも文字列として保存する。
  *   "39"                    … data/words.js の **id**（330 語）。
@@ -35,6 +37,7 @@
   var K_PROGRESS = PREFIX + 'progress';
   var K_PREFS = PREFIX + 'prefs';
   var K_QUIZLOG = PREFIX + 'quizlog';
+  var K_RECENT = PREFIX + 'recent';
 
   var available = (function () {
     try {
@@ -148,6 +151,33 @@
       progress = {};
       writeRaw(K_PROGRESS, progress);
       document.dispatchEvent(new CustomEvent('kobun:progress', { detail: { id: null } }));
+    },
+
+    /* --- 最後に開いた場所（ホームの「続きから」） -------------------
+     * kind は 'passage'（最後に読んだ文章）／'deck'（最後に学習したデッキ）。
+     * 中身は呼ぶ側が決める素の値だけ（store は data/*.js を知らない）。
+     *   passage: { id, title, workTitle }
+     *   deck:    { query, label, count }   query は "?level=S" のような文字列
+     * ------------------------------------------------------------- */
+    getRecent: function (kind) {
+      var r = readRaw(K_RECENT, {});
+      return (r && r[kind]) || null;
+    },
+
+    setRecent: function (kind, data) {
+      var r = readRaw(K_RECENT, {}) || {};
+      r[kind] = Object.assign({ at: Date.now() }, data || {});
+      writeRaw(K_RECENT, r);
+    },
+
+    clearRecent: function () { writeRaw(K_RECENT, {}); },
+
+    /** 学習履歴をすべて消す（進捗・クイズ履歴・「続きから」）。
+     *  画面の表示設定（prefs）は履歴ではないので残す。 */
+    resetAll: function () {
+      Store.resetProgress();
+      writeRaw(K_QUIZLOG, []);
+      Store.clearRecent();
     },
 
     /** バックアップ用（将来 UI を付ける） */

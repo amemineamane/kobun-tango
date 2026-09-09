@@ -3,7 +3,9 @@
  * ---------------------------------------------------------------------
  *   C.wordRow(word)        単語一覧の 1 行
  *   C.wordChip(word)       関連語カードなどの小さい単語チップ
- *   C.levelBadge(word)     S / A / B のバッジ
+ *   C.levelBadge(word)     S / A / B のバッジ（記号＋ラベル）
+ *   C.levelLegend(opts)    重要度の意味を説明する凡例
+ *   C.deckLabel(query)     クエリを 1 行の日本語にする
  *   C.statusBadge(id)      学習状態のバッジ
  *   C.statusButtons(id)    「未学習／苦手／覚えた」の切り替えボタン
  *   C.sentence(example)    原文をトークンに割ってタップできる形で描く
@@ -26,12 +28,46 @@
   /* ---------------------------------------------------------------
    * バッジ・チップ
    * ------------------------------------------------------------- */
+  /**
+   * 重要度バッジ。
+   * 記号（S/A/B）だけでは初見で意味が分からないので、**必ずラベルを併記**する
+   *   （S 最重要／A 頻出／B 応用／P 文章の語）。
+   * 記号と語は別 span に分けてあり、色帯（.level-code）とラベルを CSS で描き分ける。
+   */
   C.levelBadge = function (word) {
+    var lv = K.index.getLevel(word.level);
+    var name = (lv && lv.label) || word.levelLabel || word.level;
     return el('span', {
       class: 'badge level level-' + word.level,
-      title: word.levelLabel,
-      text: word.level
+      title: name + (lv && lv.desc ? '：' + lv.desc : '')
+    }, [
+      el('span', { class: 'level-code', text: word.level }),
+      el('span', { class: 'level-name', text: name })
+    ]);
+  };
+
+  /**
+   * 重要度の凡例。S/A/B が何を意味するかは色とバッジだけでは伝わらないので、
+   * 単語一覧・ホーム・使い方ページで同じ説明を出す。
+   * @param opts { links: true でその重要度で絞った一覧へのリンクにする }
+   */
+  C.levelLegend = function (opts) {
+    opts = opts || {};
+    var wrap = el('div', { class: 'level-legend' });
+    K.index.levels.forEach(function (l) {
+      var body = [
+        el('span', { class: 'badge level level-' + l.code }, [
+          el('span', { class: 'level-code', text: l.code }),
+          el('span', { class: 'level-name', text: l.label })
+        ]),
+        el('span', { class: 'level-legend-desc', text: l.desc }),
+        el('span', { class: 'level-legend-count muted', text: l.count + ' 語' })
+      ];
+      wrap.appendChild(opts.links
+        ? el('a', { class: 'level-legend-item is-link', href: '#/words?level=' + l.code }, body)
+        : el('span', { class: 'level-legend-item' }, body));
     });
+    return wrap;
   };
 
   C.posBadge = function (word) {
@@ -393,6 +429,34 @@
 
   var SORT_LABEL = { kana: '五十音順', level: '重要度順', pos: '品詞順' };
 
+  /**
+   * クエリを 1 行の日本語にする（ホームの「続きから」やおすすめの見出し用）。
+   * summaryChips と同じ語彙を使うので、一覧のチップと言い方がぶれない。
+   */
+  C.deckLabel = function (query) {
+    var q = query || {};
+    var parts = [];
+    if (q.passage) {
+      var p = K.index.getPassage(q.passage);
+      parts.push('「' + (p ? p.title : q.passage) + '」の語');
+    } else if (q.work) {
+      var w = K.index.getWork(q.work);
+      parts.push((w ? w.title : q.work) + 'の語');
+    }
+    if (q.level) {
+      var lv = K.index.getLevel(q.level);
+      parts.push('重要度 ' + q.level + (lv ? ' ' + lv.label : ''));
+    }
+    if (q.pos) parts.push(q.pos);
+    if (q.row) parts.push(q.row);
+    if (q.status) {
+      var s = STATUS_OPTIONS.filter(function (o) { return o.value === q.status; })[0];
+      parts.push(s ? s.label : q.status);
+    }
+    if (q.q) parts.push('検索「' + q.q + '」');
+    return parts.length ? parts.join('・') : '330 語すべて';
+  };
+
   /* フィルタ UI の開閉状態。
      既定は「一覧＝広い画面なら開く／学習・クイズ＝畳む」。
      学習とクイズはカードを先に見せたいので、条件は summary のチップで示すだけにする。
@@ -412,7 +476,10 @@
     function chip(t) { wrap.appendChild(el('span', { class: 'filter-chip', text: t })); }
 
     if (q.q) chip('検索：' + q.q);
-    if (q.level) chip('重要度 ' + q.level);
+    if (q.level) {
+      var lv = K.index.getLevel(q.level);
+      chip('重要度 ' + q.level + (lv ? ' ' + lv.label : ''));
+    }
     if (q.pos) chip(q.pos);
     if (q.row) chip(q.row);
     if (q.passage) {
@@ -531,9 +598,10 @@
       ]));
     }
 
+    // 重要度は記号だけだと意味が分からないので、ラベルと語数まで出す
     fields.push(select('level', '重要度',
-      [{ value: '', label: 'すべて' }].concat(K.index.levels.map(function (l) {
-        return { value: l.code, label: l.code + '：' + l.label };
+      [{ value: '', label: 'すべて（' + K.index.words.length + ' 語）' }].concat(K.index.levels.map(function (l) {
+        return { value: l.code, label: l.code + ' ' + l.label + '（' + l.count + ' 語）' };
       })), q.level));
 
     fields.push(select('pos', '品詞',

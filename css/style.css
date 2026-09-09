@@ -19,6 +19,7 @@
  *  11. 例文・ポップアップ     12. チップ・前後ナビ
  *  13. 作品                   14. 文章
  *  15. 学習                   16. クイズ
+ *  16-b. ホーム               16-c. 使い方
  *  17. フッタ・印刷・動きの抑制
  * ===================================================================== */
 
@@ -45,10 +46,12 @@
   --hl:         #ffeda0;   /* 強調（マーカー） */
   --focus:      #1d6fb8;   /* フォーカスリング */
 
-  --level-S:    #9d3535;   /* 白抜き 7.0:1 */
-  --level-A:    #8a5c15;   /* 白抜き 5.8:1 */
-  --level-B:    #3f5f80;   /* 白抜き 6.7:1 */
-  --level-P:    #6b625a;   /* 文章固有語 */
+  /* 重要度は「赤 → 橙 → 青緑」で序列が直感に合うようにし、
+     色相・明度の両方で差をつける（色が見えなくてもラベルで分かる）。 */
+  --level-S:    #a01f2d;   /* 最重要：深い赤   白抜き 7.7:1 */
+  --level-A:    #b35309;   /* 頻出  ：橙       白抜き 5.1:1 */
+  --level-B:    #1f6b7a;   /* 応用  ：青緑     白抜き 6.1:1 */
+  --level-P:    #6b625a;   /* 文章固有語：無彩色 */
   --on-level:   #ffffff;   /* 重要度バッジの文字色 */
   --on-solid:   #ffffff;   /* 塗りボタン・塗りバッジの文字色 */
 
@@ -123,9 +126,9 @@
     --hl:         #5c4d18;
     --focus:      #8ab4dc;
 
-    --level-S:    #e58f8f;
-    --level-A:    #d8ad6a;
-    --level-B:    #93b5d4;
+    --level-S:    #f0908c;   /* 赤   対 --bg 7.6:1 */
+    --level-A:    #f2ad63;   /* 橙   対 --bg 9.1:1 */
+    --level-B:    #78c6da;   /* 青緑 対 --bg 9.1:1 */
     --level-P:    #a89e90;
     --on-level:   #1b1917;
     --on-solid:   #1b1917;
@@ -209,6 +212,22 @@ p { margin: 0 0 .8em; }
 }
 .site-title a { color: inherit; display: inline-block; padding: .1rem 0; }
 .site-title a:hover { text-decoration: none; color: var(--accent); }
+/* タイトルがホームへの導線。いまホームにいることは色で示す（下タブは 5 個に保つ） */
+.site-title a.active { color: var(--accent); }
+
+/* 使い方はメニューに入れず、ヘッダ右の小さなリンクにする。
+   スマホでもここは上部に残るので、下タブが 6 個に増えない。 */
+.site-help-link {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  padding: .2rem .7rem;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.site-help-link:hover { text-decoration: none; background: var(--bg-sub); color: var(--fg); }
+.site-help-link.active { background: var(--accent); color: var(--accent-fg); border-color: transparent; font-weight: 700; }
 
 .site-nav { display: flex; gap: var(--sp-1); flex-wrap: wrap; margin-left: auto; }
 
@@ -230,6 +249,8 @@ p { margin: 0 0 .8em; }
 /* --- スマホ：メニューを下のタブバーにする ------------------------- */
 @media (max-width: 640px) {
   .site-header-inner { padding: var(--sp-2) var(--sp-3); }
+  /* .site-nav は下に固定されて流れから外れるので、右寄せはこちらが担う */
+  .site-help-link { margin-left: auto; }
 
   .site-nav {
     position: fixed;
@@ -283,6 +304,7 @@ p { margin: 0 0 .8em; }
   max-width: 44em;
   margin: 0 0 var(--sp-4);
 }
+.view-lead-help { margin-left: .5em; white-space: nowrap; font-weight: 700; }
 
 .crumbs {
   margin-bottom: var(--sp-3);
@@ -350,19 +372,66 @@ p { margin: 0 0 .8em; }
   vertical-align: middle;
 }
 
-/* 重要度 S / A / B — 一覧・詳細・カードで色の意味を必ずそろえる */
+/* 重要度 S / A / B — 一覧・詳細・カードで色の意味を必ずそろえる。
+   記号だけでは意味が伝わらないので **ラベルを必ず併記** する（S 最重要）。
+   記号は太字、ラベルは細字で、字面でも役割が分かるようにする。 */
 .badge.level {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .3em;
   font-weight: 700;
   color: var(--on-level);
   border: none;
-  min-width: 1.75em;
+  padding: .05em .6em;
   text-align: center;
   letter-spacing: .02em;
 }
+.level-code {
+  font-weight: 800;
+  font-size: 1.05em;
+  line-height: 1;
+}
+.level-name { font-weight: 600; letter-spacing: .04em; }
 .badge.level-S { background: var(--level-S); }
 .badge.level-A { background: var(--level-A); }
 .badge.level-B { background: var(--level-B); }
 .badge.level-P { background: var(--level-P); }
+
+/* 重要度の凡例（単語一覧の上・ホーム・使い方ページで共通）。
+   色帯とバッジだけでは S/A/B が何を指すか分からないので、必ず言葉で説明する。 */
+.level-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-3);
+}
+.level-legend-item {
+  display: flex;
+  align-items: baseline;
+  gap: .4rem;
+  flex: 1 1 16rem;
+  min-width: 0;
+  padding: .3rem .6rem;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+.level-legend-item:nth-child(1) { border-left-color: var(--level-S); }
+.level-legend-item:nth-child(2) { border-left-color: var(--level-A); }
+.level-legend-item:nth-child(3) { border-left-color: var(--level-B); }
+.level-legend-item.is-link { transition: background var(--dur) var(--ease); }
+/* 左端の色帯は重要度の色のままにしたいので、hover では地の色だけ変える */
+.level-legend-item.is-link:hover { text-decoration: none; background: var(--accent-bg); }
+.level-legend-desc { flex: 1 1 auto; }
+.level-legend-count { white-space: nowrap; font-size: var(--fs-xs); }
+
+@media (max-width: 640px) {
+  .level-legend { gap: var(--sp-1); }
+  .level-legend-item { flex-basis: 100%; font-size: var(--fs-xs); }
+}
 
 /* 学習状態 */
 .badge.status-known { background: var(--ok); color: var(--on-solid); border-color: transparent; }
@@ -519,6 +588,10 @@ p { margin: 0 0 .8em; }
 .btn-lg { font-size: var(--fs-lg); padding: .7rem 1.8rem; min-height: 3rem; }
 .btn-known { background: var(--ok); color: var(--on-solid); border-color: transparent; }
 .btn-weak  { background: var(--danger); color: var(--on-solid); border-color: transparent; }
+/* 塗りボタンは hover でも自分の色を保つ（.btn:hover の地色に負けると
+   白文字が読めなくなる）。地色を明示してから明るさだけ変える。 */
+.btn-known:hover { background: var(--ok); }
+.btn-weak:hover  { background: var(--danger); }
 .btn-known:hover, .btn-weak:hover { filter: brightness(1.1); border-color: transparent; }
 
 .deck-links { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-4); }
@@ -600,6 +673,9 @@ p { margin: 0 0 .8em; }
 }
 .word-title-kanji { font-size: var(--fs-lg); color: var(--fg-muted); margin-left: .35em; }
 .word-romaji { font-size: var(--fs-sm); margin: 0; letter-spacing: .02em; }
+/* 「S 最重要：共通テストで必ず問われる中核語」の 1 行 */
+.word-level-note { font-size: var(--fs-sm); margin: .25rem 0 0; line-height: 1.7; }
+.word-level-note b { color: var(--fg); }
 
 .meaning-list { margin: 0; padding-left: 1.5em; }
 .meaning-list li { margin-bottom: .25em; line-height: var(--lh-read); }
@@ -1107,6 +1183,201 @@ p { margin: 0 0 .8em; }
 .score-bar { max-width: 22rem; margin: 0 auto var(--sp-4); }
 .score-bar .progress-fill { background: var(--ok); }
 
+/* ========================================================== 16-b. ホーム */
+/* 入口だけの画面なので、上から「何のアプリか → いまの状態 → 次の一手」の順に置く。
+   ここで使う色・余白・角丸はすべて既存のトークン。新しい配色は足さない。 */
+.home-hero {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.home-hero-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-3xl);
+  letter-spacing: .12em;
+  margin: 0 0 .2em;
+}
+.home-hero-lead {
+  color: var(--fg-muted);
+  font-size: var(--fs-md);
+  max-width: 34em;
+  margin: 0 auto var(--sp-4);
+}
+.home-hero-lead b { color: var(--fg); }
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: center;
+}
+.home-actions .btn { flex: 0 1 auto; }
+.home-hero-sub { font-size: var(--fs-sm); margin: var(--sp-3) 0 0; }
+
+.home-sub {
+  font-size: var(--fs-md);
+  margin: var(--sp-4) 0 var(--sp-2);
+  color: var(--fg-muted);
+  letter-spacing: .04em;
+}
+.home-first { margin-bottom: var(--sp-3); }
+.home-more { margin: var(--sp-3) 0 0; font-size: var(--fs-md); font-weight: 700; }
+
+/* 覚えた／苦手／未学習の 3 色の帯（未学習は地のまま） */
+.progress-multi { display: flex; }
+.progress-seg { height: 100%; transition: width .3s var(--ease); }
+.progress-seg.is-known { background: var(--ok); }
+.progress-seg.is-weak { background: var(--danger); }
+
+.stat-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 0;
+}
+.stat {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  padding: var(--sp-2) var(--sp-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+}
+.stat-num {
+  display: block;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stat-label { font-size: var(--fs-xs); color: var(--fg-muted); }
+.stat.is-known .stat-num { color: var(--ok); }
+.stat.is-weak .stat-num { color: var(--danger); }
+
+/* 入口カード（重要度・文章） */
+.entry-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-2); margin-top: var(--sp-3); }
+@media (min-width: 700px) { .entry-grid { grid-template-columns: 1fr 1fr; } }
+
+.entry-card {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  color: inherit;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.entry-card:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-bg); }
+.entry-card.lv-S { border-left: 4px solid var(--level-S); }
+.entry-card.lv-A { border-left: 4px solid var(--level-A); }
+.entry-card.lv-B { border-left: 4px solid var(--level-B); }
+.entry-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+.entry-card-title { font-family: var(--font-serif); font-weight: 700; font-size: var(--fs-lg); letter-spacing: .03em; }
+.entry-card-count { font-size: var(--fs-sm); color: var(--fg-muted); white-space: nowrap; }
+.entry-card-desc { font-size: var(--fs-md); }
+.entry-card-progress { font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+
+/* 品詞・作品・学年のタイル */
+.tile-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); }
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  min-height: var(--tap);
+  padding: .35rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  color: inherit;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.tile:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-bg); }
+.tile-title { font-weight: 700; font-size: var(--fs-md); }
+.tile-work .tile-title { font-family: var(--font-serif); letter-spacing: .04em; }
+.tile-sub { font-size: var(--fs-xs); }
+
+/* ホーム・使い方の末尾のリンク列 */
+.home-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  justify-content: center;
+  padding: var(--sp-4) 0 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+
+/* ======================================================== 16-c. 使い方 */
+.help-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.help-toc a {
+  font-size: var(--fs-sm);
+  padding: .25rem .8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+}
+.help-toc a:hover { text-decoration: none; background: var(--accent-bg); }
+
+.help-section { scroll-margin-top: 4rem; }
+/* ?to= で飛んできた節は、どこに着いたかが分かるように左に色を出す */
+.help-section.is-target { border-left: 4px solid var(--accent); }
+.help-h3 { font-size: var(--fs-md); margin: var(--sp-4) 0 .3em; }
+.help-h3:first-of-type { margin-top: var(--sp-2); }
+
+.help-dl { margin: 0; }
+.help-dl dt {
+  font-weight: 700;
+  margin-top: var(--sp-3);
+  letter-spacing: .02em;
+}
+.help-dl dt:first-child { margin-top: 0; }
+.help-dl dd { margin: .1rem 0 0; padding-left: 1em; border-left: 2px solid var(--line); }
+
+.help-list, .help-steps { margin: 0 0 .8em; padding-left: 1.4em; }
+.help-list li, .help-steps li { margin-bottom: .35em; line-height: var(--lh-read); }
+.help-steps li::marker { color: var(--fg-muted); font-weight: 700; }
+.help-stats { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: var(--sp-3); }
+.help-done { color: var(--ok); }
+
+/* キーボードのキー */
+kbd.key {
+  display: inline-block;
+  font-family: var(--font-ja);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.5;
+  padding: .05em .5em;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-sm);
+  background: var(--bg-sub);
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+/* 履歴リセット。confirm() を使わず、この枠の中で 2 段階に分ける */
+.danger-zone {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  padding: var(--sp-3);
+}
+.danger-zone > :last-child { margin-bottom: 0; }
+.danger-text { color: var(--danger); }
+.btn-danger { background: var(--danger); color: var(--on-solid); border-color: transparent; }
+.btn-danger:hover { background: var(--danger); filter: brightness(1.1); border-color: transparent; }
+
 /* ============================================================ 17. フッタ */
 .site-footer {
   border-top: 1px solid var(--line);
@@ -1116,6 +1387,13 @@ p { margin: 0 0 .8em; }
   text-align: center;
 }
 .site-footer p { margin: .2rem 0; }
+.site-footer .footer-links {
+  display: flex; flex-wrap: wrap;
+  gap: .3rem var(--sp-3);
+  justify-content: center;
+  margin: 0 0 var(--sp-2);
+}
+.footer-links a { padding: .15rem 0; }
 
 #storage-warning {
   background: var(--bg-sub);

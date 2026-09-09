@@ -65,7 +65,7 @@
       passageTitle: passage.title,
       surface: entry.surface,
       level: 'P',
-      levelLabel: '文章語',
+      levelLabel: '文章の語',
       levelOrder: 4,
       pos: entry.pos || '名詞',
       posOrder: 90,
@@ -259,11 +259,19 @@
     });
     kanaRows = Array.from(rowSeen.keys()).sort(function (a, b) { return rowSeen.get(a) - rowSeen.get(b); });
 
+    /* 重要度は S/A/B の記号だけでは意味が伝わらないので、
+       ラベル（words.js の levelLabel と同じ語）と一言説明・語数をここで 1 か所にまとめる。
+       バッジ・フィルタの選択肢・凡例・ホーム・使い方ページはすべてこれを読む。 */
     var levels = [
-      { code: 'S', label: '最重要' },
-      { code: 'A', label: '頻出' },
-      { code: 'B', label: '応用' }
+      { code: 'S', label: '最重要', desc: '共通テストで必ず問われる中核語' },
+      { code: 'A', label: '頻出', desc: '合否を分ける頻出語' },
+      { code: 'B', label: '応用', desc: '難関大で差がつく語' }
     ].filter(function (l) { return words.some(function (w) { return w.level === l.code; }); });
+    levels.forEach(function (l) {
+      l.count = words.filter(function (w) { return w.level === l.code; }).length;
+    });
+    var levelByCode = new Map();
+    levels.forEach(function (l) { levelByCode.set(l.code, l); });
 
     return {
       words: words,
@@ -288,6 +296,14 @@
       posList: posList,
       kanaRows: kanaRows,
       levels: levels,
+
+      /** 重要度の説明を引く（S/A/B。文章固有語の 'P' もここで面倒を見る） */
+      getLevel: function (code) {
+        if (code === 'P') {
+          return { code: 'P', label: '文章の語', desc: '教科書の脚注に出る語（330 語には無い）', count: 0 };
+        }
+        return levelByCode.get(String(code)) || null;
+      },
 
       /* 便利メソッド */
       getWord: function (id) { return wordById.get(Number(id)) || null; },

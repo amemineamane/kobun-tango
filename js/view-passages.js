@@ -141,6 +141,14 @@
     }
 
     var work = K.index.getWork(passage.workId);
+
+    // ホームの「続きから」用に、最後に開いた文章を覚えておく
+    K.store.setRecent('passage', {
+      id: passage.id,
+      title: passage.title,
+      workTitle: work ? work.title : ''
+    });
+
     var entries = K.index.entriesOfPassage(passage.id);
     var deck = K.index.deckOfPassage(passage.id);
 

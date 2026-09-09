@@ -108,8 +108,11 @@
       el('p', { class: 'view-lead' }, [
         '入試向けの古文単語 330 語。かな・ローマ字（tamafu）・漢字・意味のどれでも引けます。',
         '絞り込んだ条件は、そのまま ',
-        el('b', { text: '学習' }), ' と ', el('b', { text: 'クイズ' }), ' に引き継げます。'
+        el('b', { text: '学習' }), ' と ', el('b', { text: 'クイズ' }), ' に引き継げます。',
+        el('a', { class: 'view-lead-help', href: '#/help', text: '使い方をみる →' })
       ]),
+      // 行頭の色帯とバッジの S/A/B が何を指すかを、一覧の上で説明しておく
+      C.levelLegend({ links: true }),
       filterWrap,
       countEl,
       deckLinks,
