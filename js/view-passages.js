@@ -334,6 +334,13 @@
       section.appendChild(exCard);
     }
 
+    /* --- 共有 ------------------------------------------------------ */
+    section.appendChild(C.shareButtons({
+      label: 'この文章を共有',
+      text: (work ? work.title : '') + '『' + passage.title + '』を原文と現代語訳で読む｜古文単語帳',
+      url: C.absUrl('#/passage/' + passage.id)
+    }));
+
     /* --- 前後の文章 ------------------------------------------------ */
     var all = K.index.passages;
     var pos = all.indexOf(passage);

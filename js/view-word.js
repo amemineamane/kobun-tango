@@ -202,6 +202,14 @@
       ]));
     }
 
+    /* --- 共有 ------------------------------------------------------ */
+    section.appendChild(C.shareButtons({
+      label: 'この語を共有',
+      // 語義は代表の 1 つだけ（並び順＝入試で問われる順なので先頭が中心の意味）
+      text: '『' + word.kana + '』＝' + word.primaryMeaning + '｜古文単語帳',
+      url: C.absUrl('#/word/' + word.id)
+    }));
+
     /* --- 前後ナビ -------------------------------------------------- */
     section.appendChild(el('nav', { class: 'prev-next' }, [
       prev ? el('a', { class: 'pn pn-prev', href: '#/word/' + prev.id }, [

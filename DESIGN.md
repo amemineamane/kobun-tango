@@ -125,6 +125,7 @@ erDiagram
 
 | ファイル | 中身 | 素材との関係 |
 |---|---|---|
+| `data/site.js` | アプリ名・公開 URL・制作者情報 | 新規（データではなく設定。4-c 参照） |
 | `data/words.js` | 単語 330 語 | 素材 `kobun_words.json` を **無変更** で移し替え |
 | `data/works.js` | 作品 6 件 | 新規（アプリ側の追加データ） |
 | `data/relations.js` | 単語間リンク 57 本 | 新規 |
@@ -310,11 +311,12 @@ flowchart LR
 ```
 index.html          <script> を順番に並べるだけ。順序に意味がある
 css/style.css       CSS 変数で配色を一括管理。ダークモードは prefers-color-scheme
+data/site.js        アプリ名・公開 URL・制作者情報（共有と OGP はここを見る）
 data/*.js           データ（人が編集する）
 js/util.js          DOM の小道具・文字列正規化・検索スコア
 js/store.js         localStorage（学習履歴・設定・クイズ履歴）
 js/data-index.js    data/*.js から索引をつくる ★ここが接着剤
-js/components.js    画面をまたぐ部品（単語行・関連語カード・例文カード・フィルタ・ポップアップ）
+js/components.js    画面をまたぐ部品（単語行・関連語カード・例文カード・フィルタ・ポップアップ・共有ボタン・制作者行）
 js/router.js        ハッシュルーター
 js/view-home.js     ホーム（既定ルート #/。index と store しか読まない）
 js/view-help.js     使い方（説明文はこのファイルの中。数字は index から出す）
@@ -324,9 +326,12 @@ js/view-works.js    作品ページ（#/work/:workId）
 js/view-passages.js 教科書（#/textbook）＋文章詳細（#/passage/:id）
 js/view-study.js    フラッシュカード
 js/view-quiz.js     クイズ
-js/app.js           起動
+js/app.js           起動＋Service Worker の登録・更新バー
+manifest.webmanifest    ホーム画面に追加（PWA）の設定
+sw.js               Service Worker（network-first。オフラインと「アプリとして追加」用）
+assets/             アイコン（icon*.svg / *.png・favicon.svg）と OGP 画像（ogp.svg / ogp.png）
 tools/validate.mjs      データ整合性チェック（Node）
-tools/bump-version.mjs  index.html の ?v=... を更新（GitHub Pages のキャッシュ対策。公開前に実行）
+tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION を更新（公開前に実行）
 ```
 
 依存の向きは一方向：`data → data-index → components → view-* → app`。
@@ -378,6 +383,100 @@ tools/bump-version.mjs  index.html の ?v=... を更新（GitHub Pages のキャ
 
 配色を変えたいときは `:root` と dark ブロックの色トークンだけを書き換える。
 `--radius` `--shadow` は旧名として残してあるので、古いルールが混ざっていても壊れない。
+
+---
+
+## 4-c. 共有・制作者情報・ホーム画面に追加（PWA）
+
+### 設定は `data/site.js` の 1 か所に集める
+
+アプリ名・公開 URL・説明文・ハッシュタグ・制作者（名前と X / YouTube / BOOTH の URL）は
+`data/site.js` が `window.KOBUN.site` として持つ。画面側はここしか読まない。
+`index.html` では **`data/*.js` の先頭**で読み込む（`js/*.js` より前ならどこでもよい）。
+
+| キー | 使いどころ |
+|---|---|
+| `name` `description` | 共有文面・OGP・`<meta name="description">` と言い方を揃える |
+| `url` | 共有 URL の土台。**末尾 `/` の絶対 URL**にする |
+| `hashtags` | X の intent に渡す（`#` は付けない） |
+| `author.name` | 「制作：雨峰あまね」の名前 |
+| `author.x` / `.youtube` / `.booth` | 外部リンク。**空文字や `PLACEHOLDER` を含む値ならリンクを出さない** |
+
+URL が使えるかどうかは `js/components.js` の `isUsableUrl`
+（`https?://` で始まり `PLACEHOLDER` を含まない）が毎回みている。
+差し替え前のプレースホルダのまま公開しても、リンクが消えるだけで画面は壊れない。
+
+### 共有コンポーネント `C.shareButtons(opts)`
+
+`js/components.js`。`{ title, text, url, hashtags, label }` を渡すと共有ボタンの一列を返す。
+
+- **URL は必ず絶対 URL**にする。`C.absUrl('#/word/39')` は、`file://` とローカルサーバー
+  （localhost / 127.0.0.1 / `.local`）のときだけ `KOBUN.site.url` を土台にし、
+  公開環境ではいま開いている URL を土台にする。手元の URL をそのまま配ってしまう事故を防ぐため。
+- **ボタンの出し分け**：`navigator.share` があり、かつ `pointer: coarse`（指で触る画面）のときだけ
+  「共有」1 つ＋「リンクをコピー」。それ以外（PC）は X・LINE・リンクをコピーの 3 つ。
+  PC の Chrome にも `navigator.share` はあるが、共有シートを開くより
+  直接 X が開くほうが早いので、画面の種類で分けている。
+- `navigator.share` は**クリックのハンドラの中で同期的に**呼ぶ（そうしないとブラウザに拒否される）。
+  ユーザーが閉じただけの `AbortError` は無視し、それ以外の失敗のときだけ X・LINE を出す。
+- **コピー**は `navigator.clipboard.writeText` →失敗したら一時 `<textarea>` ＋ `execCommand('copy')`。
+  結果は 2 秒だけ「コピーしました」と出す（`role="status"` なので読み上げにも乗る）。
+- アイコンは外部フォントを使わずインライン SVG の線画（ヘッダのナビと同じ流儀：
+  24×24・`currentColor`・`stroke-width 1.8`）。X は交差する 2 本、LINE は吹き出しに単純化してある
+  （商標ロゴの厳密な再現はしない）。
+
+置き場所は 6 か所。文面は「何を共有しているか」が本文だけで分かる形にする。
+
+| 画面 | 文面 | リンク先 |
+|---|---|---|
+| クイズ結果 | 「古文単語クイズ 10 問中 8 問正解（正答率 80%）！【重要度 S 最重要】」 | 結果ではなく**同じ条件で始められる** `#/quiz?level=S&count=10` |
+| 単語 | 「『をかし』＝趣がある・風情がある｜古文単語帳」 | `#/word/:id` |
+| 文章 | 「枕草子『春はあけぼの』を原文と現代語訳で読む｜古文単語帳」 | `#/passage/:id` |
+| 作品 | 「『徒然草』の単語と文章｜古文単語帳」 | `#/work/:id` |
+| 学習の完走画面 | 「古文単語帳のフラッシュカードで【重要度 S 最重要】114 語を 1 周しました！」 | 同じ条件の `#/study?…` |
+| ホーム・使い方 | 「古文単語帳｜入試向けの…」（`C.appShareButtons`） | `#/` |
+
+### 制作者情報
+
+`C.authorLine()` は「制作：雨峰あまね」＋アイコンリンク（既定は X・YouTube）の 1 行で、
+**ホームの末尾**と**共通フッタ**に同じものを出す。
+`C.authorBlock()` は使い方ページの「制作」節用（X・YouTube・BOOTH をラベル付きで）。
+共通フッタは `index.html` に直書きせず、`js/app.js` が `#footer-stat` の下に足す
+（名前や URL を変えるときに触る場所を `data/site.js` だけにするため）。
+
+### ホーム画面に追加（PWA）
+
+| 部品 | 役割 |
+|---|---|
+| `manifest.webmanifest` | 名前・アイコン・`display: standalone`。パスはすべて相対（`./`）なので、GitHub Pages のサブパス `/kobun-tango/` でも壊れない |
+| `sw.js` | Service Worker。**network-first**（ネットを先に見て、失敗したらキャッシュ） |
+| `assets/icon-192.png` `icon-512.png` `icon-maskable-512.png` `apple-touch-icon.png` | 元データは `assets/icon.svg`（maskable だけ余白を広く取った `assets/icon-maskable.svg`） |
+| `C.installBlock()` | `beforeinstallprompt` を捕まえて出す「ホーム画面に追加」ボタン。イベントが来ない環境（iOS Safari）では枠ごと出ない。すでにスタンドアロン起動中なら隠す |
+| `js/app.js` | `http(s)` のときだけ `./sw.js` を登録する（`file://` では登録できない仕様）。登録失敗は `console.warn` だけ |
+
+**cache-first にしない**のは、データを直したのに古い本文が出るのがいちばん困るため。
+キャッシュ名は `kobun-<版>` で、版（`sw.js` の `CACHE_VERSION`）は
+`tools/bump-version.mjs` が `index.html` の `?v=` と一緒に上げる。
+古いキャッシュは activate でまとめて消える。
+
+新しい Service Worker は自動で入れ替えない。待機させたまま画面下に
+「新しいバージョンがあります — 再読み込み」の小さなバーを出し、押されたら
+`SKIP_WAITING` →交代→再読み込みする（読んでいる途中でページが差し替わらないように）。
+
+### OGP と favicon
+
+`index.html` の `<head>` に `og:*` と `twitter:card=summary_large_image` を直書きしてある
+（値は `data/site.js` と同じにする。`og:url` `og:image` は**絶対 URL** でないとカードが出ない）。
+画像 `assets/ogp.png`（1200×630）は `assets/ogp.svg` を
+Chrome の headless スクリーンショットで PNG にしたもの。作り直すときも同じ手順でよい。
+
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu `
+  --window-size=1200,630 --screenshot=assets\ogp.png assets\ogp.svg
+```
+
+SVG の文字はシステムのフォントで描かれるので、書体指定は必ずフォールバックを並べる
+（Windows は Yu Mincho、Mac は Hiragino Mincho、無ければ `serif`）。
 
 ---
 

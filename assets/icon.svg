@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="古文単語帳">
+  <!--
+    ホーム画面のアイコン（正方形）の元データ。ここから
+      assets/icon-192.png / icon-512.png / apple-touch-icon.png
+    を作る（Chrome の headless スクリーンショット）。
+    ・背景は塗りつぶし（透過にすると Android で白地に置かれて枠が見えるため）。
+    ・角丸は付けない。OS 側が形を切り抜くので、こちらは四角のまま渡す。
+    ・字は favicon.svg と同じ明朝の「古」。
+  -->
+  <rect width="512" height="512" fill="#f7f4ee"/>
+  <rect x="28" y="28" width="456" height="456" fill="none" stroke="#cfc4b0" stroke-width="10"/>
+  <rect x="28" y="28" width="456" height="18" fill="#2f5d8a"/>
+  <text x="256" y="272" text-anchor="middle" dominant-baseline="central"
+        font-family="'Yu Mincho','YuMincho','Hiragino Mincho ProN','Noto Serif JP','MS PMincho',serif"
+        font-size="300" fill="#2b2723">古</text>
+</svg>

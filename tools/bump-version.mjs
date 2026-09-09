@@ -19,6 +19,12 @@
  *   index.html の構造（タグの並び・属性・改行コード）はいっさい変えない。
  *   file:// で直接開く用途にも影響しない（file:// はクエリ文字列を
  *   無視してファイルを解決するので、そのまま動く）。
+ *
+ *   あわせて sw.js の CACHE_VERSION も同じ値にする。
+ *   Service Worker のキャッシュ名がここから作られるので、版を上げると
+ *   古いキャッシュが activate のときに捨てられる。
+ *   （index.html だけ上げて sw.js を忘れると、オフライン用のキャッシュに
+ *     古いファイルが残り続けるので、必ず一緒に上げる）
  * ===================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const indexPath = path.join(__dirname, '..', 'index.html');
+const swPath = path.join(__dirname, '..', 'sw.js');
 
 function todayStamp() {
   const d = new Date();
@@ -74,6 +81,30 @@ function main() {
   const count = updated.split(marker).length - 1;
   fs.writeFileSync(indexPath, updated, 'utf8');
   console.log('index.html の ?v=... を ' + version + ' に更新しました（' + count + ' 箇所）。');
+
+  bumpServiceWorker(version);
+}
+
+/** sw.js の CACHE_VERSION を index.html と同じ版に揃える */
+function bumpServiceWorker(version) {
+  if (!fs.existsSync(swPath)) {
+    console.log('sw.js が無いので飛ばしました。');
+    return;
+  }
+  const sw = fs.readFileSync(swPath, 'utf8');
+  const re = /(const CACHE_VERSION = ')[^']*(')/;
+  if (!re.test(sw)) {
+    console.error('sw.js の CACHE_VERSION の行が見つかりません。手で直してください。');
+    process.exitCode = 1;
+    return;
+  }
+  const out = sw.replace(re, '$1' + version + '$2');
+  if (out === sw) {
+    console.log('sw.js の CACHE_VERSION はすでに ' + version + ' です。');
+    return;
+  }
+  fs.writeFileSync(swPath, out, 'utf8');
+  console.log('sw.js の CACHE_VERSION を ' + version + ' に更新しました。');
 }
 
 main();

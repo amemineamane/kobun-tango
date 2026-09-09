@@ -4,8 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>古文単語帳（プロトタイプ）</title>
-<meta name="description" content="大学入試向け古文単語 330 語。関連語・例文の品詞分解・作品タグつき。ビルド不要の静的アプリ。">
-<link rel="stylesheet" href="css/style.css?v=20260909e">
+<meta name="description" content="入試向けの古文単語 330 語と教科書の定番教材で学ぶ単語帳。関連語・例文の品詞分解・原文と現代語訳つき。">
+
+<!-- OGP / X カード。値は data/site.js と揃えること（URL は絶対パスでないとカードが出ない） -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="古文単語帳">
+<meta property="og:title" content="古文単語帳">
+<meta property="og:description" content="入試向けの古文単語 330 語と教科書の定番教材で学ぶ単語帳">
+<meta property="og:url" content="https://amemineamane.github.io/kobun-tango/">
+<meta property="og:image" content="https://amemineamane.github.io/kobun-tango/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="古文単語帳">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@AmemineAmane">
+<meta name="twitter:creator" content="@AmemineAmane">
+
+<!-- アイコン。SVG が使えないブラウザ用に PNG も並べる -->
+<link rel="icon" href="assets/favicon.svg?v=20260910a" type="image/svg+xml">
+<link rel="icon" href="assets/icon-192.png?v=20260910a" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=20260910a">
+
+<!-- ホーム画面に追加（PWA）。manifest は相対パスなので
+     GitHub Pages のサブパスでもそのまま動く。file:// では読まれないだけで害はない -->
+<link rel="manifest" href="manifest.webmanifest?v=20260910a">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1917" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="古文単語帳">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<link rel="stylesheet" href="css/style.css?v=20260910a">
 <!--
   ========================================================================
   古文単語帳アプリ（プロトタイプ）
@@ -89,29 +119,30 @@
   <p id="footer-stat"></p>
 </footer>
 
-<!-- データ（順序：words が先） -->
-<script src="data/words.js?v=20260909e"></script>
-<script src="data/works.js?v=20260909e"></script>
-<script src="data/relations.js?v=20260909e"></script>
-<script src="data/examples.js?v=20260909e"></script>
-<script src="data/workWords.js?v=20260909e"></script>
-<script src="data/passages.js?v=20260909e"></script>
+<!-- データ（順序：site → words の順。site.js は共有・制作者情報の設定） -->
+<script src="data/site.js?v=20260910a"></script>
+<script src="data/words.js?v=20260910a"></script>
+<script src="data/works.js?v=20260910a"></script>
+<script src="data/relations.js?v=20260910a"></script>
+<script src="data/examples.js?v=20260910a"></script>
+<script src="data/workWords.js?v=20260910a"></script>
+<script src="data/passages.js?v=20260910a"></script>
 
 <!-- アプリ -->
-<script src="js/util.js?v=20260909e"></script>
-<script src="js/store.js?v=20260909e"></script>
-<script src="js/data-index.js?v=20260909e"></script>
-<script src="js/components.js?v=20260909e"></script>
-<script src="js/router.js?v=20260909e"></script>
-<script src="js/view-home.js?v=20260909e"></script>
-<script src="js/view-words.js?v=20260909e"></script>
-<script src="js/view-word.js?v=20260909e"></script>
-<script src="js/view-works.js?v=20260909e"></script>
-<script src="js/view-passages.js?v=20260909e"></script>
-<script src="js/view-study.js?v=20260909e"></script>
-<script src="js/view-quiz.js?v=20260909e"></script>
-<script src="js/view-help.js?v=20260909e"></script>
-<script src="js/app.js?v=20260909e"></script>
+<script src="js/util.js?v=20260910a"></script>
+<script src="js/store.js?v=20260910a"></script>
+<script src="js/data-index.js?v=20260910a"></script>
+<script src="js/components.js?v=20260910a"></script>
+<script src="js/router.js?v=20260910a"></script>
+<script src="js/view-home.js?v=20260910a"></script>
+<script src="js/view-words.js?v=20260910a"></script>
+<script src="js/view-word.js?v=20260910a"></script>
+<script src="js/view-works.js?v=20260910a"></script>
+<script src="js/view-passages.js?v=20260910a"></script>
+<script src="js/view-study.js?v=20260910a"></script>
+<script src="js/view-quiz.js?v=20260910a"></script>
+<script src="js/view-help.js?v=20260910a"></script>
+<script src="js/app.js?v=20260910a"></script>
 
 </body>
 </html>

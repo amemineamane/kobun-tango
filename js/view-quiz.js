@@ -231,8 +231,9 @@
 
       U.clear(stage);
       var wrongs = answers.filter(function (a) { return !a.correct; });
+      var pct = Math.round(correct / (answers.length || 1) * 100);
 
-      stage.appendChild(el('div', { class: 'card quiz-result' }, [
+      var resultCard = el('div', { class: 'card quiz-result' }, [
         el('h2', { text: '結果' }),
         el('p', { class: 'score' }, [
           el('span', { class: 'big', text: String(correct) }),
@@ -258,7 +259,23 @@
           }) : null,
           el('a', { class: 'btn btn-ghost', href: '#/words' + U.buildQuery({ status: 'weak' }), text: '苦手な語を一覧で見る' })
         ])
-      ]));
+      ]);
+
+      /* 共有。リンク先は「結果画面」ではなく **同じ条件でクイズを始められる URL**
+         にする（結果は端末の中にしかないので、開いた人が同じ土俵で挑戦できる形が良い）。
+         問題数は実際に解いた数を渡す。 */
+      var shareQuery = {};
+      ['q', 'level', 'pos', 'row', 'work', 'passage', 'status', 'mode'].forEach(function (k) {
+        if (state[k]) shareQuery[k] = state[k];
+      });
+      shareQuery.count = answers.length;
+      resultCard.appendChild(C.shareButtons({
+        label: '結果を共有',
+        text: '古文単語クイズ ' + answers.length + ' 問中 ' + correct + ' 問正解（正答率 ' + pct + '%）！【' +
+          C.deckLabel(state) + '】',
+        url: C.absUrl('#/quiz' + U.buildQuery(shareQuery))
+      }));
+      stage.appendChild(resultCard);
 
       if (wrongs.length) {
         var list = el('div', { class: 'word-list' });

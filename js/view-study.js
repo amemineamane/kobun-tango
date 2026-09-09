@@ -85,7 +85,7 @@
       }
 
       if (i >= deck.length) {
-        stage.appendChild(el('div', { class: 'study-done card' }, [
+        var doneCard = el('div', { class: 'study-done card' }, [
           el('h2', { text: 'デッキを 1 周しました' }),
           el('p', {}, [
             el('span', { class: 'big', text: String(deck.length) }), ' 語中　',
@@ -106,7 +106,21 @@
             }),
             el('a', { class: 'btn btn-ghost', href: '#/quiz' + U.buildQuery(state), text: 'クイズに進む' })
           ])
-        ]));
+        ]);
+
+        /* 完走したときだけ共有を出す（途中では出さない）。
+           リンク先は同じ条件で学習を始められる URL にする。 */
+        var shareQuery = {};
+        ['q', 'level', 'pos', 'row', 'work', 'passage', 'status'].forEach(function (k) {
+          if (state[k]) shareQuery[k] = state[k];
+        });
+        doneCard.appendChild(C.shareButtons({
+          label: '結果を共有',
+          text: '古文単語帳のフラッシュカードで【' + C.deckLabel(state) + '】' + deck.length +
+            ' 語を 1 周しました！',
+          url: C.absUrl('#/study' + U.buildQuery(shareQuery))
+        }));
+        stage.appendChild(doneCard);
         return;
       }
 

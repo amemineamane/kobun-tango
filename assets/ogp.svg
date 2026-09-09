@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="古文単語帳">
+  <!--
+    OGP 画像（1200×630）の元データ。ここから assets/ogp.png を作る。
+      chrome --headless=new --screenshot=assets/ogp.png --window-size=1200,630 assets/ogp.svg
+    文字はシステムのフォントで描かれるので、書体は必ずフォールバックを並べる
+    （Windows は Yu Mincho、Mac は Hiragino Mincho、無ければ serif）。
+    配色は css/style.css のトークン（生成り・墨・藍）に合わせている。
+  -->
+  <rect width="1200" height="630" fill="#f7f4ee"/>
+
+  <!-- 内側の細い枠（装飾は控えめに、罫 1 本だけ） -->
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#cfc4b0" stroke-width="2"/>
+
+  <!-- 左肩の藍の小さな帯（アクセント） -->
+  <rect x="40" y="40" width="10" height="140" fill="#2f5d8a"/>
+
+  <g font-family="'Yu Mincho','YuMincho','Hiragino Mincho ProN','Noto Serif JP','MS PMincho',serif">
+    <text x="600" y="290" text-anchor="middle" font-size="132" letter-spacing="14" fill="#2b2723">古文単語帳</text>
+    <text x="600" y="372" text-anchor="middle" font-size="34" letter-spacing="4" fill="#6b625a">入試向けの古文単語 330 語と教科書の定番教材で学ぶ単語帳</text>
+  </g>
+
+  <!-- 見出しと説明を分ける短い罫 -->
+  <rect x="520" y="410" width="160" height="2" fill="#cfc4b0"/>
+
+  <g font-family="system-ui,-apple-system,'Segoe UI','Yu Gothic UI','Hiragino Sans',Meiryo,sans-serif">
+    <text x="600" y="472" text-anchor="middle" font-size="26" letter-spacing="2" fill="#2f5d8a">単語 330 語 ／ 教科書の教材 20 編 ／ 原文と現代語訳</text>
+    <text x="600" y="540" text-anchor="middle" font-size="26" letter-spacing="2" fill="#6b625a">制作：雨峰あまね</text>
+  </g>
+</svg>

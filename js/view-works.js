@@ -131,6 +131,13 @@
       words.length ? listWrap : el('p', { class: 'muted', text: 'まだ紐づいた語がありません。' })
     ]));
 
+    /* --- 共有 --- */
+    section.appendChild(C.shareButtons({
+      label: 'この作品を共有',
+      text: '『' + work.title + '』の単語と文章｜古文単語帳',
+      url: C.absUrl('#/work/' + work.id)
+    }));
+
     container.appendChild(section);
   }
 

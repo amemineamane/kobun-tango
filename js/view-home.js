@@ -445,7 +445,7 @@
   function render(params, query, container) {
     var section = el('section', { class: 'view view-home' });
 
-    section.appendChild(el('div', { class: 'home-hero' }, [
+    var hero = el('div', { class: 'home-hero' }, [
       el('h1', { class: 'home-hero-title', text: '古文単語帳' }),
       el('p', { class: 'home-hero-lead' }, [
         '入試向けの古文単語 ',
@@ -464,7 +464,10 @@
         '　/　',
         el('a', { href: '#/help', text: '使い方を読む' })
       ])
-    ]));
+    ]);
+    // 「ホーム画面に追加」（インストールできる環境でだけ出る。それ以外は非表示）
+    hero.appendChild(C.installBlock());
+    section.appendChild(hero);
 
     section.appendChild(statusCard());
     section.appendChild(recommendCard());
@@ -472,11 +475,24 @@
     section.appendChild(posCard());
     section.appendChild(passageCard());
 
+    section.appendChild(el('div', { class: 'card home-share' }, [
+      el('h2', { class: 'card-title', text: 'このアプリを共有' }),
+      el('p', { class: 'muted small', text: '同じ範囲を勉強している人に、この URL をそのまま渡せます。' }),
+      C.appShareButtons({ label: '共有' })
+    ]));
+
     section.appendChild(el('div', { class: 'home-foot' }, [
       el('a', { href: '#/help', text: '使い方' }),
       el('a', { href: '#/help?to=data', text: 'データについて' }),
       el('a', { href: '#/help?to=history', text: '学習履歴について' })
     ]));
+
+    // 末尾に制作者（フッター相当の小さな行）
+    var author = C.authorLine();
+    if (author) {
+      author.classList.add('home-author');
+      section.appendChild(author);
+    }
 
     container.appendChild(section);
   }

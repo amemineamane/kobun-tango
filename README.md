@@ -156,6 +156,70 @@ powershell -ExecutionPolicy Bypass -File .\start.ps1
 
 ---
 
+## 共有する
+
+各ページに共有ボタンがある。渡すのは **公開ページの絶対 URL**（手元で `file://` や
+`localhost` で開いていても、`data/site.js` の `url` を土台に組み立てる）。
+
+| 画面 | 共有される文面 |
+|---|---|
+| クイズの結果 | 「古文単語クイズ 10 問中 8 問正解（正答率 80%）！【重要度 S 最重要】」＋**同じ条件で始められる URL** |
+| 単語（`#/word/:id`） | 「『をかし』＝趣がある・風情がある｜古文単語帳」 |
+| 文章（`#/passage/:id`） | 「枕草子『春はあけぼの』を原文と現代語訳で読む｜古文単語帳」 |
+| 作品（`#/work/:id`） | 「『徒然草』の単語と文章｜古文単語帳」 |
+| 学習の完走画面 | 「古文単語帳のフラッシュカードで【…】○ 語を 1 周しました！」 |
+| ホーム・使い方 | 「古文単語帳｜入試向けの古文単語 330 語と…」 |
+
+- スマホ（`navigator.share` が使える指で触る画面）では「共有」1 つ＋「リンクをコピー」。
+- PC では **X で投稿 / LINE で送る / リンクをコピー** の 3 つ。
+- 「リンクをコピー」は 2 秒だけ「コピーしました」と出る。
+
+---
+
+## アプリとして使う（ホーム画面に追加）
+
+`manifest.webmanifest` と `sw.js`（Service Worker）を置いてあるので、
+公開ページからホーム画面・デスクトップに追加できる。
+
+- **Android（Chrome）** … ホームか使い方ページの「ホーム画面に追加」ボタン、
+  または ⋮ メニューの「アプリをインストール」。
+- **iPhone・iPad（Safari）** … 共有ボタン →「ホーム画面に追加」
+  （iOS には `beforeinstallprompt` が無いのでアプリ側のボタンは出ない）。
+- **PC（Chrome / Edge）** … アドレスバー右端のインストールアイコン。
+
+キャッシュの方針は **network-first**（ネットを先に見て、失敗したときだけキャッシュ）。
+データを直したのに古い本文が出る、という事故を避けるため。
+一度ひらいたページはオフラインでも読める。新しい版があるときは、勝手に入れ替えず
+画面下に「新しいバージョンがあります — 再読み込み」のバーを出す。
+
+`file://` で直接開いているときは Service Worker が登録できない仕様なので、
+この機能だけ使えない（ほかは今までどおり動く）。
+
+アイコンの元データは `assets/icon.svg`（maskable は余白を広く取った `assets/icon-maskable.svg`）。
+PNG は Chrome の headless スクリーンショットで書き出す。
+
+```powershell
+# 例：512×512 を書き出す
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu `
+  --window-size=512,512 --screenshot=assets\icon-512.png assets\icon.svg
+```
+
+---
+
+## 制作者
+
+**雨峰あまね**
+
+- X: <https://x.com/AmemineAmane>
+- YouTube: <https://www.youtube.com/@AmemineAmane>
+- BOOTH: <https://amemineamane.booth.pm/>
+
+感想・要望は X まで。
+名前・URL・共有の文面・OGP の値は **`data/site.js` の 1 か所**にまとまっている
+（`index.html` の `<head>` の OGP だけは静的なので、変えるときは両方を揃える）。
+
+---
+
 ## 学習履歴について
 
 - ブラウザの **localStorage** に保存される（キーは `kobun.v1.*`）。
@@ -183,8 +247,15 @@ D:\kobun_app\
   README.md           このファイル
   DESIGN.md           設計書（データモデル・画面遷移・拡張手順）
   start.ps1           ローカルサーバー起動
+  manifest.webmanifest  ホーム画面に追加（PWA）の設定
+  sw.js               Service Worker（オフラインとインストール用。network-first）
   css/style.css
+  assets/             アイコンと OGP 画像
+    icon.svg icon-maskable.svg favicon.svg ogp.svg   ← 元データ
+    icon-192.png icon-512.png icon-maskable-512.png
+    apple-touch-icon.png ogp.png                     ← SVG から書き出した PNG
   data/               ★ 編集するのはここ
+    site.js             アプリ名・公開 URL・制作者情報（共有と OGP はここを見る）
     words.js            単語 330 語（素材をそのまま変換。内容は無変更）
     works.js            作品 12 件
     relations.js        関連語リンク 57 本
@@ -200,7 +271,7 @@ D:\kobun_app\
     view-study.js view-quiz.js
     app.js
   tools/validate.mjs      データ整合性チェック
-  tools/bump-version.mjs  公開前のキャッシュバスター更新
+  tools/bump-version.mjs  公開前のキャッシュバスター更新（sw.js の版も一緒に上げる）
 ```
 
 ---
@@ -248,7 +319,9 @@ cd D:\kobun_app
 node tools\bump-version.mjs
 ```
 
-`index.html` 内の `?v=...` をすべて今日の日付＋連番に一括更新する（引数なし）。
+`index.html` 内の `?v=...` をすべて今日の日付＋連番に一括更新し、
+**あわせて `sw.js` の `CACHE_VERSION` も同じ値にする**（引数なし）。
+Service Worker のキャッシュ名はこの版から作るので、版が変わると古いキャッシュが捨てられる。
 タグの並びなど `index.html` の構造は変えないので、`file://` で直接開く用途にも影響しない。
 
 ---

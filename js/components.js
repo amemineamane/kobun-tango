@@ -673,6 +673,381 @@
     return panel;
   };
 
+  /* ---------------------------------------------------------------
+   * SNS 共有・制作者情報
+   * ---------------------------------------------------------------
+   * 文面・URL・制作者リンクの値は data/site.js（KOBUN.site）だけが持つ。
+   * ここは「どう見せるか」だけを担当する。
+   *
+   * アイコンは外部フォントを使えないのでインライン SVG の線画にする
+   * （ヘッダのナビと同じ流儀：viewBox 24×24・currentColor・stroke-width 1.8）。
+   * 商標ロゴの厳密な再現はしない（X は交差する 2 本、LINE は吹き出し）。
+   * ------------------------------------------------------------- */
+
+  var SVG_ATTRS = 'viewBox="0 0 24 24" width="18" height="18" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+    'stroke-linejoin="round" aria-hidden="true" focusable="false"';
+
+  var ICON_PATHS = {
+    // 端末の共有シート：3 つの点を線でつないだ、よくある共有マーク
+    share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/>' +
+           '<circle cx="18" cy="18.5" r="2.5"/><path d="M8.3 10.8 15.7 7"/>' +
+           '<path d="M8.3 13.2 15.7 17"/>',
+    // X：交差する 2 本の線に単純化したもの
+    x: '<path d="M4.5 4.5 19.5 19.5"/><path d="M19.5 4.5 4.5 19.5"/>',
+    // LINE：吹き出し（尾を左下に出す）
+    line: '<path d="M12 4.2c-4.7 0-8.5 2.9-8.5 6.5 0 3.2 2.9 5.8 6.8 6.4l-.7 3.1 ' +
+          '3.6-2.6c4.2-.4 7.3-3.2 7.3-6.9 0-3.6-3.8-6.5-8.5-6.5z"/>',
+    // リンクをコピー：鎖
+    link: '<path d="M10.2 13.8a3.6 3.6 0 0 0 5.1 0l2.8-2.8a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4"/>' +
+          '<path d="M13.8 10.2a3.6 3.6 0 0 0-5.1 0l-2.8 2.8a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4"/>',
+    // YouTube：画面と再生マーク
+    youtube: '<rect x="2.8" y="5.5" width="18.4" height="13" rx="4"/>' +
+             '<path d="M10.4 9.4 15.6 12l-5.2 2.6z"/>',
+    // BOOTH：買い物袋
+    booth: '<path d="M4.4 8.5h15.2l-1.1 11H5.5z"/><path d="M8.8 8.5V7a3.2 3.2 0 0 1 6.4 0v1.5"/>',
+    // ホーム画面に追加：受け皿に下向きの矢印
+    install: '<path d="M12 3.5v10"/><path d="M8 10.2 12 14.2 16 10.2"/>' +
+             '<path d="M4.5 16v2.5A2 2 0 0 0 6.5 20.5h11a2 2 0 0 0 2-2V16"/>'
+  };
+
+  function icon(name) {
+    var d = ICON_PATHS[name];
+    if (!d) return null;
+    return el('span', {
+      class: 'share-icon',
+      html: '<svg class="share-icon-svg" ' + SVG_ATTRS + '>' + d + '</svg>'
+    });
+  }
+
+  /**
+   * 共有 URL は必ず絶対 URL にする。
+   * file:// やローカルサーバー（localhost）で開いているときは
+   * 手元の URL を配っても相手が開けないので、KOBUN.site.url で組み立てる。
+   * @param hash '#/word/39' のようなハッシュ（省略時はいま開いている画面）
+   */
+  C.absUrl = function (hash) {
+    var h = (hash == null || hash === '') ? (location.hash || '#/') : String(hash);
+    if (h.charAt(0) !== '#') h = '#' + h;
+
+    var base = ((K.site && K.site.url) || '').replace(/#.*$/, '');
+    var proto = (location.protocol || '').toLowerCase();
+    var host = (location.hostname || '').toLowerCase();
+    var isLocal = (proto !== 'http:' && proto !== 'https:') ||
+      /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|::1)$/.test(host) ||
+      /\.local$/.test(host);
+
+    if (base && isLocal) return base + h;
+    var here = location.href.split('#')[0];
+    if (/^https?:/i.test(here)) return here + h;
+    return (base || here) + h;
+  };
+
+  function xIntentUrl(text, url, tags) {
+    var q = 'text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
+    if (tags && tags.length) q += '&hashtags=' + encodeURIComponent(tags.join(','));
+    return 'https://twitter.com/intent/tweet?' + q;
+  }
+
+  function lineShareUrl(text, url) {
+    return 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(url) +
+      '&text=' + encodeURIComponent(text);
+  }
+
+  /** navigator.clipboard が無い／拒否された環境用のフォールバック */
+  function legacyCopy(text) {
+    var ta = el('textarea', { readonly: true, 'aria-hidden': 'true' });
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    var ok = false;
+    try {
+      ta.focus();
+      ta.select();
+      if (ta.setSelectionRange) ta.setSelectionRange(0, ta.value.length);
+      ok = document.execCommand('copy');
+    } catch (e) { ok = false; }
+    if (ta.parentNode) ta.parentNode.removeChild(ta);
+    return !!ok;
+  }
+
+  function copyToClipboard(text, done) {
+    var nav = window.navigator;
+    if (nav && nav.clipboard && nav.clipboard.writeText) {
+      try {
+        nav.clipboard.writeText(text).then(
+          function () { done(true); },
+          function () { done(legacyCopy(text)); }
+        );
+        return;
+      } catch (e) { /* 下のフォールバックへ */ }
+    }
+    done(legacyCopy(text));
+  }
+
+  /**
+   * 共有ボタン。
+   * @param opts {
+   *   title:    共有シートのタイトル（既定：サイト名）
+   *   text:     共有する文面（X・LINE の本文にも使う）
+   *   url:      共有する絶対 URL（既定：いま開いている画面）
+   *   hashtags: ['古文単語帳'] のような配列（# は付けない。既定：site.hashtags）
+   *   label:    見出しの文字（既定「共有」）
+   * }
+   *
+   * 端末の共有シート（navigator.share）が使えるのは主にスマホなので、
+   * 「navigator.share があり、かつ指がタップする画面（pointer: coarse）」の
+   * ときだけ 1 つの「共有」ボタンにまとめ、それ以外（PC）では
+   * X・LINE・リンクをコピーの 3 つを出す。
+   * PC の Chrome にも navigator.share はあるが、共有シートより
+   * 「X で投稿」「リンクをコピー」が並んでいるほうが早いため。
+   */
+  C.shareButtons = function (opts) {
+    opts = opts || {};
+    var site = K.site || {};
+    var url = opts.url || C.absUrl(null);
+    var title = opts.title || site.name || document.title || '';
+    var text = opts.text || title;
+    var tags = opts.hashtags || site.hashtags || [];
+
+    var wrap = el('div', { class: 'share-bar' });
+    wrap.appendChild(el('span', { class: 'share-bar-label', text: opts.label || '共有' }));
+
+    var row = el('div', { class: 'share-actions' });
+    var toast = el('span', { class: 'share-toast', role: 'status', 'aria-live': 'polite' });
+    var toastTimer = null;
+    function say(msg) {
+      toast.textContent = msg;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.textContent = ''; }, 2000);
+    }
+
+    function btnLabel(t) { return el('span', { class: 'share-btn-label', text: t }); }
+
+    var xLink = el('a', {
+      class: 'share-btn share-x',
+      href: xIntentUrl(text, url, tags),
+      target: '_blank',
+      rel: 'noopener noreferrer'
+    }, [icon('x'), btnLabel('X で投稿')]);
+
+    var lineLink = el('a', {
+      class: 'share-btn share-line',
+      href: lineShareUrl(text, url),
+      target: '_blank',
+      rel: 'noopener noreferrer'
+    }, [icon('line'), btnLabel('LINE で送る')]);
+
+    var copyBtn = el('button', {
+      type: 'button',
+      class: 'share-btn share-copy',
+      onClick: function () {
+        copyToClipboard(url, function (ok) {
+          say(ok ? 'コピーしました' : 'コピーできませんでした');
+        });
+      }
+    }, [icon('link'), btnLabel('リンクをコピー')]);
+
+    var useNative = false;
+    try {
+      useNative = !!(window.navigator && window.navigator.share) &&
+        !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    } catch (e) { useNative = false; }
+
+    if (useNative) {
+      // 共有シートが開けなかったときだけ X・LINE を出す（畳んでおく）
+      var fallback = el('span', { class: 'share-fallback', hidden: true }, [xLink, lineLink]);
+      row.appendChild(el('button', {
+        type: 'button',
+        class: 'share-btn share-native',
+        onClick: function () {
+          // ユーザー操作のイベントの中で同期的に呼ぶこと（そうしないと拒否される）
+          try {
+            var p = window.navigator.share({ title: title, text: text, url: url });
+            if (p && p.catch) {
+              p.catch(function (err) {
+                // ユーザーが共有シートを閉じただけ（AbortError）は無視する
+                if (err && (err.name === 'AbortError' || /abort/i.test(String(err.message || '')))) return;
+                fallback.hidden = false;
+                say('共有できませんでした');
+              });
+            }
+          } catch (e) {
+            fallback.hidden = false;
+            say('共有できませんでした');
+          }
+        }
+      }, [icon('share'), btnLabel('共有')]));
+      row.appendChild(copyBtn);
+      row.appendChild(fallback);
+    } else {
+      row.appendChild(xLink);
+      row.appendChild(lineLink);
+      row.appendChild(copyBtn);
+    }
+
+    wrap.appendChild(row);
+    wrap.appendChild(toast);
+    return wrap;
+  };
+
+  /** アプリ全体を共有するボタン（ホームと使い方で同じ文面にする） */
+  C.appShareButtons = function (opts) {
+    opts = opts || {};
+    var site = K.site || {};
+    return C.shareButtons({
+      label: opts.label || 'このアプリを共有',
+      title: site.name,
+      text: (site.name || '古文単語帳') + '｜' + (site.description || ''),
+      url: C.absUrl('#/')
+    });
+  };
+
+  /* ---------------------------------------------------------------
+   * ホーム画面に追加（PWA のインストール導線）
+   * ---------------------------------------------------------------
+   * Android Chrome などは、条件がそろうと `beforeinstallprompt` を投げてくる。
+   * 既定のバナーは止めて取っておき、こちらのボタンから出す
+   * （ユーザー操作の中で prompt() を呼ばないと拒否されるため）。
+   *
+   * iOS Safari にはこのイベントが無い。その環境ではボタンは出ないままで、
+   * 代わりに使い方ページの「アプリとして使う」に手順を書いてある。
+   * すでにインストール済みで起動しているとき（display-mode: standalone）は出さない。
+   * ------------------------------------------------------------- */
+  var deferredPrompt = null;
+  var installBlocks = [];   // いま画面にある「ホーム画面に追加」の枠
+
+  /** 画面から外れた枠は捨てつつ、残っているものに fn を適用する */
+  function eachInstallBlock(fn) {
+    installBlocks = installBlocks.filter(function (b) { return document.body.contains(b); });
+    installBlocks.forEach(fn);
+  }
+
+  /** ホーム画面から（＝アプリとして）起動しているか */
+  C.isStandalone = function () {
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    } catch (e) { /* 判定できなければ通常起動とみなす */ }
+    return window.navigator && window.navigator.standalone === true;
+  };
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();            // ブラウザ既定のバナーは出さず、自前のボタンに任せる
+    deferredPrompt = e;
+    eachInstallBlock(function (b) { b.hidden = C.isStandalone(); });
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    eachInstallBlock(function (b) { b.hidden = true; });
+  });
+
+  /**
+   * 「ホーム画面に追加」ボタン＋一言。
+   * イベントが来ていない環境では枠ごと隠れる（何も出ない）。
+   */
+  C.installBlock = function (opts) {
+    opts = opts || {};
+    var wrap = el('div', { class: 'install-block' });
+    var btn = el('button', {
+      type: 'button',
+      class: 'share-btn share-native install-btn',
+      onClick: function () {
+        if (!deferredPrompt) return;
+        var p = deferredPrompt;
+        deferredPrompt = null;     // prompt() は 1 回きり。使ったら捨てる
+        try {
+          p.prompt();
+          if (p.userChoice && p.userChoice.then) {
+            p.userChoice.then(function () {
+              // 承諾でも辞退でも、同じイベントは二度使えないのでボタンは畳む
+              eachInstallBlock(function (b) { b.hidden = true; });
+            });
+          } else {
+            eachInstallBlock(function (b) { b.hidden = true; });
+          }
+        } catch (e) {
+          eachInstallBlock(function (b) { b.hidden = true; });
+        }
+      }
+    }, [icon('install'), el('span', { class: 'share-btn-label', text: 'ホーム画面に追加' })]);
+
+    wrap.appendChild(btn);
+    wrap.appendChild(el('span', {
+      class: 'muted small',
+      text: opts.note || 'アイコンから全画面で開けます（オフラインでも読めます）。'
+    }));
+    wrap.hidden = !deferredPrompt || C.isStandalone();
+    installBlocks.push(wrap);
+    return wrap;
+  };
+
+  /* --- 制作者情報 -------------------------------------------------- */
+
+  var AUTHOR_SERVICES = [
+    { key: 'x', label: 'X', icon: 'x' },
+    { key: 'youtube', label: 'YouTube', icon: 'youtube' },
+    { key: 'booth', label: 'BOOTH', icon: 'booth' }
+  ];
+
+  /** 空文字や PLACEHOLDER のままの URL はリンクにしない（未設定でも壊れないように） */
+  function isUsableUrl(u) {
+    return typeof u === 'string' && /^https?:\/\//i.test(u) && !/PLACEHOLDER/i.test(u);
+  }
+
+  /**
+   * 制作者の外部リンク（配列）。
+   * @param opts { services: ['x','youtube','booth'], labels: true でラベル併記 }
+   */
+  C.authorLinks = function (opts) {
+    opts = opts || {};
+    var a = (K.site && K.site.author) || {};
+    var only = opts.services || ['x', 'youtube', 'booth'];
+    var withLabel = opts.labels !== false;
+    var out = [];
+    AUTHOR_SERVICES.forEach(function (s) {
+      if (only.indexOf(s.key) < 0) return;
+      if (!isUsableUrl(a[s.key])) return;
+      out.push(el('a', {
+        class: 'author-link author-link-' + s.key,
+        href: a[s.key],
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        title: (a.name || '') + ' の ' + s.label,
+        'aria-label': (a.name || '') + ' の ' + s.label
+      }, [icon(s.icon), withLabel ? el('span', { class: 'author-link-label', text: s.label }) : null]));
+    });
+    return out;
+  };
+
+  /** 「制作：雨峰あまね ＋ アイコンリンク」の 1 行（ホーム末尾・共通フッタ用） */
+  C.authorLine = function (opts) {
+    opts = opts || {};
+    var a = (K.site && K.site.author) || {};
+    if (!a.name) return null;
+    var links = C.authorLinks({
+      services: opts.services || ['x', 'youtube'],
+      labels: opts.labels === true
+    });
+    return el('p', { class: 'author-line' }, [
+      el('span', { class: 'author-line-name', text: '制作：' + a.name })
+    ].concat(links.length ? [el('span', { class: 'author-links' }, links)] : []));
+  };
+
+  /** 使い方ページの「制作」節の中身（名前＋ラベル付きリンク＋一言） */
+  C.authorBlock = function () {
+    var a = (K.site && K.site.author) || {};
+    var links = C.authorLinks({ services: ['x', 'youtube', 'booth'], labels: true });
+    return el('div', { class: 'author-block' }, [
+      el('p', { class: 'author-block-name' }, ['制作：', el('b', { text: a.name || '' })]),
+      links.length ? el('div', { class: 'author-links author-links-lg' }, links) : null,
+      el('p', { class: 'muted small', text: '感想・要望は X までお寄せください。' })
+    ]);
+  };
+
   /** 学習状態バッジをその場で更新する（一覧を再描画せずに済ませる） */
   document.addEventListener('kobun:progress', function (e) {
     var id = e.detail && e.detail.id;

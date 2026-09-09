@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="古文単語帳">
+  <!--
+    maskable 版（assets/icon-maskable-512.png の元）。
+    Android は端末ごとに丸・角丸四角などへ切り抜くので、
+    **中央 80%（半径 205px の円）の中だけ** に意味のある絵を収める。
+    そのぶん余白を広く取り、枠線は描かず、字も小さめにしてある。
+    背景は端まで塗りつぶす（切り抜きで白い角が出ないように）。
+  -->
+  <rect width="512" height="512" fill="#f7f4ee"/>
+  <text x="256" y="264" text-anchor="middle" dominant-baseline="central"
+        font-family="'Yu Mincho','YuMincho','Hiragino Mincho ProN','Noto Serif JP','MS PMincho',serif"
+        font-size="230" fill="#2b2723">古</text>
+</svg>

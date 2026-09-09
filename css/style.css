@@ -20,6 +20,7 @@
  *  13. 作品                   14. 文章
  *  15. 学習                   16. クイズ
  *  16-b. ホーム               16-c. 使い方
+ *  16-d. 共有・制作者・ホーム画面に追加
  *  17. フッタ・印刷・動きの抑制
  * ===================================================================== */
 
@@ -1409,6 +1410,149 @@ kbd.key {
 .btn-danger { background: var(--danger); color: var(--on-solid); border-color: transparent; }
 .btn-danger:hover { background: var(--danger); filter: brightness(1.1); border-color: transparent; }
 
+/* ============================================ 16-d. 共有・制作者・PWA 導線 */
+/* 共有ボタン（C.shareButtons）。カードの中にも外にも置けるよう、
+   自前の枠は持たず「区切り線＋ボタン列」だけにする。 */
+.share-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin: var(--sp-4) 0 0;
+  padding-top: var(--sp-3);
+  border-top: 1px dashed var(--line);
+}
+.card > .share-bar:last-child { margin-bottom: 0; }
+.share-bar-label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+/* 隠しておいた X・LINE は、出すときに同じ列へそのまま並べたいので display: contents */
+.share-fallback { display: contents; }
+.share-fallback[hidden] { display: none; }
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  min-height: var(--tap);
+  padding: .35rem .8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.share-btn:hover {
+  background: var(--bg-sub);
+  border-color: var(--fg-muted);
+  text-decoration: none;
+}
+.share-btn:active { background: var(--bg-inset); }
+.share-native { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+.share-native:hover { background: var(--accent); border-color: transparent; filter: brightness(1.08); }
+.share-icon { display: inline-flex; }
+.share-icon-svg { display: block; }
+.share-btn-label { white-space: nowrap; }
+
+.share-toast {
+  font-size: var(--fs-sm);
+  color: var(--ok);
+  min-height: 1.4em;   /* 出たり消えたりしても行がずれないように場所を確保する */
+}
+
+/* 制作者行（ホーム末尾・共通フッタ）と、使い方ページの「制作」節 */
+.author-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+.author-links { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  min-height: 32px;
+  padding: .15rem .5rem;
+  border-radius: var(--r-pill);
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.author-link:hover { background: var(--accent-bg); color: var(--accent); text-decoration: none; }
+.author-links-lg .author-link {
+  min-height: var(--tap);
+  padding: .35rem .8rem;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-card);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+.author-links-lg .author-link:hover { background: var(--bg-sub); color: var(--fg); }
+.author-block { margin-top: var(--sp-2); }
+.author-block-name { margin-bottom: var(--sp-2); }
+.author-block .author-links { margin-bottom: var(--sp-2); }
+
+.home-author { margin-top: var(--sp-4); }
+.site-footer .author-line { margin-top: var(--sp-2); }
+
+@media (max-width: 640px) {
+  .share-btn { padding: .35rem .7rem; }
+}
+
+/* ホーム画面に追加（PWA）の導線。beforeinstallprompt が来ない環境では枠ごと隠れる */
+.install-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-3);
+}
+.install-block[hidden] { display: none; }
+/* ヒーローは中央揃えなので、その中に置くときは横も中央に */
+.home-hero .install-block { justify-content: center; }
+
+/* 新しい版が待機中のときのバー。ポップアップ（z-index 50）より前に出す */
+#update-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--sp-3) + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  max-width: 94vw;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--fs-sm);
+}
+#update-bar .btn { min-height: 36px; padding: .3rem .8rem; font-size: var(--fs-sm); }
+
+@media (max-width: 640px) {
+  /* 下タブバーに重ならない位置へ */
+  #update-bar { bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + var(--sp-2)); }
+}
+
 /* ============================================================ 17. フッタ */
 .site-footer {
   border-top: 1px solid var(--line);
@@ -1431,7 +1575,8 @@ kbd.key {
 /* --------------------------------------------------------------- 印刷 */
 @media print {
   .site-header, .site-footer, .filter-panel, .filter-bar, .deck-links,
-  .status-buttons, .prev-next, .passage-controls, .passage-legend { display: none; }
+  .status-buttons, .prev-next, .passage-controls, .passage-legend,
+  .share-bar, .install-block, #update-bar { display: none; }
   .card, .word-row, .example-card, .passage-para { box-shadow: none; break-inside: avoid; }
   #app { padding: 0; }
 }
