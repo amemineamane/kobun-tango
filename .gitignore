@@ -1,0 +1,4 @@
+﻿# 学習履歴などは各ブラウザの localStorage にあり、リポジトリには含まれない
+Thumbs.db
+desktop.ini
+*.log

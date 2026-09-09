@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>古文単語帳（プロトタイプ）</title>
+<meta name="description" content="大学入試向け古文単語 330 語。関連語・例文の品詞分解・作品タグつき。ビルド不要の静的アプリ。">
+<link rel="stylesheet" href="css/style.css">
+<!--
+  ========================================================================
+  古文単語帳アプリ（プロトタイプ）
+
+  ・ビルド不要。この index.html をダブルクリックするだけで動く。
+  ・file:// では fetch が CORS で弾かれるため、データは JSON ではなく
+    「window.KOBUN に代入するだけの .js」として読み込んでいる。
+  ・ES モジュール（type="module"）も file:// では CORS で弾かれるので、
+    普通の <script> を順番に並べている。**順序に意味がある**:
+        （data/*.js 同士の順序は問わないが、js/*.js より前であること）
+        data/*.js   … データを window.KOBUN に載せる
+        js/util.js  … 依存なしの道具
+        js/store.js … localStorage
+        js/data-index.js … データから索引をつくる（data/*.js の後）
+        js/components.js … 共通部品（util / store / index の後）
+        js/router.js     … ルーター
+        js/view-*.js     … 各画面（components の後）
+        js/app.js        … 起動（最後）
+  ========================================================================
+-->
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <h1 class="site-title"><a href="#/words">古文単語帳</a></h1>
+    <nav class="site-nav" aria-label="メインメニュー">
+      <a href="#/words" data-nav="words">単語</a>
+      <a href="#/works" data-nav="works">作品</a>
+      <a href="#/passages" data-nav="passages">文章</a>
+      <a href="#/study" data-nav="study">学習</a>
+      <a href="#/quiz"  data-nav="quiz">クイズ</a>
+    </nav>
+  </div>
+</header>
+
+<div id="storage-warning" hidden>
+  このブラウザでは localStorage が使えないため、学習履歴はページを閉じると消えます。
+</div>
+
+<main id="app">
+  <div class="notice">
+    <p>読み込み中…</p>
+    <p class="muted">この表示のまま変わらない場合は、ブラウザのコンソール（F12）でエラーを確認してください。</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p id="footer-stat"></p>
+  <p>語義・品詞分解はプロトタイプ用のサンプルです。<strong>公開前に辞書での校閲が必要です。</strong></p>
+</footer>
+
+<!-- データ（順序：words が先） -->
+<script src="data/words.js"></script>
+<script src="data/works.js"></script>
+<script src="data/relations.js"></script>
+<script src="data/examples.js"></script>
+<script src="data/workWords.js"></script>
+<script src="data/passages.js"></script>
+
+<!-- アプリ -->
+<script src="js/util.js"></script>
+<script src="js/store.js"></script>
+<script src="js/data-index.js"></script>
+<script src="js/components.js"></script>
+<script src="js/router.js"></script>
+<script src="js/view-words.js"></script>
+<script src="js/view-word.js"></script>
+<script src="js/view-works.js"></script>
+<script src="js/view-passages.js"></script>
+<script src="js/view-study.js"></script>
+<script src="js/view-quiz.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
