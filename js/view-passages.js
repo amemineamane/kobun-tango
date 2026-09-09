@@ -1,8 +1,14 @@
 /* =====================================================================
- * js/view-passages.js — 文章一覧（#/passages）と文章詳細（#/passage/:id）
+ * js/view-passages.js — 教科書（#/textbook）と文章詳細（#/passage/:id）
  * ---------------------------------------------------------------------
  * 「教科書に出てくる作品と文章の訳、そしてその文章に出てくる単語」を
  * 1 画面で扱うための画面。データは data/passages.js。
+ *
+ * #/textbook は **作品ごとにまとまった文章（教材）の一覧**。
+ * かつて #/works（作品一覧）と #/passages（文章一覧）に分かれていた入口を
+ * 1 本にまとめたもので、旧 URL は router.js が #/textbook に転送する。
+ *   作品名をタップ → 作品ページ（#/work/:workId、js/view-works.js）
+ *   文章名をタップ → 本文ページ（#/passage/:id、このファイルの下半分）
  *
  * 文章詳細でできること:
  *   ・原文と現代語訳を段落ごとに対応させて読む（上下／横並び、訳の表示切替）
@@ -32,15 +38,38 @@
     });
   }
 
+  /** 文章カード 1 枚（教科書一覧と作品ページで同じ見た目にする） */
+  function passageCard(p) {
+    var sum = progressOf(p);
+    var lead = p.paragraphs.length ? p.paragraphs[0].text : '';
+    return el('a', { class: 'passage-card', href: '#/passage/' + p.id }, [
+      el('div', { class: 'passage-card-head' },
+        [el('span', { class: 'passage-card-title', text: p.title })].concat(gradeBadges(p))),
+      p.section ? el('p', { class: 'passage-card-section muted', text: p.section }) : null,
+      el('p', { class: 'passage-card-lead', text: lead.slice(0, 40) + (lead.length > 40 ? '…' : '') }),
+      el('p', { class: 'passage-card-stats' }, [
+        el('span', { class: 'badge count', text: '段落 ' + p.paragraphs.length }),
+        el('span', { class: 'badge count', text: '語 ' + sum.total }),
+        el('span', {
+          class: 'badge count' + (sum.total && sum.known === sum.total ? ' count-done' : ''),
+          text: '覚えた ' + sum.known + ' / ' + sum.total
+        })
+      ])
+    ]);
+  }
+
   /* ---------------------------------------------------------------
-   * 文章一覧
+   * 教科書（#/textbook）
+   * 作品ごとに文章（教材）をまとめて並べる。作品の見出しは作品ページへの
+   * リンクを兼ねるので、「作品から入る」「文章から入る」が 1 画面で済む。
+   * 文章がまだ無い作品（例文・作品タグだけの作品）も、収録語の数を添えて出す。
    * ------------------------------------------------------------- */
-  function renderList(params, query, container) {
+  function renderTextbook(params, query, container) {
     var state = Object.assign({}, query);
 
-    var section = el('section', { class: 'view view-passages' }, [
-      el('h1', { class: 'view-title', text: '文章' }),
-      el('p', { class: 'view-lead', text: '教科書に定番として載る古典教材を、原文と現代語訳で読めます。文章ごとに「その文章に出てくる単語だけ」で学習・クイズができます。' })
+    var section = el('section', { class: 'view view-textbook' }, [
+      el('h1', { class: 'view-title', text: '教科書' }),
+      el('p', { class: 'view-lead', text: '教科書に定番として載る古典教材を、作品ごとにまとめました。文章を選ぶと原文と現代語訳が読め、「その文章に出てくる単語だけ」で学習・クイズができます。作品名からは、その作品の収録語や例文をまとめた作品ページへ進めます。' })
     ]);
 
     var listWrap = el('div');
@@ -76,39 +105,43 @@
       var shown = 0;
 
       K.index.works.forEach(function (work) {
-        var list = K.index.passagesOfWork(work.id).filter(function (p) {
+        var all = K.index.passagesOfWork(work.id);
+        var list = all.filter(function (p) {
           if (!state.grade) return true;
           return (p.grade || []).indexOf(state.grade) >= 0;
         });
-        if (!list.length) return;
+        // 学年でしぼっているときは、該当する文章がある作品だけを出す。
+        // しぼっていないときは、文章がまだ無い作品も収録語つきで出す。
+        if (!list.length && state.grade) return;
         shown += list.length;
 
-        var grid = el('div', { class: 'passage-grid' });
-        list.forEach(function (p) {
-          var sum = progressOf(p);
-          grid.appendChild(el('a', { class: 'passage-card', href: '#/passage/' + p.id }, [
-            el('div', { class: 'passage-card-head' },
-              [el('span', { class: 'passage-card-title', text: p.title })].concat(gradeBadges(p))),
-            p.section ? el('p', { class: 'passage-card-section muted', text: p.section }) : null,
-            el('p', { class: 'passage-card-lead', text: p.paragraphs[0].text.slice(0, 40) + (p.paragraphs[0].text.length > 40 ? '…' : '') }),
-            el('p', { class: 'passage-card-stats' }, [
-              el('span', { class: 'badge count', text: '段落 ' + p.paragraphs.length }),
-              el('span', { class: 'badge count', text: '語 ' + sum.total }),
-              el('span', {
-                class: 'badge count' + (sum.total && sum.known === sum.total ? ' count-done' : ''),
-                text: '覚えた ' + sum.known + ' / ' + sum.total
-              })
-            ])
-          ]));
-        });
+        var words = K.index.wordsByWork.get(work.id) || [];
+        var meta = [work.author, work.era, work.genre].filter(Boolean).join('　/　');
 
-        listWrap.appendChild(el('div', { class: 'card' }, [
-          el('h2', { class: 'card-title' }, [
-            el('a', { href: '#/work/' + work.id, text: work.title }),
-            el('span', { class: 'muted small', text: '（' + list.length + '）' })
+        var head = el('div', { class: 'textbook-work-head' }, [
+          el('h2', { class: 'card-title textbook-work-title' }, [
+            el('a', { class: 'textbook-work-link', href: '#/work/' + work.id, text: work.title }),
+            el('span', { class: 'textbook-work-go muted small', text: '作品ページ →' })
           ]),
-          grid
-        ]));
+          meta ? el('p', { class: 'textbook-work-meta muted small', text: meta }) : null,
+          el('p', { class: 'textbook-work-stats' }, [
+            el('span', { class: 'badge count', text: list.length ? '文章 ' + list.length : '文章 なし' }),
+            el('span', { class: 'badge count', text: '収録語 ' + words.length })
+          ])
+        ]);
+
+        var body;
+        if (list.length) {
+          body = el('div', { class: 'passage-grid' });
+          list.forEach(function (p) { body.appendChild(passageCard(p)); });
+        } else {
+          body = el('p', { class: 'textbook-empty muted' }, [
+            '文章はまだありません／収録語 ' + words.length + ' 語　',
+            el('a', { href: '#/work/' + work.id, text: '作品ページで見る →' })
+          ]);
+        }
+
+        listWrap.appendChild(el('div', { class: 'card textbook-work' }, [head, body]));
       });
 
       if (shown === 0) {
@@ -135,7 +168,7 @@
       container.appendChild(el('div', { class: 'notice error' }, [
         el('h2', { text: '文章が見つかりません' }),
         el('p', { text: 'id = ' + params.id + ' の文章はありません。' }),
-        el('p', {}, [el('a', { href: '#/passages', text: '文章一覧へ' })])
+        el('p', {}, [el('a', { href: '#/textbook', text: '教科書へ' })])
       ]));
       return;
     }
@@ -159,7 +192,7 @@
 
     /* --- パンくず・見出し ------------------------------------------ */
     section.appendChild(el('div', { class: 'crumbs' }, [
-      el('a', { href: '#/passages', text: '← 文章一覧' }),
+      el('a', { href: '#/textbook', text: '← 教科書' }),
       work ? el('span', { class: 'muted', text: '　/　' }) : null,
       work ? el('a', { href: '#/work/' + work.id, text: work.title }) : null
     ]));
@@ -321,6 +354,6 @@
   }
 
   K.views = K.views || {};
-  K.views.passages = { render: renderList };
+  K.views.textbook = { render: renderTextbook };
   K.views.passage = { render: renderDetail };
 })();

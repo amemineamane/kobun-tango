@@ -99,6 +99,7 @@
   /* --- その他 -------------------------------------------------------- */
   --maxw: 980px;
   --tap: 44px;           /* 最小タップ領域 */
+  --tab-h: 64px;          /* スマホ下タブバーの高さ（safe-area は別枠で加算） */
   --dur: .18s;
   --ease: cubic-bezier(.2, .7, .3, 1);
 }
@@ -212,7 +213,7 @@ p { margin: 0 0 .8em; }
 }
 .site-title a { color: inherit; display: inline-block; padding: .1rem 0; }
 .site-title a:hover { text-decoration: none; color: var(--accent); }
-/* タイトルがホームへの導線。いまホームにいることは色で示す（下タブは 5 個に保つ） */
+/* タイトルがホームへの導線。いまホームにいることは色で示す（下タブは 4 個に保つ） */
 .site-title a.active { color: var(--accent); }
 
 /* 使い方はメニューに入れず、ヘッダ右の小さなリンクにする。
@@ -246,6 +247,10 @@ p { margin: 0 0 .8em; }
   font-weight: 700;
 }
 
+/* アイコンはスマホの下タブでだけ使う。デスクトップの横並びメニューは
+   これまでどおりラベルのみのピル表示のまま変えない。 */
+.nav-icon { display: none; }
+
 /* --- スマホ：メニューを下のタブバーにする ------------------------- */
 @media (max-width: 640px) {
   .site-header-inner { padding: var(--sp-2) var(--sp-3); }
@@ -259,6 +264,7 @@ p { margin: 0 0 .8em; }
     margin: 0;
     gap: 0;
     flex-wrap: nowrap;
+    height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
     background: var(--bg-card);
     border-top: 1px solid var(--line);
     box-shadow: 0 -2px 12px rgba(43, 39, 35, .08);
@@ -267,20 +273,32 @@ p { margin: 0 0 .8em; }
   .site-nav a {
     flex: 1 1 0;
     min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .15rem;
     text-align: center;
     border-radius: 0;
-    padding: .65rem .1rem calc(.65rem + env(safe-area-inset-bottom, 0px));
-    font-size: var(--fs-sm);
-    line-height: 1.3;
+    padding: .3rem .1rem;
+    font-size: var(--fs-base);
+    line-height: 1.2;
   }
+  .nav-icon { display: block; }
+  .nav-label { display: block; }
   .site-nav a.active {
     background: var(--accent-bg);
     color: var(--accent);
     box-shadow: inset 0 3px 0 var(--accent);
   }
-  /* 下タブの下に本文が隠れないように */
-  #app { padding-bottom: 5.5rem; }
-  .site-footer { padding-bottom: 5.5rem; }
+  /* 下タブの下に本文が隠れないように（バーの高さ＋ホームバー分＋余白）。
+     #app と .site-footer は後ろの節（5. レイアウト／17. フッタ）で
+     padding の一括指定（下辺を含む）がもう一度出てくるため、
+     source order だけでは負けてしまう。ここは意図的に !important で勝たせる
+     （このファイルで !important を使うのはこの種の上書きだけ。.hidden と同じ扱い）。 */
+  #app { padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + var(--sp-4)) !important; }
+  .site-footer { padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + var(--sp-4)) !important; }
 }
 
 /* ============================================================ 5. レイアウト */
@@ -518,7 +536,7 @@ p { margin: 0 0 .8em; }
   padding: var(--sp-3);
   border-top: 1px solid var(--line);
 }
-/* 文章一覧のように <details> なしで単体で使う場合 */
+/* 教科書の学年フィルタのように <details> なしで単体で使う場合 */
 .view > .filter-bar {
   background: var(--bg-card);
   border: 1px solid var(--line);
@@ -876,28 +894,32 @@ p { margin: 0 0 .8em; }
 .pn-kana { font-family: var(--font-serif); font-weight: 700; font-size: var(--fs-md); }
 
 /* ============================================================ 13. 作品 */
-.work-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-3); }
-@media (min-width: 700px) { .work-grid { grid-template-columns: 1fr 1fr; } }
-
-.work-card {
-  display: block;
-  background: var(--bg-card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: var(--sp-4);
-  color: inherit;
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
-}
-.work-card:hover { text-decoration: none; border-color: var(--accent); box-shadow: var(--shadow-md); }
-.work-card-title { font-family: var(--font-serif); font-size: var(--fs-xl); margin: 0 0 .2rem; letter-spacing: .04em; }
-.work-card-meta { font-size: var(--fs-sm); margin: 0 0 .5rem; }
-.work-card-summary { font-size: var(--fs-md); margin: 0 0 .6rem; line-height: 1.8; }
-.work-card-stats { margin: 0; display: flex; gap: .35rem; flex-wrap: wrap; }
-
+/* 作品一覧（旧 .work-grid / .work-card）は「教科書」に統合したので削除した。
+   残っているのは作品ページ（#/work/:workId）の見出しだけ。 */
 .work-head { margin-bottom: var(--sp-4); }
 .work-meta { font-size: var(--fs-sm); margin: 0 0 .5rem; }
 .work-summary { font-size: var(--fs-md); line-height: var(--lh-read); max-width: 48em; }
+
+/* ======================================================== 13-b. 教科書 */
+/* #/textbook は作品ごとに文章カードを束ねる。カードの見出し行は
+   「作品ページへのリンク＋書誌＋文章数・収録語数」の 3 段。
+   .card-title の罫線は見出し行の下端（stats の下）に引きたいので、
+   .card-title 自身の罫線は消して .textbook-work-head に持たせる。 */
+.textbook-work-head {
+  margin: 0 0 var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line);
+}
+.textbook-work-title { margin: 0; padding: 0; border-bottom: 0; }
+.textbook-work-link {
+  font-family: var(--font-serif);
+  font-size: var(--fs-xl);
+  letter-spacing: .04em;
+}
+.textbook-work-go { white-space: nowrap; }
+.textbook-work-meta { margin: .2rem 0 .4rem; }
+.textbook-work-stats { margin: 0; display: flex; gap: .35rem; flex-wrap: wrap; }
+.textbook-empty { font-size: var(--fs-sm); margin: 0; }
 
 /* ============================================================ 14. 文章 */
 .passage-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-3); }
@@ -1227,6 +1249,15 @@ p { margin: 0 0 .8em; }
 .home-first { margin-bottom: var(--sp-3); }
 .home-more { margin: var(--sp-3) 0 0; font-size: var(--fs-md); font-weight: 700; }
 
+/* 今日のおすすめ：複数件を 1 枚のカードに積む。境界線で 1 件ずつ区切る。
+   ボタンは .deck-links / .btn を流用しているので、狭い幅で折り返しても崩れない。 */
+.reco-item {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px dashed var(--line-strong);
+}
+.reco-item:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
 /* 覚えた／苦手／未学習の 3 色の帯（未学習は地のまま） */
 .progress-multi { display: flex; }
 .progress-seg { height: 100%; transition: width .3s var(--ease); }
@@ -1387,13 +1418,6 @@ kbd.key {
   text-align: center;
 }
 .site-footer p { margin: .2rem 0; }
-.site-footer .footer-links {
-  display: flex; flex-wrap: wrap;
-  gap: .3rem var(--sp-3);
-  justify-content: center;
-  margin: 0 0 var(--sp-2);
-}
-.footer-links a { padding: .15rem 0; }
 
 #storage-warning {
   background: var(--bg-sub);

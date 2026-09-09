@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>古文単語帳（プロトタイプ）</title>
 <meta name="description" content="大学入試向け古文単語 330 語。関連語・例文の品詞分解・作品タグつき。ビルド不要の静的アプリ。">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260909e">
 <!--
   ========================================================================
   古文単語帳アプリ（プロトタイプ）
@@ -32,14 +32,43 @@
 <header class="site-header">
   <div class="site-header-inner">
     <h1 class="site-title"><a href="#/" data-nav="home">古文単語帳</a></h1>
-    <!-- 下タブ（スマホ）は 5 個までに保ちたいので、ホームはタイトル、
-         使い方はヘッダ右のリンクから開く。どちらも全画面で常に見える。 -->
+    <!-- 下タブ（スマホ）は 5 個までに保ちたいので（いまは 4 個）、ホームはタイトル、
+         使い方はヘッダ右のリンクから開く。どちらも全画面で常に見える。
+         「作品」と「文章」は入口が二重で迷うので「教科書」1 つに統合した
+         （#/textbook。作品ページ・文章ページもこのタブの中として点灯する）。 -->
     <nav class="site-nav" aria-label="メインメニュー">
-      <a href="#/words" data-nav="words">単語</a>
-      <a href="#/works" data-nav="works">作品</a>
-      <a href="#/passages" data-nav="passages">文章</a>
-      <a href="#/study" data-nav="study">学習</a>
-      <a href="#/quiz"  data-nav="quiz">クイズ</a>
+      <a href="#/words" data-nav="words">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M4 5.5c2-1.2 5-1.2 7 0v13c-2-1.2-5-1.2-7 0v-13z"/>
+          <path d="M20 5.5c-2-1.2-5-1.2-7 0v13c2-1.2 5-1.2 7 0v-13z"/>
+        </svg>
+        <span class="nav-label">単語</span>
+      </a>
+      <a href="#/textbook" data-nav="textbook">
+        <!-- しおりを挟んだ本＝教科書。単語タブ（見開きの本）と形で区別する -->
+        <svg class="nav-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3H18v18H7.5A1.5 1.5 0 0 1 6 19.5v-15z"/>
+          <path d="M6 17.5A1.5 1.5 0 0 1 7.5 16H18"/>
+          <path d="M10.5 3v6.5l2-1.3 2 1.3V3"/>
+        </svg>
+        <span class="nav-label">教科書</span>
+      </a>
+      <a href="#/study" data-nav="study">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <rect x="4" y="6" width="16" height="12" rx="2"/>
+          <line x1="4" y1="10.5" x2="20" y2="10.5"/>
+          <line x1="8" y1="14.5" x2="14" y2="14.5"/>
+        </svg>
+        <span class="nav-label">学習</span>
+      </a>
+      <a href="#/quiz"  data-nav="quiz">
+        <svg class="nav-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="8.5"/>
+          <path d="M9.3 9.6a2.7 2.7 0 1 1 3.9 2.4c-.9.5-1.4 1-1.4 2"/>
+          <circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none"/>
+        </svg>
+        <span class="nav-label">クイズ</span>
+      </a>
     </nav>
     <a class="site-help-link" href="#/help" data-nav="help">使い方</a>
   </div>
@@ -57,39 +86,32 @@
 </main>
 
 <footer class="site-footer">
-  <p class="footer-links">
-    <a href="#/">ホーム</a>
-    <a href="#/help">使い方</a>
-    <a href="#/help?to=history">学習履歴について</a>
-    <a href="#/help?to=data">データについて</a>
-  </p>
   <p id="footer-stat"></p>
-  <p>語義・品詞分解はプロトタイプ用のサンプルです。<strong>公開前に辞書での校閲が必要です。</strong></p>
 </footer>
 
 <!-- データ（順序：words が先） -->
-<script src="data/words.js"></script>
-<script src="data/works.js"></script>
-<script src="data/relations.js"></script>
-<script src="data/examples.js"></script>
-<script src="data/workWords.js"></script>
-<script src="data/passages.js"></script>
+<script src="data/words.js?v=20260909e"></script>
+<script src="data/works.js?v=20260909e"></script>
+<script src="data/relations.js?v=20260909e"></script>
+<script src="data/examples.js?v=20260909e"></script>
+<script src="data/workWords.js?v=20260909e"></script>
+<script src="data/passages.js?v=20260909e"></script>
 
 <!-- アプリ -->
-<script src="js/util.js"></script>
-<script src="js/store.js"></script>
-<script src="js/data-index.js"></script>
-<script src="js/components.js"></script>
-<script src="js/router.js"></script>
-<script src="js/view-home.js"></script>
-<script src="js/view-words.js"></script>
-<script src="js/view-word.js"></script>
-<script src="js/view-works.js"></script>
-<script src="js/view-passages.js"></script>
-<script src="js/view-study.js"></script>
-<script src="js/view-quiz.js"></script>
-<script src="js/view-help.js"></script>
-<script src="js/app.js"></script>
+<script src="js/util.js?v=20260909e"></script>
+<script src="js/store.js?v=20260909e"></script>
+<script src="js/data-index.js?v=20260909e"></script>
+<script src="js/components.js?v=20260909e"></script>
+<script src="js/router.js?v=20260909e"></script>
+<script src="js/view-home.js?v=20260909e"></script>
+<script src="js/view-words.js?v=20260909e"></script>
+<script src="js/view-word.js?v=20260909e"></script>
+<script src="js/view-works.js?v=20260909e"></script>
+<script src="js/view-passages.js?v=20260909e"></script>
+<script src="js/view-study.js?v=20260909e"></script>
+<script src="js/view-quiz.js?v=20260909e"></script>
+<script src="js/view-help.js?v=20260909e"></script>
+<script src="js/app.js?v=20260909e"></script>
 
 </body>
 </html>

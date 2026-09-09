@@ -9,12 +9,16 @@
  *   #/help             使い方（?to=history などで節までスクロール）
  *   #/words            単語一覧（?q= &level= &pos= &row= &work= &status= &sort= を取る）
  *   #/word/:id         単語詳細（:id は words.js の id）
- *   #/works            作品一覧
- *   #/work/:workId     作品詳細
- *   #/passages         文章（教材）一覧（?grade= を取る）
+ *   #/textbook         教科書（作品ごとの文章一覧。?grade= を取る）
+ *   #/work/:workId     作品ページ
  *   #/passage/:id      文章詳細（:id は passages.js の id）
  *   #/study            フラッシュカード（?level= &pos= &work= &passage= &status= を取る）
  *   #/quiz             4択クイズ（同上）
+ *
+ * 旧 URL（REDIRECTS）:
+ *   #/works    → #/textbook   （作品一覧を教科書に統合）
+ *   #/passages → #/textbook   （文章一覧を教科書に統合）
+ *   ブックマークや外部リンクを壊さないため、履歴に残さず差し替える。
  *
  * 【ルートを足すには】
  *   1. ROUTES に { pattern, view } を 1 行足す。
@@ -33,13 +37,18 @@
     { pattern: '/help', view: 'help' },
     { pattern: '/words', view: 'words' },
     { pattern: '/word/:id', view: 'word' },
-    { pattern: '/works', view: 'works' },
+    { pattern: '/textbook', view: 'textbook' },
     { pattern: '/work/:workId', view: 'work' },
-    { pattern: '/passages', view: 'passages' },
     { pattern: '/passage/:id', view: 'passage' },
     { pattern: '/study', view: 'study' },
     { pattern: '/quiz', view: 'quiz' }
   ];
+
+  /** 旧パス → 新パス。クエリ（?grade= など）はそのまま引き継ぐ。 */
+  var REDIRECTS = {
+    '/works': '/textbook',
+    '/passages': '/textbook'
+  };
 
   function compile(pattern) {
     var keys = [];
@@ -85,6 +94,25 @@
       var container = document.getElementById('app');
       if (!container) return;
       var route = Router.parse();
+
+      /* 旧 URL は新しいパスに差し替える。
+         戻るボタンで旧 URL に戻ってループしないよう location.replace を使う
+         （履歴を 1 つ消費しない）。file:// で replace が使えない環境に備えて
+         location.hash 直書きにフォールバックする。
+         ハッシュの書き換えは同期的なので、続けて新しいルートを描いてしまう。
+         直後に飛んでくる hashchange は同じ画面を描き直すだけで害がない。 */
+      var to = REDIRECTS[route.path];
+      if (to) {
+        var url = '#' + to + U.buildQuery(route.query);
+        try { location.replace(location.href.split('#')[0] + url); }
+        catch (e) { location.hash = url.slice(1); }
+        route = Router.parse();
+        if (REDIRECTS[route.path]) {
+          // ハッシュを書き換えられなかった場合の保険。表示だけ新しい画面にする
+          route = { path: to, params: {}, query: route.query, view: 'textbook' };
+        }
+      }
+
       Router.current = route;
       U.clear(container);
 
@@ -117,11 +145,12 @@
     },
 
     updateNav: function (route) {
+      /* 「教科書」タブは配下（作品ページ・文章ページ）でも点灯させる。
+         入口が 1 本なので、いま自分がどのタブの中にいるかが常に分かる。 */
       var map = {
         home: 'home', help: 'help',
         words: 'words', word: 'words',
-        works: 'works', work: 'works',
-        passages: 'passages', passage: 'passages',
+        textbook: 'textbook', work: 'textbook', passage: 'textbook',
         study: 'study', quiz: 'quiz'
       };
       var active = map[route.view] || '';

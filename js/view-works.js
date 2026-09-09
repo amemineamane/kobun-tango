@@ -1,6 +1,10 @@
 /* =====================================================================
- * js/view-works.js — 作品一覧（#/works）と作品詳細（#/work/:workId）
+ * js/view-works.js — 作品ページ（#/work/:workId）
  * ---------------------------------------------------------------------
+ * 作品の一覧は「教科書」（#/textbook、js/view-passages.js）が兼ねる。
+ * 入口を 1 本にしたので、このファイルは作品 1 件の詳細だけを描く。
+ * 旧 URL の #/works は router.js が #/textbook に転送する。
+ *
  * 作品ページの「収録語」は
  *     例文 tokens の wordId  ∪  data/workWords.js  ∪  passages.vocab の wordId
  * の和集合（計算は js/data-index.js の wordsByWork）。
@@ -14,35 +18,6 @@
   var el = U.el;
 
   /* ---------------------------------------------------------------
-   * 作品一覧
-   * ------------------------------------------------------------- */
-  function renderList(params, query, container) {
-    var section = el('section', { class: 'view view-works' }, [
-      el('h1', { class: 'view-title', text: '作品' }),
-      el('p', { class: 'view-lead', text: '作品ごとに、収録された文章・例文・単語をまとめて確認できます。' })
-    ]);
-
-    var grid = el('div', { class: 'work-grid' });
-    K.index.works.forEach(function (w) {
-      var words = K.index.wordsByWork.get(w.id) || [];
-      var examples = K.index.examplesByWork.get(w.id) || [];
-      var passages = K.index.passagesOfWork(w.id);
-      grid.appendChild(el('a', { class: 'work-card', href: '#/work/' + w.id }, [
-        el('h2', { class: 'work-card-title', text: w.title }),
-        el('p', { class: 'work-card-meta muted', text: w.author + '　/　' + w.era + '　/　' + w.genre }),
-        el('p', { class: 'work-card-summary', text: w.summary }),
-        el('p', { class: 'work-card-stats' }, [
-          passages.length ? el('span', { class: 'badge count', text: '文章 ' + passages.length }) : null,
-          el('span', { class: 'badge count', text: '例文 ' + examples.length }),
-          el('span', { class: 'badge count', text: '収録語 ' + words.length })
-        ])
-      ]));
-    });
-    section.appendChild(grid);
-    container.appendChild(section);
-  }
-
-  /* ---------------------------------------------------------------
    * 作品詳細
    * ------------------------------------------------------------- */
   function renderDetail(params, query, container) {
@@ -51,7 +26,7 @@
       container.appendChild(el('div', { class: 'notice error' }, [
         el('h2', { text: '作品が見つかりません' }),
         el('p', { text: 'id = ' + params.workId + ' の作品はありません。' }),
-        el('p', {}, [el('a', { href: '#/works', text: '作品一覧へ' })])
+        el('p', {}, [el('a', { href: '#/textbook', text: '教科書へ' })])
       ]));
       return;
     }
@@ -70,7 +45,7 @@
     });
 
     var section = el('section', { class: 'view view-work' }, [
-      el('div', { class: 'crumbs' }, [el('a', { href: '#/works', text: '← 作品一覧' })]),
+      el('div', { class: 'crumbs' }, [el('a', { href: '#/textbook', text: '← 教科書' })]),
       el('header', { class: 'work-head' }, [
         el('h1', { class: 'view-title', text: work.title }),
         el('p', { class: 'work-meta muted', text: work.author + '　/　' + work.era + '　/　' + work.genre }),
@@ -160,6 +135,5 @@
   }
 
   K.views = K.views || {};
-  K.views.works = { render: renderList };
   K.views.work = { render: renderDetail };
 })();

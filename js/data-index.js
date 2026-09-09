@@ -45,7 +45,7 @@
   };
 
   /** 文章の「学年」フィルタの並び順。ここに無い値は末尾に回る。 */
-  var GRADE_ORDER = ['中1', '中2', '中3', '高1', '高2', '高3'];
+  var GRADE_ORDER = ['中1', '中2', '中3', '高校'];
 
   /** 文章固有語を Word と同じ形に包む。学習・クイズがそのまま扱えるようにする。 */
   function makePassageWord(passage, entry, index) {

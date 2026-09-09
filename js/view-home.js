@@ -7,8 +7,11 @@
  *
  *   1. ヒーロー           … アプリの説明と 3 つの大きな導線
  *   2. 学習の状態         … 330 語の進捗（覚えた／苦手／未学習）と「続きから」
- *   3. おすすめ           … 苦手が溜まっていれば復習、無ければ未学習のデッキ
- *   4. 入口カード         … 重要度・品詞・作品・文章へのショートカット
+ *   3. おすすめ           … 苦手が溜まっていれば復習を先頭に固定。そのうえで、
+ *                          未学習が残る文章・作品・重要度/品詞（無ければ五十音行）から
+ *                          日付シードの擬似乱数で毎日 2〜3 件を選んで添える
+ *   4. 入口カード         … 重要度・品詞・教科書の文章へのショートカット
+ *                          （作品への入口は「教科書」#/textbook に一本化した）
  *   5. フッターのリンク   … 使い方 / データについて
  *
  * リンク先は既存のクエリ形式に合わせる（#/words?level=S など）。
@@ -115,7 +118,200 @@
 
   /* ---------------------------------------------------------------
    * 3. おすすめ
+   * ---------------------------------------------------------------
+   * 苦手が溜まっていれば「苦手 N 語を復習」を先頭に固定で出す。
+   * そのうえで、未学習が残っている「文章」「作品」「重要度・品詞」
+   * （どれも無ければ最後の手段として五十音行）から、日付をシードにした
+   * 決定的な擬似乱数で毎日 2〜3 件を選んで下に添える
+   * （苦手を出しているときは 2 件、苦手ゼロなら 2〜3 件）。
+   * 同じ日にホームを何度開いても同じおすすめになるが、日が変われば変わる。
    * ------------------------------------------------------------- */
+
+  /** 'YYYYMMDD' を数値にしたものをシードにする（今日は同じ、日が変われば変わる） */
+  function todaySeed() {
+    var d = new Date();
+    var s = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    return s >>> 0;
+  }
+
+  /** mulberry32: 依存ライブラリなしの決定的な擬似乱数生成器 */
+  function mulberry32(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) | 0;
+      var t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function pickOne(list, rng) {
+    if (!list || !list.length) return null;
+    return list[Math.floor(rng() * list.length)];
+  }
+
+  /** Fisher–Yates。渡した配列は書き換えない */
+  function shuffled(list, rng) {
+    var arr = list.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  /* --- 候補集め（未学習が 1 語でも残っているものだけ） -------------- */
+
+  /** 文章：その文章のデッキ（330 語＋文章固有語）に未学習が残るもの */
+  function passageCandidates() {
+    return K.index.passages.map(function (p) {
+      var deck = K.index.deckOfPassage(p.id);
+      var s = K.store.summaryOf(deck.map(function (c) { return c.id; }));
+      return { passage: p, total: s.total, unlearned: s.newCount };
+    }).filter(function (c) { return c.total > 0 && c.unlearned > 0; });
+  }
+
+  /** 作品：その作品の収録語（例文 ∪ workWords ∪ passages.vocab、330 語のみ）に未学習が残るもの */
+  function workCandidates() {
+    return K.index.works.map(function (w) {
+      var list = K.index.wordsByWork.get(w.id) || [];
+      var s = K.store.summaryOf(list.map(function (word) { return word.id; }));
+      return { work: w, total: s.total, unlearned: s.newCount };
+    }).filter(function (c) { return c.total > 0 && c.unlearned > 0; });
+  }
+
+  /** 重要度・品詞：未学習が残るものだけ（重要度は S/A/B、品詞は一覧の選択肢と同じ） */
+  function levelPosCandidates() {
+    var out = [];
+    K.index.levels.forEach(function (l) {
+      var ids = K.index.words.filter(function (w) { return w.level === l.code; }).map(function (w) { return w.id; });
+      var s = K.store.summaryOf(ids);
+      if (s.newCount > 0) out.push({ kind: 'level', level: l, total: s.total, unlearned: s.newCount });
+    });
+    K.index.posList.forEach(function (p) {
+      var ids = K.index.words.filter(function (w) { return w.pos === p; }).map(function (w) { return w.id; });
+      var s = K.store.summaryOf(ids);
+      if (s.newCount > 0) out.push({ kind: 'pos', pos: p, total: s.total, unlearned: s.newCount });
+    });
+    return out;
+  }
+
+  /** 五十音行：最後の手段。他の候補が足りないときだけ埋め合わせに使う */
+  function rowCandidates() {
+    return K.index.kanaRows.map(function (r) {
+      var ids = K.index.words.filter(function (w) { return w.kanaRow === r; }).map(function (w) { return w.id; });
+      var s = K.store.summaryOf(ids);
+      return { row: r, total: s.total, unlearned: s.newCount };
+    }).filter(function (c) { return c.unlearned > 0; });
+  }
+
+  /* --- 候補 1 件を「説明文＋ボタン 2 個」に組み立てる ---------------- */
+
+  function recoItem(lead, links) {
+    return el('div', { class: 'reco-item' }, [
+      el('p', {}, lead),
+      el('div', { class: 'deck-links' }, links)
+    ]);
+  }
+
+  function passageRecoItem(c) {
+    var work = K.index.getWork(c.passage.workId);
+    return recoItem(
+      [
+        el('b', { text: '「' + c.passage.title + '」' }),
+        work ? el('span', { class: 'muted', text: '（' + work.title + '）' }) : '',
+        'を読んでみませんか。この文章の単語 ' + c.total + ' 語のうち未学習は ',
+        el('b', { text: c.unlearned + ' 語' }), ' です。'
+      ],
+      [
+        el('a', { class: 'btn btn-primary', href: '#/study?passage=' + encodeURIComponent(c.passage.id), text: 'この文章の単語で学習' }),
+        el('a', { class: 'btn', href: '#/passage/' + encodeURIComponent(c.passage.id), text: '文章を読む' })
+      ]
+    );
+  }
+
+  function workRecoItem(c) {
+    return recoItem(
+      [
+        el('b', { text: '「' + c.work.title + '」' }),
+        'の単語 ' + c.total + ' 語のうち未学習は ',
+        el('b', { text: c.unlearned + ' 語' }), ' です。'
+      ],
+      [
+        el('a', { class: 'btn btn-primary', href: '#/study?work=' + encodeURIComponent(c.work.id), text: 'この作品の単語で学習' }),
+        el('a', { class: 'btn', href: '#/work/' + encodeURIComponent(c.work.id), text: '作品ページ' })
+      ]
+    );
+  }
+
+  function levelPosRecoItem(c) {
+    if (c.kind === 'level') {
+      var l = c.level;
+      return recoItem(
+        [
+          el('b', { text: l.code + ' ' + l.label }),
+          'の未学習 ', el('b', { text: c.unlearned + ' 語' }),
+          ' はいかがですか（' + l.desc + '）。'
+        ],
+        [
+          el('a', { class: 'btn btn-primary', href: '#/study?level=' + l.code + '&status=new', text: l.code + 'ランクの未学習 ' + c.unlearned + ' 語で学習' }),
+          el('a', { class: 'btn', href: '#/words?level=' + l.code + '&status=new', text: '一覧で見る' })
+        ]
+      );
+    }
+    return recoItem(
+      [
+        el('b', { text: c.pos } ),
+        'の未学習 ', el('b', { text: c.unlearned + ' 語' }),
+        '（全 ' + c.total + ' 語）はいかがですか。'
+      ],
+      [
+        el('a', { class: 'btn btn-primary', href: '#/study?pos=' + encodeURIComponent(c.pos) + '&status=new', text: c.pos + 'の未学習 ' + c.unlearned + ' 語で学習' }),
+        el('a', { class: 'btn', href: '#/words?pos=' + encodeURIComponent(c.pos) + '&status=new', text: '一覧で見る' })
+      ]
+    );
+  }
+
+  function rowRecoItem(c) {
+    return recoItem(
+      [
+        el('b', { text: c.row + '行' }),
+        'の未学習 ', el('b', { text: c.unlearned + ' 語' }),
+        ' はいかがですか。'
+      ],
+      [
+        el('a', { class: 'btn btn-primary', href: '#/study?row=' + encodeURIComponent(c.row) + '&status=new', text: c.row + 'の未学習 ' + c.unlearned + ' 語で学習' }),
+        el('a', { class: 'btn', href: '#/study?status=new', text: '未学習からランダムに' })
+      ]
+    );
+  }
+
+  /**
+   * 候補の種類（文章／作品／重要度・品詞）から、日替わりの擬似乱数で
+   * 種類ごとに 1 件ずつ選び、種類の順番もシャッフルして need 件返す。
+   * 種類が足りないときだけ五十音行で埋める。候補が 1 つも無ければ空配列。
+   */
+  function pickRecoItems(need) {
+    var rng = mulberry32(todaySeed());
+    var buckets = [];
+
+    var pc = passageCandidates();
+    if (pc.length) buckets.push(passageRecoItem(pickOne(pc, rng)));
+    var wc = workCandidates();
+    if (wc.length) buckets.push(workRecoItem(pickOne(wc, rng)));
+    var lc = levelPosCandidates();
+    if (lc.length) buckets.push(levelPosRecoItem(pickOne(lc, rng)));
+
+    buckets = shuffled(buckets, rng);
+    var items = buckets.slice(0, need);
+
+    if (items.length < need) {
+      var rc = rowCandidates();
+      if (rc.length) items.push(rowRecoItem(pickOne(rc, rng)));
+    }
+    return items;
+  }
+
   function recommendCard() {
     var sum = K.store.summary(K.index.words.length);
     var card = el('div', { class: 'card home-reco' }, [
@@ -132,41 +328,24 @@
         el('a', { class: 'btn', href: '#/quiz?status=weak', text: '苦手だけでクイズ' }),
         el('a', { class: 'btn btn-ghost', href: '#/words?status=weak', text: '一覧で見る' })
       ]));
+      pickRecoItems(2).forEach(function (item) { card.appendChild(item); });
       return card;
     }
 
-    // 苦手ゼロ。未学習の語が残っている行（五十音行）からランダムに 1 つ薦める。
-    var rows = K.index.kanaRows.filter(function (r) {
-      return K.index.words.some(function (w) {
-        return w.kanaRow === r && K.store.getStatus(w.id) === 'new';
-      });
-    });
-    if (!rows.length) {
+    var items = pickRecoItems(3);
+    if (!items.length) {
       card.appendChild(el('p', { text: '330 語すべてに学習の記録が付きました。クイズで力だめしをしてみてください。' }));
       card.appendChild(el('div', { class: 'deck-links' }, [
         el('a', { class: 'btn btn-primary', href: '#/quiz', text: '330 語からクイズ' }),
-        el('a', { class: 'btn', href: '#/passages', text: '文章を読む' })
+        el('a', { class: 'btn', href: '#/textbook', text: '文章を読む' })
       ]));
       return card;
     }
 
-    var row = rows[Math.floor(Math.random() * rows.length)];
-    var n = K.index.words.filter(function (w) {
-      return w.kanaRow === row && K.store.getStatus(w.id) === 'new';
-    }).length;
-
-    card.appendChild(el('p', {}, [
-      '未学習が ', el('b', { text: sum.newCount + ' 語' }), ' 残っています。',
-      'きょうは ', el('b', { text: row }), ' の未学習 ' + n + ' 語はいかがですか。'
+    card.appendChild(el('p', { class: 'muted small' }, [
+      '未学習が ', el('b', { text: sum.newCount + ' 語' }), ' 残っています。きょうのおすすめはこちら。'
     ]));
-    card.appendChild(el('div', { class: 'deck-links' }, [
-      el('a', {
-        class: 'btn btn-primary',
-        href: '#/study?row=' + encodeURIComponent(row) + '&status=new',
-        text: row + 'の未学習 ' + n + ' 語で学習'
-      }),
-      el('a', { class: 'btn', href: '#/study?status=new', text: '未学習からランダムに' })
-    ]));
+    items.forEach(function (item) { card.appendChild(item); });
     return card;
   }
 
@@ -216,28 +395,8 @@
     return card;
   }
 
-  function workCard() {
-    var card = el('div', { class: 'card' }, [
-      el('h2', { class: 'card-title' }, [
-        '作品から選ぶ',
-        el('span', { class: 'muted small', text: '（' + K.index.works.length + ' 件）' })
-      ])
-    ]);
-    var list = el('div', { class: 'tile-list' });
-    K.index.works.forEach(function (w) {
-      var np = K.index.passagesOfWork(w.id).length;
-      var nw = (K.index.wordsByWork.get(w.id) || []).length;
-      list.appendChild(el('a', { class: 'tile tile-work', href: '#/work/' + w.id }, [
-        el('span', { class: 'tile-title', text: w.title }),
-        el('span', { class: 'tile-sub muted', text: '文章 ' + np + '・語 ' + nw })
-      ]));
-    });
-    card.appendChild(list);
-    card.appendChild(el('p', { class: 'home-more' }, [
-      el('a', { href: '#/works', text: '作品一覧をすべて見る →' })
-    ]));
-    return card;
-  }
+  /* 「作品から選ぶ」の入口カードは廃止した。作品の入口は「教科書」
+     （#/textbook）の見出し行に統合してあり、二重にすると迷うため。 */
 
   function passageCard() {
     var card = el('div', { class: 'card' }, [
@@ -248,18 +407,18 @@
       el('p', { class: 'muted small', text: '原文と現代語訳を並べて読み、その文章に出てくる語だけで学習できます。' })
     ]);
 
-    // 学年でしぼった入口（文章一覧の ?grade= にそのまま渡す）
+    // 学年でしぼった入口（教科書の ?grade= にそのまま渡す）
     var grades = el('div', { class: 'tile-list' });
     K.index.grades.forEach(function (g) {
       var n = K.index.passages.filter(function (p) { return (p.grade || []).indexOf(g) >= 0; }).length;
-      grades.appendChild(el('a', { class: 'tile', href: '#/passages?grade=' + encodeURIComponent(g) }, [
+      grades.appendChild(el('a', { class: 'tile', href: '#/textbook?grade=' + encodeURIComponent(g) }, [
         el('span', { class: 'tile-title', text: g }),
         el('span', { class: 'tile-sub muted', text: n + ' 編' })
       ]));
     });
     card.appendChild(grades);
 
-    // 直近の 4 編だけ名前で見せる（全部は文章一覧へ）
+    // 直近の 4 編だけ名前で見せる（全部は教科書へ）
     var grid = el('div', { class: 'entry-grid' });
     K.index.passages.slice(0, 4).forEach(function (p) {
       var work = K.index.getWork(p.workId);
@@ -275,7 +434,7 @@
     });
     card.appendChild(grid);
     card.appendChild(el('p', { class: 'home-more' }, [
-      el('a', { href: '#/passages', text: '文章一覧をすべて見る →' })
+      el('a', { href: '#/textbook', text: '教科書の文章をすべて見る →' })
     ]));
     return card;
   }
@@ -297,7 +456,7 @@
       ]),
       el('div', { class: 'home-actions' }, [
         el('a', { class: 'btn btn-primary btn-lg', href: '#/study', text: '単語を学習する' }),
-        el('a', { class: 'btn btn-lg', href: '#/passages', text: '教科書の文章を読む' }),
+        el('a', { class: 'btn btn-lg', href: '#/textbook', text: '教科書の文章を読む' }),
         el('a', { class: 'btn btn-lg', href: '#/quiz', text: 'クイズ' })
       ]),
       el('p', { class: 'home-hero-sub muted' }, [
@@ -311,12 +470,11 @@
     section.appendChild(recommendCard());
     section.appendChild(levelCard());
     section.appendChild(posCard());
-    section.appendChild(workCard());
     section.appendChild(passageCard());
 
     section.appendChild(el('div', { class: 'home-foot' }, [
       el('a', { href: '#/help', text: '使い方' }),
-      el('a', { href: '#/help?to=data', text: 'データについて（一次校閲済・底本異同あり）' }),
+      el('a', { href: '#/help?to=data', text: 'データについて' }),
       el('a', { href: '#/help?to=history', text: '学習履歴について' })
     ]));
 
