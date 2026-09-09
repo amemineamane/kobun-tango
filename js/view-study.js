@@ -2,7 +2,7 @@
  * js/view-study.js — フラッシュカード（#/study）
  * ---------------------------------------------------------------------
  * 単語一覧と同じクエリでデッキを作る（#/study?level=S&pos=敬語）。
- * 表：見出し語 → タップ／Space で 裏：語義（＋例文があれば 1 つ）
+ * 表：見出し語 → タップ／Space で 裏：語義（＋用例があれば 1 つ）
  * 「覚えた／まだ」で localStorage に記録する（キーは id）。
  *
  * キーボード:
@@ -125,7 +125,8 @@
       }
 
       var w = deck[i];
-      var examples = K.index.examplesOf(w.id);
+      // 用例＝この語が出てくる段落（品詞分解の w が根拠）
+      var usage = C.usageFor(w.id);
 
       var card = el('div', {
         class: 'flashcard' + (flipped ? ' flipped' : ''),
@@ -153,11 +154,11 @@
             w.isPassageWord && w.note
               ? el('p', { class: 'muted small' + (/要確認/.test(w.note) ? ' needs-check' : ''), text: w.note })
               : null,
-            examples.length
+            usage
               ? el('div', { class: 'flashcard-example' }, [
-                el('h3', { class: 'small muted', text: '例文（' + (K.index.getWork(examples[0].workId) || {}).title + '）' }),
-                C.sentence(examples[0], { highlightWordId: w.id }),
-                el('p', { class: 'example-translation', text: examples[0].translation })
+                el('h3', { class: 'small muted', text: '用例（' + usage.label + '）' }),
+                usage.line,
+                el('p', { class: 'example-translation', text: usage.translation })
               ])
               : null,
             el('p', { class: 'flashcard-more' }, [

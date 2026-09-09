@@ -6,10 +6,18 @@
  *   ・見出し（かな・漢字・品詞・重要度）と語義
  *   ・学習状態の切り替え
  *   ・関連語カード（relations.js を双方向に解決したもの）
- *   ・この語を含む例文（examples.js の tokens に wordId があるもの）
- *   ・この語が出てくる文章（passages.js の vocab に wordId があるもの）
+ *   ・**この語が出てくる文章**（品詞分解の w ∪ passages.js の vocab）
  *   ・登場作品へのリンク
  *   ・五十音順の前後の語へのナビ
+ *
+ * 【「例文」枠を「この語が出てくる文章」に統合した経緯】
+ *   かつては「例文（data/examples.js）」と「この語が出てくる文章（vocab）」の
+ *   2 枠があり、同じ本文が両方に出て分かりにくかった。
+ *   教科書教材の原文全部に品詞分解（data/tokens/*.js）が付いたので、
+ *   **段落単位** の 1 枠にまとめ、examples.js は退避した（DESIGN.md 5.2）。
+ *   表示は 2 段構え。
+ *     1. 品詞分解の w が付いた段落 … 原文（タップ可）＋訳を出す
+ *     2. vocab にだけ載っている文章 … 文章名のチップだけ出す
  * ===================================================================== */
 (function () {
   'use strict';
@@ -140,29 +148,52 @@
     }
     section.appendChild(relCard);
 
-    /* --- 例文 ------------------------------------------------------ */
-    var examples = K.index.examplesOf(word.id);
-    var exCard = el('div', { class: 'card' }, [
+    /* --- この語が出てくる文章 ---------------------------------------- *
+     * 品詞分解のある段落は原文ごと出す（その語を強調し、タップで品詞分解）。
+     * 品詞分解がまだ無い文章は、文章名のチップだけを下にまとめる。
+     * ---------------------------------------------------------------- */
+    var hits = K.index.paragraphsOfWord(word.id);
+    var passages = K.index.passagesOfWord(word.id);
+    var shownPassageIds = new Set(hits.map(function (h) { return h.passage.id; }));
+    var chipOnly = passages.filter(function (p) { return !shownPassageIds.has(p.id); });
+
+    var hitCard = el('div', { class: 'card' }, [
       el('h2', { class: 'card-title' }, [
-        '例文', el('span', { class: 'muted small', text: '（' + examples.length + '）' })
+        'この語が出てくる文章',
+        el('span', { class: 'muted small', text: '（' + passages.length + '）' })
       ])
     ]);
-    if (examples.length === 0) {
-      exCard.appendChild(el('p', { class: 'muted', text: 'この語を含む例文はまだありません。data/examples.js の tokens に wordId: ' + word.id + ' を付けた語があれば、ここに自動で出ます。' }));
-    } else {
-      examples.forEach(function (ex) {
-        exCard.appendChild(C.exampleCard(ex, { highlightWordId: word.id }));
-      });
-    }
-    section.appendChild(exCard);
 
-    /* --- この語が出てくる文章（教材） -------------------------------- */
-    var passages = K.index.passagesOfWord(word.id);
-    if (passages.length) {
+    hits.forEach(function (h) {
+      var wk = K.index.getWork(h.passage.workId);
+      var entries = K.index.entriesOfPassage(h.passage.id);
+      // その文章での語義（vocab に載っていれば meaningIndex の語義）
+      var e = entries.filter(function (x) { return x.word && x.word.id === word.id; })[0];
+      hitCard.appendChild(el('article', { class: 'example-card' }, [
+        el('div', { class: 'example-head' }, [
+          el('a', {
+            class: 'example-work',
+            href: '#/passage/' + h.passage.id,
+            text: (wk ? wk.title + '「' : '「') + h.passage.title + '」'
+          }),
+          el('span', { class: 'example-section', text: '第 ' + (h.index + 1) + ' 段落' })
+        ]),
+        el('div', { class: 'example-body' }, [
+          C.passageTokenLine(entries, h.tokens, { highlightWordId: word.id }),
+          el('p', { class: 'example-translation', text: h.translation })
+        ]),
+        e ? el('p', {
+          class: 'example-note' + (/要確認/.test(e.note) ? ' needs-check' : ''),
+          text: 'この文章では「' + e.surface + '／' + e.meaning + '」' + (e.note ? '　' + e.note : '')
+        }) : null,
+        el('p', { class: 'example-hint muted', text: '原文の語をタップすると品詞分解が出ます。' })
+      ]));
+    });
+
+    if (chipOnly.length) {
       var plist = el('div', { class: 'chip-list' });
-      passages.forEach(function (p) {
+      chipOnly.forEach(function (p) {
         var wk = K.index.getWork(p.workId);
-        // この文章での語義（meaningIndex）と本文の形を出す
         var e = K.index.entriesOfPassage(p.id).filter(function (x) {
           return x.word && x.word.id === word.id;
         })[0];
@@ -171,13 +202,19 @@
           e ? el('span', { class: 'work-chip-genre muted', text: '本文：' + e.surface + '／' + e.meaning }) : null
         ]));
       });
-      section.appendChild(el('div', { class: 'card' }, [
-        el('h2', { class: 'card-title' }, [
-          'この語が出てくる文章', el('span', { class: 'muted small', text: '（' + passages.length + '）' })
-        ]),
-        plist
-      ]));
+      if (hits.length) {
+        hitCard.appendChild(el('p', { class: 'muted small', text: 'このほか、まだ品詞分解を付けていない文章に出てきます。' }));
+      }
+      hitCard.appendChild(plist);
     }
+
+    if (!passages.length) {
+      hitCard.appendChild(el('p', {
+        class: 'muted',
+        text: 'この語が出てくる文章はまだ登録されていません。data/tokens/<文章id>.js のトークンに w: ' + word.id + ' を付けるか、data/passages.js の vocab に足すと、ここに自動で出ます。'
+      }));
+    }
+    section.appendChild(hitCard);
 
     /* --- 登場作品 -------------------------------------------------- */
     var works = K.index.worksOf(word.id);

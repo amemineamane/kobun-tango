@@ -12,24 +12,31 @@
  *   [words]      id の重複 / 必須フィールドの欠落 / levelとlevelOrderの整合
  *   [works]      id の重複
  *   [relations]  from・to が実在する wordId か / 自己参照 / 重複 / type が空でないか
- *   [examples]   id 重複 / workId 実在 / tokens の wordId 実在 /
- *                tokens.surface の連結が text と一致するか / 必須フィールド
  *   [workWords]  workId・wordId 実在 / 組み合わせ重複
- *   [passages]   id 重複 / workId・wordId・exampleIds 実在 /
+ *   [passages]   id 重複 / workId・wordId 実在 /
  *                paragraphs の text・translation /
  *                **vocab[].surface が paragraphs[].text に実際に出現するか** /
  *                meaningIndex が meanings の範囲内か /
  *                wordId 無しの vocab に meaning があるか /
  *                同じ wordId を 1 文章に 2 回書いていないか /
  *                wordId ありの surface が見出し語・漢字表記と字面で繋がるか（警告）
+ *   [tokens]     品詞分解（data/tokens/*.js）。最後に tools/validate-tokens.mjs を
+ *                子プロセスとして呼び、その出力をそのまま流す。
+ *                品詞分解は 1 文章 1 ファイルで分担して書き足していくので、
+ *                検査も独立して回せるよう別ファイルのままにしてある
+ *                （品詞分解だけ見たいときは node tools/validate-tokens.mjs）。
+ *                どちらかにエラーがあれば、このコマンドは異常終了する。
  * ===================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DATA_FILES = ['words.js', 'works.js', 'relations.js', 'examples.js', 'workWords.js', 'passages.js'];
+// data/examples.js は役目を終えて docs/legacy/ に退避した（DESIGN.md 5.2 の経緯）。
+// 教材の品詞分解は data/tokens/*.js が持ち、tools/validate-tokens.mjs が見る。
+const DATA_FILES = ['words.js', 'works.js', 'relations.js', 'workWords.js', 'passages.js'];
 
 /* --- data/*.js を Node 上で評価して window.KOBUN を組み立てる --------- */
 const sandbox = { window: {}, console };
@@ -110,36 +117,12 @@ relations.forEach((r, i) => {
   if (!r.note) warn(at, 'note が空です（あとで読み返すときに困ります）');
 });
 
-/* --- examples ------------------------------------------------------- */
-const examples = K.examples || [];
-const exampleIds = new Set();
-examples.forEach((ex, i) => {
-  const at = `examples[${i}] (id=${ex.id})`;
-  if (!ex.id) err(at, 'id がありません');
-  if (exampleIds.has(ex.id)) err(at, 'id が重複しています');
-  exampleIds.add(ex.id);
-  if (!workById.has(ex.workId)) err(at, `workId="${ex.workId}" が works に存在しません`);
-  if (!ex.text) err(at, 'text が空です');
-  if (!ex.translation) warn(at, 'translation が空です');
-  if (!Array.isArray(ex.tokens) || ex.tokens.length === 0) {
-    err(at, 'tokens が空です');
-    return;
-  }
-  const joined = ex.tokens.map((t) => t.surface ?? '').join('');
-  if (joined !== ex.text) {
-    err(at, `tokens.surface の連結が text と一致しません\n         text  : ${ex.text}\n         tokens: ${joined}`);
-  }
-  ex.tokens.forEach((t, j) => {
-    const tAt = `${at}.tokens[${j}] ("${t.surface}")`;
-    if (!t.surface) err(tAt, 'surface が空です');
-    if (!t.base) warn(tAt, 'base が空です');
-    if (!t.pos) err(tAt, 'pos が空です');
-    if (t.wordId != null && !wordById.has(t.wordId)) {
-      err(tAt, `wordId=${t.wordId} が words に存在しません`);
-    }
-    if (t.pos !== '記号' && !t.meaning) warn(tAt, 'meaning が空です');
-  });
-});
+/* --- examples ------------------------------------------------------- *
+ * data/examples.js（例文＋品詞分解）はここで検査していたが、
+ * 教材の原文そのものに品詞分解が付いた（data/tokens/*.js）ので役目を終え、
+ * docs/legacy/examples.js に退避した。検査は tools/validate-tokens.mjs が引き継ぐ。
+ * 経緯は DESIGN.md「5.2 例文を足すには」参照。
+ * ------------------------------------------------------------------- */
 
 /* --- workWords ------------------------------------------------------ */
 const workWords = K.workWords || [];
@@ -195,10 +178,6 @@ passages.forEach((p, i) => {
   });
   const fullText = p.paragraphs.map((par) => par.text || '').join('\n');
 
-  for (const exId of p.exampleIds || []) {
-    if (!exampleIds.has(exId)) err(at, `exampleIds の "${exId}" が examples に存在しません`);
-  }
-
   if (!Array.isArray(p.vocab) || p.vocab.length === 0) {
     warn(at, 'vocab が空です（学習デッキが作れません）');
     return;
@@ -246,7 +225,6 @@ passages.forEach((p, i) => {
 
 /* --- 集計 ----------------------------------------------------------- */
 const taggedWordIds = new Set();
-for (const ex of examples) for (const t of ex.tokens || []) if (t.wordId != null) taggedWordIds.add(t.wordId);
 for (const ww of workWords) taggedWordIds.add(ww.wordId);
 for (const p of passages) for (const v of p.vocab || []) if (v.wordId != null) taggedWordIds.add(v.wordId);
 const passageVocabTotal = passages.reduce((n, p) => n + (p.vocab?.length || 0), 0);
@@ -260,11 +238,10 @@ console.log('=== 古文単語帳アプリ データ検証 ===');
 console.log(`  単語         : ${words.length} 語`);
 console.log(`  作品         : ${works.length} 件`);
 console.log(`  関連語リンク : ${relations.length} 本（延べ ${relatedWordIds.size} 語がリンクを持つ）`);
-console.log(`  例文         : ${examples.length} 文 / トークン計 ${examples.reduce((n, e) => n + (e.tokens?.length || 0), 0)}`);
 console.log(`  作品タグ     : ${workWords.length} 件`);
 console.log(`  文章（教材） : ${passages.length} 編 / 段落計 ${passageParaTotal}`);
 console.log(`  文章の語     : ${passageVocabTotal} 件（うち 330 語に無い文章固有語 ${passageExtraTotal} 件）`);
-console.log(`  作品に紐づく語: ${taggedWordIds.size} 語（例文 tokens ∪ workWords ∪ passages.vocab）`);
+console.log(`  作品に紐づく語: ${taggedWordIds.size} 語（workWords ∪ passages.vocab。品詞分解の w は validate-tokens.mjs 側で数える）`);
 console.log('');
 
 for (const w of warnings) console.log(w);
@@ -273,8 +250,22 @@ for (const e of errors) console.log(e);
 
 if (errors.length === 0) {
   console.log(`OK: エラー 0 件（警告 ${warnings.length} 件）`);
-  process.exit(0);
 } else {
   console.log(`NG: エラー ${errors.length} 件 / 警告 ${warnings.length} 件`);
-  process.exit(1);
 }
+
+/* --- 品詞分解の検査を続けて走らせる --------------------------------- *
+ * 別ファイル（tools/validate-tokens.mjs）のまま呼ぶ。
+ * 出力は stdio: 'inherit' でそのまま画面に流れる。
+ * ------------------------------------------------------------------- */
+console.log('');
+const tokenValidator = path.join(ROOT, 'tools', 'validate-tokens.mjs');
+let tokenFailed = false;
+if (fs.existsSync(tokenValidator)) {
+  const r = spawnSync(process.execPath, [tokenValidator], { stdio: 'inherit' });
+  tokenFailed = r.status !== 0;
+} else {
+  console.log('（tools/validate-tokens.mjs が無いので品詞分解の検査は飛ばしました）');
+}
+
+process.exit(errors.length === 0 && !tokenFailed ? 0 : 1);

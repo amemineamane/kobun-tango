@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260910c';
+const CACHE_VERSION = '20260910e';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
@@ -47,9 +47,32 @@ const PRECACHE = [
   './data/words.js',
   './data/works.js',
   './data/relations.js',
-  './data/examples.js',
   './data/workWords.js',
   './data/passages.js',
+  /* 品詞分解（1 文章 = 1 ファイル）。この 2 行のあいだは
+     `node tools/sync-tokens.mjs` が index.html と一緒に自動生成する。 */
+  /* tokens:begin */
+  './data/tokens/genji-kiritsubo.js',
+  './data/tokens/heike-gion.js',
+  './data/tokens/hojoki-yukukawa.js',
+  './data/tokens/hosomichi-tabidachi.js',
+  './data/tokens/ise-akutagawa.js',
+  './data/tokens/ise-azuma.js',
+  './data/tokens/ise-tsutsuizutsu.js',
+  './data/tokens/kokin-kanajo.js',
+  './data/tokens/makura-chunagon.js',
+  './data/tokens/makura-haru.js',
+  './data/tokens/makura-utsukushiki.js',
+  './data/tokens/makura-yuki.js',
+  './data/tokens/sarashina-kadode.js',
+  './data/tokens/taketori-oitachi.js',
+  './data/tokens/tosa-kadode.js',
+  './data/tokens/tsurezure-jo.js',
+  './data/tokens/tsurezure-koumyo.js',
+  './data/tokens/tsurezure-ninnaji.js',
+  './data/tokens/tsurezure-yumi.js',
+  './data/tokens/ujishui-chigo.js',
+  /* tokens:end */
   './js/util.js',
   './js/store.js',
   './js/data-index.js',

@@ -33,7 +33,7 @@
       stat.textContent =
         '単語 ' + K.words.length + ' 語　/　作品 ' + (K.works || []).length + ' 件　/　' +
         '文章 ' + (K.passages || []).length + ' 編　/　' +
-        '例文 ' + (K.examples || []).length + ' 文　/　関連語 ' + (K.relations || []).length + ' 本';
+        '品詞分解 ' + K.index.tokensByPassage.size + ' 編　/　関連語 ' + (K.relations || []).length + ' 本';
     }
 
     /* 共通フッタの制作者行。index.html には直書きせず、data/site.js の値から描く

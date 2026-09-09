@@ -171,7 +171,7 @@
     }).filter(function (c) { return c.total > 0 && c.unlearned > 0; });
   }
 
-  /** 作品：その作品の収録語（例文 ∪ workWords ∪ passages.vocab、330 語のみ）に未学習が残るもの */
+  /** 作品：その作品の収録語（passages.vocab ∪ 品詞分解の w ∪ workWords、330 語のみ）に未学習が残るもの */
   function workCandidates() {
     return K.index.works.map(function (w) {
       var list = K.index.wordsByWork.get(w.id) || [];

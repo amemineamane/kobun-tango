@@ -8,14 +8,16 @@
  *   C.deckLabel(query)     クエリを 1 行の日本語にする
  *   C.statusBadge(id)      学習状態のバッジ
  *   C.statusButtons(id)    「未学習／苦手／覚えた」の切り替えボタン
- *   C.sentence(example)    原文をトークンに割ってタップできる形で描く
- *   C.exampleCard(example, opts)  例文カード（原文＋訳＋品詞分解）
  *   C.tokenPopup(token)    品詞分解のポップアップを出す
+ *   C.usageFor(wordId)     その語の用例（品詞分解のある段落）を 1 つ返す
  *   C.filterBar(spec)      一覧・学習・クイズで共通のフィルタ UI
  *   C.applyFilters(words, query)  フィルタ条件で単語を絞る（共通ロジック）
  *   C.deckSource(query)    デッキの母集団を決める（?passage= があれば文章の語）
  *   C.wordHref(word)       単語のリンク先（文章固有語は文章ページへ）
- *   C.passageLine(passage, text)  文章の原文 1 段落を、重要語つきで描く
+ *   C.passageLine(entries, text)  文章の原文 1 段落を、重要語つきで描く（品詞分解が無いとき）
+ *   C.normalizeToken(t)    data/tokens の短いキー（s/b/p/c/f/m/w/n）を展開する
+ *   C.passageTokenLine(entries, tokens, opts)  原文 1 段落を品詞分解から描く
+ *   C.tokenTableOf(tokens) 品詞分解の一覧表（data/tokens のトークン配列から）
  * ===================================================================== */
 (function () {
   'use strict';
@@ -223,41 +225,14 @@
     popupEl.style.top = top + 'px';
   };
 
-  /* ---------------------------------------------------------------
-   * 原文（トークン列）
-   * ------------------------------------------------------------- */
   /**
-   * @param example 例文
-   * @param opts    { highlightWordId: number }  その語を強調表示する
+   * 品詞分解の一覧表（文章ページの「品詞分解を表で見る」で開く）。
+   * 受け取るのは「展開済みトークン」（surface/base/pos/detail/meaning/note/wordId）の配列。
+   * data/tokens の短いキーのままの配列は C.normalizeToken を通してから渡すこと。
    */
-  C.sentence = function (example, opts) {
-    opts = opts || {};
-    var wrap = el('p', { class: 'sentence', lang: 'ja' });
-    (example.tokens || []).forEach(function (t) {
-      if (t.pos === '記号') {
-        wrap.appendChild(el('span', { class: 'tok tok-punct', text: t.surface }));
-        return;
-      }
-      var cls = 'tok';
-      if (t.wordId != null) cls += ' tok-word';
-      if (opts.highlightWordId != null && t.wordId === opts.highlightWordId) cls += ' tok-hl';
-      if (t.note && /要確認/.test(t.note)) cls += ' tok-check';
-      var span = el('button', {
-        type: 'button',
-        class: cls,
-        text: t.surface,
-        title: (t.pos || '') + (t.detail ? '・' + t.detail : ''),
-        onClick: function (e) { e.stopPropagation(); C.tokenPopup(t, span); }
-      });
-      wrap.appendChild(span);
-    });
-    return wrap;
-  };
-
-  /** 品詞分解の一覧表（例文カードの「品詞分解を見る」で開く） */
-  C.tokenTable = function (example) {
+  C.tokenTableOf = function (tokens) {
     var tbody = el('tbody');
-    (example.tokens || []).forEach(function (t) {
+    (tokens || []).forEach(function (t) {
       if (t.pos === '記号') return;
       var word = t.wordId != null ? K.index.getWord(t.wordId) : null;
       tbody.appendChild(el('tr', {}, [
@@ -289,39 +264,6 @@
         ]),
         tbody
       ])
-    ]);
-  };
-
-  /**
-   * 例文カード。
-   * @param opts { highlightWordId, showWork(boolean), open(boolean) }
-   */
-  C.exampleCard = function (example, opts) {
-    opts = opts || {};
-    var work = K.index.getWork(example.workId);
-    var body = el('div', { class: 'example-body' }, [
-      C.sentence(example, { highlightWordId: opts.highlightWordId }),
-      example.reading ? el('p', { class: 'example-reading', text: example.reading }) : null,
-      el('p', { class: 'example-translation', text: example.translation || '' }),
-      example.note ? el('p', { class: 'example-note', text: example.note }) : null
-    ]);
-
-    var details = el('details', { class: 'token-details' }, [
-      el('summary', { text: '品詞分解の一覧を見る' }),
-      C.tokenTable(example)
-    ]);
-    if (opts.open) details.open = true;
-
-    return el('article', { class: 'example-card' }, [
-      el('div', { class: 'example-head' }, [
-        opts.showWork !== false && work
-          ? el('a', { class: 'example-work', href: '#/work/' + work.id, text: work.title })
-          : null,
-        el('span', { class: 'example-section', text: example.section || '' })
-      ]),
-      body,
-      el('p', { class: 'example-hint muted', text: '原文の語をタップすると品詞分解が出ます。' }),
-      details
     ]);
   };
 
@@ -395,6 +337,125 @@
     }
     flush();
     return wrap;
+  };
+
+  /* ---------------------------------------------------------------
+   * 文章（passages）の原文 ― 品詞分解つき
+   * -------------------------------------------------------------
+   * data/tokens/<passageId>.js がある文章は、原文を「文字列の部分一致」では
+   * なく **トークン列** から描く。こうすると
+   *   ・原文のどの語をタップしても品詞・活用・語義が出る
+   *   ・重要語のハイライトが語の途中で切れない
+   *   ・「品詞分解を表で見る」を段落ごとに出せる
+   * が同時に成り立つ。品詞分解がまだ無い文章は C.passageLine に落ちる。
+   * ------------------------------------------------------------- */
+
+  /** data/tokens の短いキーを、tokenPopup / tokenTable が読める形に展開する */
+  C.normalizeToken = function (t) {
+    var detail = [t.c, t.f].filter(Boolean).join('・');
+    return {
+      surface: t.s,
+      base: t.b || t.s,
+      pos: t.p || '',
+      detail: detail,
+      meaning: t.m || '',
+      note: t.n || '',
+      wordId: (t.w == null ? null : t.w)
+    };
+  };
+
+  /**
+   * vocab のハイライトをトークンに重ねるための対応表を作る。
+   * 段落テキストの文字位置ごとに「そこを覆っている vocab エントリ」を置く。
+   * 長い surface から塗るので、「たまへ」と「のたまへ」なら長いほうが残る。
+   */
+  function paintVocab(entries, text) {
+    var paint = new Array(text.length).fill(null);
+    buildMatcher(entries || []).forEach(function (e) {
+      if (!e.surface) return;
+      var from = 0;
+      for (;;) {
+        var idx = text.indexOf(e.surface, from);
+        if (idx < 0) break;
+        for (var k = idx; k < idx + e.surface.length; k++) {
+          if (!paint[k]) paint[k] = e; // 先に塗った（＝長い）語を残す
+        }
+        from = idx + e.surface.length;
+      }
+    });
+    return paint;
+  }
+
+  /**
+   * 文章の 1 段落を、品詞分解のトークン列から描く。
+   * @param entries K.index.entriesOfPassage(id) の戻り（ハイライト用。空でよい）
+   * @param tokens  data/tokens のトークン配列（この段落ぶん）
+   * @param opts    { highlightWordId } その語を強調する
+   */
+  C.passageTokenLine = function (entries, tokens, opts) {
+    opts = opts || {};
+    var wrap = el('p', { class: 'passage-text', lang: 'ja' });
+    var text = (tokens || []).map(function (t) { return (t && t.s) || ''; }).join('');
+    var paint = paintVocab(entries, text);
+    var at = 0;
+
+    (tokens || []).forEach(function (t) {
+      var s = (t && t.s) || '';
+      var start = at;
+      at += s.length;
+      if (!s) return;
+      // 句読点・鉤括弧はタップさせない（素の文字として置く）
+      if (t.p === '記号') { wrap.appendChild(document.createTextNode(s)); return; }
+
+      // この語にかかっている vocab（語の先頭の文字で代表させる）
+      var hit = paint[start] || null;
+
+      var tk = C.normalizeToken(t);
+      if (hit) {
+        if (tk.wordId == null && hit.word) tk.wordId = hit.word.id;
+        if (!tk.meaning) tk.meaning = hit.meaning;
+        if (hit.note) tk.note = tk.note ? tk.note + '　' + hit.note : hit.note;
+      }
+
+      // 実線＝330 語（w があるか、vocab の 330 語にかかっている）
+      // 点線＝この文章だけの語　／ 下線なし＝それ以外（タップはできる）
+      var cls = 'pv pv-tok';
+      if (tk.wordId != null) cls += ' pv-word';
+      else if (hit && hit.passageWord) cls += ' pv-extra';
+      if (opts.highlightWordId != null && tk.wordId === opts.highlightWordId) cls += ' pv-hl';
+      if (/要確認/.test(tk.note)) cls += ' pv-check';
+
+      var btn = el('button', {
+        type: 'button',
+        class: cls,
+        text: s,
+        title: (tk.pos || '') + (tk.detail ? '・' + tk.detail : '') + (tk.meaning ? '：' + tk.meaning : ''),
+        onClick: function (ev) { ev.stopPropagation(); C.tokenPopup(tk, btn); }
+      });
+      wrap.appendChild(btn);
+    });
+    return wrap;
+  };
+
+  /**
+   * その語の「用例」を 1 つ返す（学習カードの裏・クイズの答え合わせで使う）。
+   * 根拠は品詞分解（data/tokens/*.js）の w が付いた段落。まだ品詞分解の無い
+   * 文章にしか出てこない語では null になり、呼び出し側は用例を出さない。
+   * @returns {{label: string, line: Element, translation: string}|null}
+   */
+  C.usageFor = function (wordId) {
+    var hits = K.index.paragraphsOfWord(wordId);
+    if (hits.length) {
+      var h = hits[0];
+      var wk = K.index.getWork(h.passage.workId);
+      return {
+        label: (wk ? wk.title : '') + '「' + h.passage.title + '」',
+        line: C.passageTokenLine(
+          K.index.entriesOfPassage(h.passage.id), h.tokens, { highlightWordId: wordId }),
+        translation: h.translation
+      };
+    }
+    return null;
   };
 
   /* ---------------------------------------------------------------

@@ -12,9 +12,18 @@
  *
  * 文章詳細でできること:
  *   ・原文と現代語訳を段落ごとに対応させて読む（上下／横並び、訳の表示切替）
- *   ・原文中の重要語をタップして語義を見る（C.passageLine → C.tokenPopup）
+ *   ・**原文のどの語をタップしても品詞・活用・語義が出る**
+ *     （data/tokens/<id>.js → C.passageTokenLine → C.tokenPopup）
+ *   ・段落ごとに「品詞分解を表で見る」を開く（C.tokenTableOf）
  *   ・この文章の単語一覧（330 語は詳細へリンク、文章固有語はその場で語義）
  *   ・「この文章の単語で学習／クイズ」→ #/study?passage=<id> / #/quiz?passage=<id>
+ *
+ * 【原文の描き方は 2 通り】
+ *   品詞分解あり（data/tokens/<passageId>.js がある）… C.passageTokenLine。
+ *     全語タップ可。vocab のハイライトはトークンの上に重ねる。
+ *   品詞分解なし … C.passageLine（vocab の surface を文字列一致で拾う従来の描画）。
+ *   かつて別枠にあった「品詞分解つき例文（data/examples.js）」は、原文そのものが
+ *   品詞分解になったので廃止した（同じ本文の枠が 2 つあると分かりにくいため）。
  *
  * 表示の設定（訳の表示・レイアウト）は store の prefs に覚えさせる。
  * ===================================================================== */
@@ -62,14 +71,14 @@
    * 教科書（#/textbook）
    * 作品ごとに文章（教材）をまとめて並べる。作品の見出しは作品ページへの
    * リンクを兼ねるので、「作品から入る」「文章から入る」が 1 画面で済む。
-   * 文章がまだ無い作品（例文・作品タグだけの作品）も、収録語の数を添えて出す。
+   * 文章がまだ無い作品（作品タグだけの作品）も、収録語の数を添えて出す。
    * ------------------------------------------------------------- */
   function renderTextbook(params, query, container) {
     var state = Object.assign({}, query);
 
     var section = el('section', { class: 'view view-textbook' }, [
       el('h1', { class: 'view-title', text: '教科書' }),
-      el('p', { class: 'view-lead', text: '教科書に定番として載る古典教材を、作品ごとにまとめました。文章を選ぶと原文と現代語訳が読め、「その文章に出てくる単語だけ」で学習・クイズができます。作品名からは、その作品の収録語や例文をまとめた作品ページへ進めます。' })
+      el('p', { class: 'view-lead', text: '教科書に定番として載る古典教材を、作品ごとにまとめました。文章を選ぶと原文と現代語訳が読め、「その文章に出てくる単語だけ」で学習・クイズができます。作品名からは、その作品の書誌や収録語をまとめた作品ページへ進めます。' })
     ]);
 
     var listWrap = el('div');
@@ -209,12 +218,26 @@
     var controls = el('div', { class: 'passage-controls' });
     var paras = el('div');
 
+    // 品詞分解（data/tokens/<id>.js）。無ければ null で、従来の描画に落ちる
+    var tokenParas = K.index.tokensOf(passage.id);
+
     function drawBody() {
       U.clear(paras);
       paras.className = 'passage-body layout-' + layout + (showTranslation ? '' : ' no-translation');
-      passage.paragraphs.forEach(function (p) {
+      passage.paragraphs.forEach(function (p, i) {
+        var toks = tokenParas ? tokenParas[i] : null;
+        var orig = el('div', { class: 'passage-orig' }, [
+          toks ? C.passageTokenLine(entries, toks) : C.passageLine(entries, p.text)
+        ]);
+        // 段落ごとの「品詞分解を表で見る」。原文タップと同じ内容を一覧で読める
+        if (toks) {
+          orig.appendChild(el('details', { class: 'token-details' }, [
+            el('summary', { text: '品詞分解を表で見る' }),
+            C.tokenTableOf(toks.map(C.normalizeToken))
+          ]));
+        }
         paras.appendChild(el('div', { class: 'passage-para' }, [
-          el('div', { class: 'passage-orig' }, [C.passageLine(entries, p.text)]),
+          orig,
           showTranslation
             ? el('div', { class: 'passage-trans' }, [el('p', { text: p.translation || '' })])
             : null
@@ -246,8 +269,13 @@
       }));
     }
 
-    /* 原文の下線は 2 種類あり、説明が無いと区別できないので凡例を出す */
+    /* 原文の下線は 2 種類あり、説明が無いと区別できないので凡例を出す。
+       品詞分解がある文章は「下線の無い語もタップできる」ことを先に言う。 */
     var legend = el('div', { class: 'passage-legend' }, [
+      tokenParas ? el('span', { class: 'legend-item' }, [
+        el('span', { class: 'legend-sample is-tok', text: 'どの語も' }),
+        el('span', { text: 'タップすると品詞・活用・語義が出ます' })
+      ]) : null,
       el('span', { class: 'legend-item' }, [
         el('span', { class: 'legend-sample is-word', text: '実線の語' }),
         el('span', { text: '重要 330 語（タップで語義・詳細ページへ）' })
@@ -318,21 +346,11 @@
       deck.length ? listWrap : el('p', { class: 'muted', text: 'まだ語が登録されていません。data/passages.js の vocab に足してください。' })
     ]));
 
-    /* --- 品詞分解つき例文 ------------------------------------------ */
-    var exs = (passage.exampleIds || [])
-      .map(function (id) { return K.index.exampleById.get(id); })
-      .filter(Boolean);
-    if (exs.length) {
-      var exCard = el('div', { class: 'card' }, [
-        el('h2', { class: 'card-title' }, [
-          '品詞分解つきで読む',
-          el('span', { class: 'muted small', text: '（' + exs.length + '）' })
-        ]),
-        el('p', { class: 'muted small', text: 'この文章のうち、data/examples.js に品詞分解がある箇所です。' })
-      ]);
-      exs.forEach(function (ex) { exCard.appendChild(C.exampleCard(ex, { showWork: false })); });
-      section.appendChild(exCard);
-    }
+    /* かつてここに「品詞分解つき例文」の枠があった。
+       同じ本文が「原文と現代語訳」と「例文」の 2 か所に出て分かりにくかったので、
+       原文そのものを品詞分解から描くようにして枠ごと廃止した。
+       品詞分解がまだ無い文章は、原文が従来どおり文字列で描かれるだけで、
+       ここに何も足さない（DESIGN.md「品詞分解を足すには」参照）。 */
 
     /* --- 共有 ------------------------------------------------------ */
     section.appendChild(C.shareButtons({

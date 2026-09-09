@@ -15,7 +15,7 @@
 | Vanilla JS / 依存ゼロ | npm も CDN も要らない。5 年後に開いても動く |
 | ハッシュルーティング | `#/word/39` で直リンクできて、かつ `file://` でも動く |
 | 学習履歴のキーは `id` | `kana` は重複しうる（`ながむ`〔眺む〕/〔詠む〕、`ゐる`〔居る〕/〔率る〕） |
-| 教材の文章は `data/passages.js` に別置き | 例文（文単位・全トークン品詞分解）と、教材（数段落・訳つき）は量も用途も違う。混ぜると examples.js が肥大する |
+| 教材の文章は `data/passages.js`、その品詞分解は `data/tokens/<文章id>.js` | 原文・訳と、語ごとの品詞分解では 1 編あたりの分量が桁違い。分けておけば品詞分解を 1 編ずつ足せて、複数人で同時に書いても衝突しない |
 | UTF-8（BOM なし）／`.bat` を作らない | Windows の cp932 で日本語入り `.bat` が壊れる問題を避ける。起動用は `start.ps1` |
 
 ---
@@ -26,18 +26,18 @@
 erDiagram
     WORD ||--o{ RELATION_FROM : "from"
     WORD ||--o{ RELATION_TO   : "to"
-    WORD ||--o{ TOKEN         : "wordId（任意）"
     WORD ||--o{ WORKWORD      : "wordId"
-    WORK ||--o{ EXAMPLE       : "workId"
     WORK ||--o{ WORKWORD      : "workId"
-    EXAMPLE ||--|{ TOKEN      : "tokens[]"
     WORD ||--o{ PROGRESS      : "id（localStorage）"
     WORK ||--o{ PASSAGE       : "workId"
     PASSAGE ||--|{ PARAGRAPH  : "paragraphs[]"
     PASSAGE ||--|{ PVOCAB     : "vocab[]"
     WORD ||--o{ PVOCAB        : "wordId（任意）"
-    PASSAGE ||--o{ EXAMPLE    : "exampleIds[]（任意）"
     PVOCAB ||--o| PROGRESS    : "p:passageId:index"
+    PASSAGE ||--o| TOKENS     : "data/tokens/<passageId>.js"
+    TOKENS ||--|{ PTOKEN      : "段落ごとの配列"
+    PARAGRAPH ||--|{ PTOKEN   : "s を連結すると text"
+    WORD ||--o{ PTOKEN        : "w（任意）"
 
     WORD {
         number id PK "1..330 固定"
@@ -66,24 +66,6 @@ erDiagram
         string type "類義/対義/派生/同音注意/混同注意/段階"
         string note
     }
-    EXAMPLE {
-        string id PK "makura-1 など"
-        string workId FK
-        string section "段・巻"
-        string text "原文"
-        string reading "読みがな"
-        string translation
-        array  tokens
-    }
-    TOKEN {
-        string surface "原文の形"
-        string base "辞書形"
-        string pos
-        string detail "活用の種類・活用形"
-        string meaning
-        number wordId FK "辞書330語にあれば"
-        string note "要確認 など"
-    }
     WORKWORD {
         string workId FK
         number wordId FK
@@ -97,7 +79,6 @@ erDiagram
         array  grade "中2 / 高校 など"
         array  paragraphs
         array  vocab
-        array  exampleIds FK
         string note "要確認 など"
     }
     PARAGRAPH {
@@ -113,6 +94,20 @@ erDiagram
         string base
         string note
     }
+    TOKENS {
+        string passageId PK "window.KOBUN.tokens のキー"
+        array  paragraphs "段落ごとのトークン配列"
+    }
+    PTOKEN {
+        string s "表層形（原文の字面）"
+        string b "基本形"
+        string p "品詞（統一ラベル 19 種）"
+        string c "活用の種類（ハ行四段 / ク活用 / ラ変型 …）"
+        string f "活用形（未然〜命令の 6 つ）"
+        string m "この文脈での語義・用法"
+        number w FK "330 語にあれば wordId"
+        string n "注記（音便・係り結び・要確認 など）"
+    }
     PROGRESS {
         string status "new/weak/known"
         number seen
@@ -120,6 +115,11 @@ erDiagram
         number wrong
     }
 ```
+
+**PTOKEN のキーが 1 文字なのは、全 20 編 65 段落ぶんを書くとファイルが大きくなるため。**
+意味は `docs/tokens-guide.md` にまとめてあり、画面に渡す前に
+`C.normalizeToken()` が `surface/base/pos/detail/meaning/wordId/note` に展開する
+（ポップアップ `C.tokenPopup` と一覧表 `C.tokenTableOf` はこの展開後の形を読む）。
 
 ### ファイルと責務
 
@@ -129,21 +129,22 @@ erDiagram
 | `data/words.js` | 単語 330 語 | 素材 `kobun_words.json` を **無変更** で移し替え |
 | `data/works.js` | 作品 6 件 | 新規（アプリ側の追加データ） |
 | `data/relations.js` | 単語間リンク 57 本 | 新規 |
-| `data/examples.js` | 例文 10 文＋品詞分解 308 トークン | 新規 |
 | `data/workWords.js` | 作品タグ 26 件 | 新規 |
 | `data/passages.js` | 教材 20 編（段落 65・vocab 250 件） | 新規 |
+| `data/tokens/<文章id>.js` | 教材の全文品詞分解（1 文章 = 1 ファイル） | 新規。仕様は `docs/tokens-guide.md` |
 
 `words.js` を素材そのままに保つことで、**素材が更新されたら再生成して差し替えるだけ**で済む。
 アプリ独自の情報は必ず別ファイルに置き、`id` で紐づける。
 
 ### 設計の要点
 
-**1. 例文はトークン列で持つ**
+**1. 原文はトークン列で持つ**
 
-例文を「原文の文字列＋現代語訳」だけで持つと、単語と例文を結ぶのに文字列検索が必要になり、
+原文を「文字列＋現代語訳」だけで持つと、単語と本文を結ぶのに文字列検索が必要になり、
 活用形（`うつくしう` ≠ `うつくし`）と同音異義語（`ながむ` が 2 語）で必ず破綻する。
-トークン単位で `wordId` を持たせれば、リンクは id で確定する。
-`tokens` はそのまま品詞分解の表示データにもなり、原文タップのポップアップにも使える。
+トークン単位で `w`（wordId）を持たせれば、リンクは id で確定する。
+トークンはそのまま品詞分解の表示データにもなり、原文タップのポップアップ・
+段落ごとの一覧表・単語詳細の「この語が出てくる文章」がすべて同じ 1 つのデータから出る。
 
 **2. 関連語は片方向で書く**
 
@@ -153,17 +154,21 @@ erDiagram
 
 **3. 作品の収録語は「和集合」**
 
-作品ページの収録語 ＝ **例文 tokens の wordId** ∪ **workWords の手動タグ**
-∪ **passages の vocab の wordId**。
-例文や文章を書けば自動的に語が紐づき、まだ無い語も手で足せる。
+作品ページの収録語 ＝ **passages の vocab の wordId** ∪ **品詞分解の `w`**
+∪ **workWords の手動タグ**。
+文章や品詞分解を書けば自動的に語が紐づき、まだ無い語も手で足せる。
 あとから重複しても、和集合なので二重に出ない。
 
-**3-b. 教材（文章）は品詞分解しない**
+**3-b. 教材の品詞分解はファイルを分ける**
 
-`examples.js` は 1 文を全トークンに割るので、10 文で 308 トークンある。
-教材 20 編（65 段落）を同じ密度で持つと数千トークンになり、書くのも直すのも現実的でない。
-そこで `passages.js` は **原文と訳を段落単位で持ち、覚える語だけを `vocab` に列挙**する。
-原文中のハイライトは `vocab[].surface` の **文字列一致**で行う（`js/components.js` の `passageLine`）。
+教材 20 編（65 段落）を全文品詞分解すると 2500 トークンを超える。
+1 ファイルに詰めると数千行になって編集しづらく、複数人で同時に書くと衝突する。
+そこで **1 文章 = 1 ファイル**（`data/tokens/<文章id>.js`）に分け、
+`window.KOBUN.tokens[passageId]` に段落ごとの配列として載せる。
+`index.html` と `sw.js` の読み込みは `tools/sync-tokens.mjs` が
+ディレクトリの実際の中身から作り直すので、書き忘れも 404 も起きない。
+品詞分解がまだ無い文章は、原文中のハイライトが `vocab[].surface` の
+**文字列一致**（`js/components.js` の `passageLine`）に落ちるだけで、そのまま動く。
 
 文字列一致で困るのは 2 点だけで、どちらも対処済み:
 
@@ -219,7 +224,7 @@ flowchart LR
     HP -->|重要度の凡例| W
     W -->|行をタップ| D
     D -->|関連語カード| D
-    D -->|例文のトークン| D
+    D -->|出てくる段落のトークン| D
     D -->|前後の語| D
     D -->|登場作品| K
     D -->|出てくる文章| P
@@ -297,11 +302,11 @@ flowchart LR
 | **ホーム** | アプリの説明と 3 つの主要導線（学習／教科書の文章／クイズ）。330 語の進捗（覚えた・苦手・未学習）と「続きから」（最後に学習したデッキ・最後に読んだ文章）。履歴ゼロなら「まず S ランク 114 語から」。おすすめ（苦手が溜まっていれば復習、なければ未学習の文章・作品・重要度/品詞を日替わりで）。重要度・品詞・学年・文章への入口カード（「作品から選ぶ」は教科書に統合したので置かない） |
 | **使い方** | できること／重要度 S・A・B の意味／検索のコツ／学習の進め方／カードとクイズの操作／文章ページの見方／**学習履歴はこのブラウザだけに保存されること**とリセット（2 段階ボタン）／データの出どころ／動作環境。`?to=history` のように節を指定して開ける |
 | **単語一覧** | かな／ローマ字／漢字／意味で検索。重要度・品詞・五十音行・作品・学習状態でフィルタ。五十音順／重要度順／品詞順でソート。各行に学習状態バッジ |
-| **単語詳細** | 語義一覧、学習状態の切り替え、関連語カード（type ごとにグループ化）、この語を含む例文（該当トークンをハイライト、タップで品詞分解ポップアップ、`wordId` があればその語へ飛べる）、品詞分解の一覧表、登場作品、五十音順の前後ナビ |
+| **単語詳細** | 語義一覧、学習状態の切り替え、関連語カード（type ごとにグループ化）、**この語が出てくる文章**（教材の段落を原文のまま並べ、その語をハイライト。原文のどの語もタップで品詞分解ポップアップ）、登場作品、五十音順の前後ナビ |
 | **教科書** | 教材を作品別にグループ化した唯一の入口。作品の見出し行は作品ページへのリンクで、作者・時代・ジャンルと文章数・収録語数を添える。各文章カードに段落数・語数・学習進捗（覚えた/総数）。学年でしぼれる。文章がまだ無い作品も「文章はまだありません／収録語 N 語」として出す |
-| **作品ページ** | 作品の書誌と紹介。その作品の文章・例文・収録語（「例文」／「文章」／「タグ」バッジで由来がわかる）。「この作品の単語で学習／クイズ」 |
-| **文章詳細** | 原文と現代語訳を段落ごとに対応表示（上下／横並びの切替、訳の表示・非表示）。原文の重要語をタップで語義ポップアップ。この文章の単語一覧（330 語は詳細へリンク、文章固有語はその場で語義）。「この文章の単語で学習／クイズ」。品詞分解つき例文があれば併せて表示 |
-| **学習** | フィルタしたデッキをカードで。表＝見出し語 → めくると語義＋例文。「覚えた／まだ」を記録。Space でめくる、←→ で回答。一周後に「まだの語だけで復習」 |
+| **作品ページ** | 作品の書誌と紹介。その作品の文章と収録語（「文章」／「タグ」バッジで由来がわかる）。「この作品の単語で学習／クイズ」 |
+| **文章詳細** | 原文と現代語訳を段落ごとに対応表示（上下／横並びの切替、訳の表示・非表示）。**原文のどの語をタップしても品詞・活用・語義が出る**。段落ごとに「品詞分解を表で見る」。この文章の単語一覧（330 語は詳細へリンク、文章固有語はその場で語義）。「この文章の単語で学習／クイズ」 |
+| **学習** | フィルタしたデッキをカードで。表＝見出し語 → めくると語義＋用例（その語が出てくる段落）。「覚えた／まだ」を記録。Space でめくる、←→ で回答。一周後に「まだの語だけで復習」 |
 | **クイズ** | 4択。誤答は **同じ品詞の別語** から取る（SCHEMA.md の推奨）。語→意味／意味→語 の 2 形式。1〜4 の数字キーで回答。結果を localStorage に記録し、間違えた語だけ再出題できる |
 
 ---
@@ -316,7 +321,7 @@ data/*.js           データ（人が編集する）
 js/util.js          DOM の小道具・文字列正規化・検索スコア
 js/store.js         localStorage（学習履歴・設定・クイズ履歴）
 js/data-index.js    data/*.js から索引をつくる ★ここが接着剤
-js/components.js    画面をまたぐ部品（単語行・関連語カード・例文カード・フィルタ・ポップアップ・共有ボタン・制作者行）
+js/components.js    画面をまたぐ部品（単語行・関連語カード・原文のトークン描画・品詞分解ポップアップ／一覧表・フィルタ・共有ボタン・制作者行）
 js/router.js        ハッシュルーター
 js/view-home.js     ホーム（既定ルート #/。index と store しか読まない）
 js/view-help.js     使い方（説明文はこのファイルの中。数字は index から出す）
@@ -367,7 +372,7 @@ tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION を更
 
 | 種類 | トークン |
 |---|---|
-| **面** | `--bg`（画面の地）`--bg-card`（カード）`--bg-sub`（バッジ・表頭）`--bg-inset`（カードの中の面：訳・例文） |
+| **面** | `--bg`（画面の地）`--bg-card`（カード）`--bg-sub`（バッジ・表頭）`--bg-inset`（カードの中の面：訳・用例） |
 | **文字** | `--fg`（本文）`--fg-muted`（補助・AA 合格）`--fg-faint`（装飾のみ） |
 | **罫** | `--line` / `--line-strong` |
 | **強調** | `--accent` `--accent-fg` `--accent-bg` `--accent-dim`（原文の下線）`--hl`（マーカー）`--focus` |
@@ -500,19 +505,30 @@ SVG の文字はシステムのフォントで描かれるので、書体指定�
 非対称な関係（`派生` は「元 → 派生語」の向きがある）は
 `js/data-index.js` の `INVERSE_TYPE` に逆向きのラベルを書く。
 
-### 5.2 例文を足すには
+### 5.2 `data/examples.js`（旧「例文」）について — 退避済み
 
-1. `data/works.js` にその作品があるか確認（無ければ 5.3 を先に）。
-2. `data/examples.js` に 1 件足す。`id` は `作品id-連番`。
-3. `text` に原文を書き、語に割って `tokens` を作る。
-   **`tokens` の `surface` を順に連結したものが `text` と一字一句同じ**になること
-   （句読点も `pos: '記号'` のトークンとして入れる）。`validate.mjs` がこの一致を検査する。
-4. 辞書 330 語にある語には `wordId` を付ける。付けた語の詳細ページに、この例文が自動で出る。
-5. 自信のない品詞分解には `note` に「要確認」と書く。画面上で色が変わる。
-6. `node tools/validate.mjs` でエラー 0 を確認。
+かつては「例文（`data/examples.js`。1 文単位・全トークン品詞分解）」と
+「文章（`data/passages.js`。教材単位・訳つき）」の 2 系統があった。
+そのため文章ページに **「原文と現代語訳」と「品詞分解つき例文」の枠が 2 つ**並び、
+同じ本文が二度出て分かりにくい、という指摘を受けた。
 
-トークンの粒度は「学校文法の単語分割」に合わせている（付属語も 1 トークン）。
-複合語をどこまで割るかは揺れるので、迷ったら `note` に方針を書き残す。
+そこで教材の原文そのものに品詞分解を付ける `data/tokens/*.js`（5.2c）を作り、
+
+- 文章ページ … 原文をトークンから描き、**どの語もタップで品詞分解**。例文枠は廃止
+- 単語詳細 … 「例文」枠を **「この語が出てくる文章」**（段落単位）に統合
+- 作品ページ … 例文枠を廃止（文章カードから読む）
+- 学習・クイズ … 用例は `C.usageFor()` が「その語が出てくる段落」から取る
+
+とし、`examples.js` は読み込みを外して **`docs/legacy/examples.js`** に退避した。
+`passages.js` の `exampleIds`、`js/components.js` の `C.sentence` / `C.exampleCard`、
+`js/data-index.js` の `examplesByWord` / `examplesByWork` / `exampleById`、
+`tools/validate.mjs` の `[examples]` ブロックも同時に削除している。
+
+**失われたもの**: `ise-1`（伊勢物語 第一段「初冠」）は対応する教材が `passages.js` に
+無かったため、UI から消えた。必要になったら `passages.js` に教材として足し、
+`data/tokens/ise-uikoburi.js` に品詞分解を作る（退避したファイルにトークンが残っている）。
+
+**新しい本文は例文ではなく、教材（5.2b）＋品詞分解（5.2c）として足すこと。**
 
 ### 5.2b 文章（教科書の教材）を足すには
 
@@ -530,8 +546,7 @@ SVG の文字はシステムのフォントで描かれるので、書体指定�
      vocab: [
        { wordId: 39, surface: 'をかし', meaningIndex: 0 },        // 330 語にある語
        { surface: 'あけぼの', meaning: '夜明け方', pos: '名詞' }   // 文章固有語
-     ],
-     exampleIds: ['makura-1']
+     ]
      // note は任意。自信のない箇所があれば 'note: "要確認: …"' のように書く
    }
    ```
@@ -547,6 +562,45 @@ SVG の文字はシステムのフォントで描かれるので、書体指定�
    1 文字の仮名（`え`）は別語の一部に当たるので、`え得` のように 2 文字以上にする。
 7. `node tools/validate.mjs` でエラー 0 を確認。
 8. コードの変更は不要。教科書（`#/textbook`）・作品ページ・単語一覧の「文章」フィルタに自動で出る。
+9. 続けて **5.2c** で品詞分解を作る（`vocab` の `surface` は
+   品詞分解のトークン境界に沿う形にすること。検証器が警告する）。
+
+### 5.2c 品詞分解を足すには
+
+文章に品詞分解を付けると、**文章ページで原文のどの語をタップしても品詞・活用・語義が出る**。
+段落ごとの「品詞分解を表で見る」も開き、単語詳細の「この語が出てくる文章」に
+その段落が原文つきで並ぶ。付けていない文章は従来どおり（重要語だけタップ可）動く。
+
+1. **[`docs/tokens-guide.md`](docs/tokens-guide.md)** を読む。
+   キーの意味、品詞の統一ラベル 19 種、活用の種類・活用形の書き方、
+   「なり」「ぬ」「に」「なむ」など定番論点の扱い、330 語との対応、担当割りまで
+   すべてそこに決めてある。
+2. `data/tokens/<文章id>.js` を作る（`<文章id>` は `passages.js` の `id`。1 文章 1 ファイル）。
+
+   ```js
+   window.KOBUN = window.KOBUN || {};
+   window.KOBUN.tokens = window.KOBUN.tokens || {};
+   window.KOBUN.tokens['makura-haru'] = [
+     [ // 段落 1
+       { s: '春', b: '春', p: '名詞', m: '春' },
+       { s: 'は', b: 'は', p: '係助詞', m: '（主題）〜は' },
+       { s: '。', p: '記号' }
+     ]
+   ];
+   ```
+3. **段落数は `paragraphs.length` と同じ**、**段落内の `s` を連結すると
+   `paragraphs[i].text` と一字一句一致**させる。ここが検証の要。
+4. `node tools/validate-tokens.mjs` でエラー 0 にする
+   （`node tools/validate.mjs` からも最後に呼ばれる）。
+5. `node tools/sync-tokens.mjs` を実行する。`index.html` の `<script>` と
+   `sw.js` の `PRECACHE` が `data/tokens/` の実際の中身から作り直される。
+6. コードの変更は不要。`js/data-index.js` が
+   `tokensOf(passageId)` / `paragraphsOfWord(wordId)` を組み立て、
+   `C.passageTokenLine` が原文を描く。
+
+**なぜ 1 文章 1 ファイルか。** 全 20 編ぶんは 1 ファイルに収めると数千行になり、
+複数人（複数エージェント）で同時に書くと衝突する。
+ファイルを分ければ担当ごとに独立して書け、読み込み設定も `sync-tokens.mjs` が面倒を見る。
 
 ### 5.3 新しい作品を足すには
 
@@ -557,8 +611,8 @@ SVG の文字はシステムのフォントで描かれるので、書体指定�
    { id: 'genji', title: '源氏物語', author: '紫式部', era: '平安時代中期',
      genre: '作り物語', summary: '…' },
    ```
-2. `data/examples.js` にその作品の例文を足す（`workId: 'genji'`）。
-3. 例文に出てこないが重要な語を `data/workWords.js` に足す。
+2. `data/passages.js` にその作品の教材を足し（5.2b）、品詞分解を作る（5.2c）。
+3. 本文に出てこないが重要な語を `data/workWords.js` に足す。
 4. `node tools/validate.mjs`。
 5. コードの変更は不要。教科書（`#/textbook`）・作品ページ・単語一覧の「作品」フィルタに自動で出る。
    文章（passages）がまだ無い作品も、教科書に「文章はまだありません／収録語 N 語」として出る。
@@ -628,11 +682,10 @@ SVG の文字はシステムのフォントで描かれるので、書体指定�
 | 候補 | どこに足すか | メモ |
 |---|---|---|
 | **SRS（間隔反復）** | `store.js` の progress に `ease` / `interval` / `dueAt` を追加。`view-study.js` のデッキ生成を「今日が期限の語」に | SM-2 の簡易版で十分。既存の `seen/correct/wrong` がそのまま材料になる |
-| **音声読み上げ** | `SpeechSynthesisUtterance` で `example.reading` を読む | `romaji` は字面なので読み上げには使えない（SCHEMA.md の注意）。`reading` を全例文に入れてあるのはこのため |
-| **文章の品詞分解** | `passages.js` の段落を `examples.js` に 1 文ずつ切り出し、`exampleIds` で結ぶ | 全文をやる必要はない。「ここだけは品詞分解を見たい」段落から足していける |
-| **音読・朗読** | `passages.js` の paragraph に `reading` を足す | `examples.js` の `reading` と同じ形。読み上げ拡張の材料になる |
-| **CSV インポート／エクスポート** | `tools/` に `csv2js.mjs` を追加 | 例文・関連語を表計算で編集したい人向け。素材の CSV と同じく UTF-8 BOM 付きで出す |
-| **活用練習** | `examples.js` の `tokens[].detail` をそのまま問題に | 「この『たる』の活用形は？」。データはもう揃っている |
+| **音声読み上げ** | `SpeechSynthesisUtterance` で段落の読みを読む | `romaji` は字面なので読み上げには使えない（SCHEMA.md の注意）。`passages.js` の paragraph に `reading` を足すのが素直 |
+| **音読・朗読** | `passages.js` の paragraph に `reading` を足す | 読み上げ拡張の材料になる。トークンの `s` と対応づければ 1 語ずつ読ませることもできる |
+| **CSV インポート／エクスポート** | `tools/` に `csv2js.mjs` を追加 | 品詞分解・関連語を表計算で編集したい人向け。素材の CSV と同じく UTF-8 BOM 付きで出す |
+| **活用練習** | 品詞分解の `c`（活用の種類）と `f`（活用形）をそのまま問題に | 「この『たる』の活用形は？」。20 編・2500 トークンぶんのデータはもう揃っている |
 | **助動詞・敬語の体系ページ** | `data/grammar.js` を新設 | 敬語 27 語は本動詞／補助動詞、尊敬／謙譲／丁寧で整理したい |
 | **書き取りモード** | `view-quiz.js` に mode を追加 | 意味 → 仮名を入力。`searchKeys` の正規化を答え合わせに流用できる |
 | **タグ（自由タグ）** | `data/tags.js` ＋ `data/wordTags.js` | `workWords.js` と同じ形 |
@@ -645,7 +698,7 @@ SVG の文字はシステムのフォントで描かれるので、書体指定�
 
 - `data/words.js` の内容は素材そのままで、素材の SCHEMA.md に
   「公開アプリに載せる前に、手元の辞書で最終確認することを勧める」とある。
-- `works.js` / `relations.js` / `examples.js` / `workWords.js` / `passages.js` は
+- `works.js` / `relations.js` / `workWords.js` / `passages.js` / `tokens/*.js` は
   **このプロトタイプ用に書き起こしたサンプル**で、各ファイル冒頭に「サンプル・要校閲」と明記した。
 - 解釈が分かれる箇所は `note` に「要確認」と書いてある。
   画面上では色（`--warn`）と破線の下線で目立つようにしてある。

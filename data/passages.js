@@ -9,11 +9,14 @@
  *     ・「この文章の単語で学習／クイズ」のデッキ
  *   がこの 1 ファイルから生成される。
  *
- * 【examples.js との違い】
- *   examples.js … 1 文単位。**全トークンの品詞分解つき**。単語詳細の例文に使う。
- *   passages.js … 教材単位（数段落）。品詞分解は持たない。訳と重要語だけ。
- *   量が違うので分けてある。両方に同じ本文が出てくることはあり、
- *   その場合は exampleIds で結びつける（文章詳細から品詞分解つき例文へ飛べる）。
+ * 【他のデータとの関係】
+ *   passages.js  … 教材単位（数段落）。原文・現代語訳・その文章で覚える語。
+ *   data/tokens/<id>.js … その原文の **全文の品詞分解**（1 文章 1 ファイル）。
+ *                 段落内の s を連結すると paragraphs[i].text と一字一句一致する。
+ *                 これがあると、文章ページで原文のどの語もタップできる。
+ *                 書き方は docs/tokens-guide.md。検証は tools/validate-tokens.mjs。
+ *   examples.js  … 旧「品詞分解つき例文」。教材の原文そのものに品詞分解が
+ *                 付いたので役目を終えつつある（DESIGN.md 5.2 の経緯を参照）。
  *
  * 【フィールド】
  *   id           文字列の安定ID。"作品id-教材の短い名" で付ける（URL になる）。
@@ -24,7 +27,6 @@
  *   paragraphs   段落の配列。1 段落 = { text（原文）, translation（現代語訳）}
  *                長い教材は有名部分を抜粋し、省いた箇所は本文中に「（中略）」と書く。
  *   vocab        この文章で覚える語の配列（下記）
- *   exampleIds   data/examples.js の例文 id（任意）。品詞分解つきで読める箇所
  *   note         教材全体への注記。**自信のない箇所は「要確認: …」と書く**
  *
  * 【vocab の 1 要素】
@@ -101,7 +103,6 @@ window.KOBUN.passages = [
       { surface: 'もと', base: 'もと', meaning: '（草木の）根元', pos: '名詞' },
       { surface: '三寸', meaning: '約九センチ', pos: '名詞', note: '一寸は約三センチ。' }
     ],
-    exampleIds: ['taketori-1', 'taketori-2'],
     note: '冒頭から「うつくしうてゐたり」までを収めた。底本異同: 翁の名は教科書で一般的な「さぬきの造」に拠った（國民文庫本などは「讃岐造麿」）。'
   },
 
@@ -288,8 +289,7 @@ window.KOBUN.passages = [
       { surface: '山の端', meaning: '山の、空に接するあたりの輪郭', pos: '名詞' },
       { surface: 'さらでも', meaning: 'そうでなくても', pos: 'その他' }
     ],
-    exampleIds: ['makura-1', 'makura-2', 'makura-3', 'makura-4'],
-    note: '第一段の四季すべてを収めたが、秋の段末「日入り果てて、風の音、虫の音など、はた言ふべきにあらず。」と冬の段末「昼になりて、ぬるくゆるびもていけば、火桶の火も白き灰がちになりてわろし。」は省いた。品詞分解は data/examples.js の makura-1〜4 で読める。'
+    note: '第一段の四季すべてを収めたが、秋の段末「日入り果てて、風の音、虫の音など、はた言ふべきにあらず。」と冬の段末「昼になりて、ぬるくゆるびもていけば、火桶の火も白き灰がちになりてわろし。」は省いた。品詞分解は data/tokens/makura-haru.js にあり、本文の語をタップすると出る。'
   },
 
   {
@@ -313,9 +313,9 @@ window.KOBUN.passages = [
       }
     ],
     vocab: [
-      { wordId: 10, surface: 'うつくし', meaningIndex: 0, note: '本文に三度出てくる。この段の主題語。' },
+      { wordId: 10, surface: 'うつくしき', meaningIndex: 0, note: 'この段の主題語。「うつくしき」（連体形）と「うつくし」（終止形）で三度出てくる。' },
       { wordId: 99, surface: 'いと', meaningIndex: 0 },
-      { wordId: 39, surface: 'をかしげ', meaningIndex: 3, note: '形容動詞「をかしげなり」。ここは「かわいらしい」。' },
+      { wordId: 39, surface: 'をかしげなる', meaningIndex: 3, note: '形容動詞「をかしげなり」の連体形。ここは「かわいらしい」。' },
       { surface: '児', meaning: 'ちご。幼児', pos: '名詞' },
       { surface: 'ねず鳴き', meaning: 'ねずみの鳴きまねをして呼ぶこと', pos: '名詞' },
       { surface: '目ざとに', base: '目ざとし', meaning: '目ざとく・すばやく見つけて', pos: '副詞' },
@@ -349,7 +349,7 @@ window.KOBUN.passages = [
       { wordId: 78, surface: '参り', meaningIndex: 0 },
       { wordId: 72, surface: 'たまひ', meaningIndex: 0, note: '四段活用なので尊敬。「たまふ」「たまへ」も本文に出てくる。' },
       { wordId: 70, surface: '奉ら', meaningIndex: 0, note: 'ここは本動詞の謙譲「差し上げる」。' },
-      { wordId: 8, surface: 'いみじ', meaningIndex: 1, note: '「いみじき」「いみじう」の形で二度出てくる。' },
+      { wordId: 8, surface: 'いみじき', meaningIndex: 1, note: '「いみじき」（連体形）と「いみじう」（連用形のウ音便）の形で二度出てくる。' },
       { wordId: 74, surface: 'はべれ', meaningIndex: 2, note: '補助動詞の丁寧。「はべる」「はべり」も本文に出てくる。' },
       { wordId: 143, surface: 'おぼろけ', meaningIndex: 0 },
       { wordId: 101, surface: 'え張る', meaningIndex: 0, note: '「え〜まじ」で不可能。' },
@@ -418,13 +418,12 @@ window.KOBUN.passages = [
     ],
     vocab: [
       { wordId: 45, surface: 'つれづれなる', meaningIndex: 0 },
-      { wordId: 139, surface: 'よしなし', meaningIndex: 0, note: '「よしなし事」＝とりとめもないこと。' },
+      { wordId: 139, surface: 'よしなし事', meaningIndex: 0, note: '形容詞「よしなし」＋「事」の複合名詞で「とりとめもないこと」。品詞分解では 1 語として切っている。' },
       { wordId: 4, surface: 'あやしう', meaningIndex: 0, note: '「あやしく」のウ音便。' },
       { wordId: 250, surface: 'ものぐるほしけれ', meaningIndex: 0, note: '「こそ〜けれ」の係り結びで已然形。' },
       { surface: '日暮らし', meaning: '一日中・朝から日暮れまで', pos: '副詞' },
       { surface: 'そこはかとなく', base: 'そこはかとなし', meaning: 'とりとめもなく・あてもなく', pos: '形容詞' }
     ],
-    exampleIds: ['tsurezure-1'],
     note: ''
   },
 
@@ -605,7 +604,7 @@ window.KOBUN.passages = [
       { wordId: 98, surface: 'いかで', meaningIndex: 1, note: '後に出る「いかでか」は反語（どうして〜か、いや〜ない）。' },
       { wordId: 45, surface: 'つれづれなる', meaningIndex: 1 },
       { wordId: 100, surface: 'いとど', meaningIndex: 0 },
-      { wordId: 32, surface: 'ゆかし', meaningIndex: 0, note: '本文は名詞化した「ゆかしさ」。' },
+      { wordId: 32, surface: 'ゆかしさ', meaningIndex: 0, note: '形容詞「ゆかし」＋接尾語「さ」で名詞化した形。' },
       { wordId: 51, surface: 'おぼえ', meaningIndex: 0, note: 'ここは「記憶する」に近い用法。' },
       { wordId: 8, surface: 'いみじく', meaningIndex: 0 },
       { wordId: 17, surface: '心もとなき', meaningIndex: 0 },
@@ -656,7 +655,6 @@ window.KOBUN.passages = [
       { surface: 'たけき', base: 'たけし', meaning: '勇猛だ・気性が激しい', pos: '形容詞' },
       { surface: 'ひとへに', meaning: 'まったく・ひたすら', pos: '副詞' }
     ],
-    exampleIds: ['heike-1'],
     note: '底本異同: 覚一本は「娑羅双樹」。教科書で一般的な「沙羅双樹」に揃えた。対句と七五調のリズムを声に出して確かめたい箇所。'
   },
 
@@ -687,7 +685,6 @@ window.KOBUN.passages = [
       { surface: 'かつ', meaning: '一方では', pos: '副詞', note: '「かつ〜かつ〜」で対になる。' },
       { surface: '栖', meaning: 'すみか。住まい', pos: '名詞' }
     ],
-    exampleIds: ['hojoki-1'],
     note: '大福光寺本に拠る。底本異同: 流布本（国文大観など）は「久しくとどまることなし」「世の中にある人とすみかと」。'
   },
 

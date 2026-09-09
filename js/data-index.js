@@ -7,20 +7,30 @@
  * つくる索引:
  *   wordById         Map<number, Word>
  *   workById         Map<string, Work>
- *   exampleById      Map<string, Example>
  *   relationsByWord  Map<number, Array<{word, type, note, reversed}>>
  *                    ※ relations.js に片方向で書いた行も **双方向** に展開する
- *   examplesByWord   Map<number, Array<Example>>
  *   worksByWord      Map<number, Array<Work>>
  *   wordsByWork      Map<string, Array<Word>>
- *                    （例文 tokens ∪ workWords ∪ passages.vocab の wordId の和集合）
- *   examplesByWork   Map<string, Array<Example>>
+ *                    （passages.vocab ∪ 品詞分解の w ∪ workWords の和集合）
  *   passageById      Map<string, Passage>
  *   passagesByWork   Map<string, Array<Passage>>
  *   passagesByWord   Map<number, Array<Passage>>
  *   passageEntries   Map<string, Array<VocabEntry>>  文章の語（表示用。原文の順ではなく記載順）
  *   passageDeck      Map<string, Array<Word|PassageWord>>  学習・クイズのデッキ
+ *   tokensByPassage  Map<string, Array<Array<Token>>>  品詞分解（段落ごと）
+ *   paragraphsByWord Map<number, Array<ParagraphHit>>  その語が出てくる段落
  *   posList / kanaRows / levels / grades … フィルタの選択肢
+ *
+ * 【品詞分解（data/tokens/*.js）】
+ *   window.KOBUN.tokens は { passageId: [ [token, …], … ] } の素の連想配列で、
+ *   1 文章 1 ファイルで足していける（data 側には索引を置かない）。ここで
+ *     ・文章 → 段落ごとのトークン列（文章ページが原文を描くのに使う）
+ *     ・単語 → その語が出てくる段落（単語詳細の「この語が出てくる文章」）
+ *   の 2 つに開く。かつて data/examples.js が担っていた「例文」の索引は、
+ *   **この段落索引に置き換わった**（1 文＝例文 ではなく 1 段落＝読む単位）。
+ *   トークンの w は passages.vocab と並ぶ「語と文章を結ぶ根拠」なので、
+ *   passagesByWord / wordsByWork にも合流させる。
+ *   トークンのキーは短い（s/b/p/c/f/m/w/n）。意味は docs/tokens-guide.md 参照。
  *
  * 【PassageWord（文章固有語）】
  *   330 語に無い語も、学習カード・クイズに出せるように Word と同じ形の
@@ -88,7 +98,6 @@
     var words = K.words || [];
     var works = K.works || [];
     var relations = K.relations || [];
-    var examples = K.examples || [];
     var workWords = K.workWords || [];
     var passages = K.passages || [];
 
@@ -97,9 +106,6 @@
 
     var workById = new Map();
     works.forEach(function (w) { workById.set(w.id, w); });
-
-    var exampleById = new Map();
-    examples.forEach(function (e) { exampleById.set(e.id, e); });
 
     /* --- 関連語（双方向に展開） ---------------------------------- */
     var relationsByWord = new Map();
@@ -123,30 +129,13 @@
       });
     });
 
-    /* --- 例文 ⇔ 単語 / 作品 --------------------------------------- */
-    var examplesByWord = new Map();
-    var examplesByWork = new Map();
+    /* --- 語 ⇔ 作品 ------------------------------------------------ *
+     * かつては data/examples.js の例文 tokens が「語と作品の結びつき」の
+     * 主な根拠だったが、例文は退避した（DESIGN.md 5.2）。
+     * いまは passages.vocab・品詞分解の w・workWords の 3 つを下で足し込む。
+     * ---------------------------------------------------------------- */
     var workIdsByWord = new Map(); // wordId -> Set<workId>
     var wordIdsByWork = new Map(); // workId -> Set<wordId>
-
-    examples.forEach(function (ex) {
-      if (!examplesByWork.has(ex.workId)) examplesByWork.set(ex.workId, []);
-      examplesByWork.get(ex.workId).push(ex);
-
-      var seenInThisExample = new Set();
-      (ex.tokens || []).forEach(function (t) {
-        if (t.wordId == null || !wordById.has(t.wordId)) return;
-        if (!seenInThisExample.has(t.wordId)) {
-          seenInThisExample.add(t.wordId);
-          if (!examplesByWord.has(t.wordId)) examplesByWord.set(t.wordId, []);
-          examplesByWord.get(t.wordId).push(ex);
-        }
-        if (!workIdsByWord.has(t.wordId)) workIdsByWord.set(t.wordId, new Set());
-        workIdsByWord.get(t.wordId).add(ex.workId);
-        if (!wordIdsByWork.has(ex.workId)) wordIdsByWork.set(ex.workId, new Set());
-        wordIdsByWork.get(ex.workId).add(t.wordId);
-      });
-    });
 
     /* --- 手動タグ（workWords）を和集合として足す ------------------ */
     var workWordNote = new Map(); // "workId/wordId" -> note
@@ -191,7 +180,7 @@
         var word = v.wordId != null ? wordById.get(v.wordId) : null;
         var pw = null;
         if (word) {
-          // 作品の収録語に足す（例文 tokens ∪ workWords ∪ passages.vocab）
+          // 作品の収録語に足す（passages.vocab ∪ 品詞分解の w ∪ workWords）
           if (!wordIdsByWork.has(p.workId)) wordIdsByWork.set(p.workId, new Set());
           wordIdsByWork.get(p.workId).add(word.id);
           if (!workIdsByWord.has(word.id)) workIdsByWord.set(word.id, new Set());
@@ -221,6 +210,50 @@
 
       passageEntries.set(p.id, entries);
       passageDeck.set(p.id, deck);
+    });
+
+    /* --- 品詞分解（data/tokens/*.js） ------------------------------
+     * passages を回し終えてから開く（passageById が要るため）。
+     * tokens に無い文章は素通りし、画面側が従来の文字列描画に落ちる。
+     * ------------------------------------------------------------- */
+    var rawTokens = K.tokens || {};
+    var tokensByPassage = new Map();
+    var paragraphsByWord = new Map(); // wordId -> [{ passage, index, text, translation, tokens }]
+
+    Object.keys(rawTokens).forEach(function (passageId) {
+      var p = passageById.get(passageId);
+      var paras = rawTokens[passageId];
+      // 文章が無い／段落数が合わないデータは使わない（tools/validate-tokens.mjs が弾く）
+      if (!p || !Array.isArray(paras) || paras.length !== p.paragraphs.length) return;
+      tokensByPassage.set(passageId, paras);
+
+      paras.forEach(function (list, i) {
+        if (!Array.isArray(list)) return;
+        var seen = new Set();
+        list.forEach(function (t) {
+          if (!t || t.w == null) return;
+          var word = wordById.get(t.w);
+          if (!word || seen.has(word.id)) return;
+          seen.add(word.id);
+
+          if (!paragraphsByWord.has(word.id)) paragraphsByWord.set(word.id, []);
+          paragraphsByWord.get(word.id).push({
+            passage: p,
+            index: i,
+            text: p.paragraphs[i].text || '',
+            translation: p.paragraphs[i].translation || '',
+            tokens: list
+          });
+
+          // 「この語が出てくる文章」「作品の収録語」の根拠に合流させる
+          if (!passagesByWord.has(word.id)) passagesByWord.set(word.id, []);
+          if (passagesByWord.get(word.id).indexOf(p) < 0) passagesByWord.get(word.id).push(p);
+          if (!wordIdsByWork.has(p.workId)) wordIdsByWork.set(p.workId, new Set());
+          wordIdsByWork.get(p.workId).add(word.id);
+          if (!workIdsByWord.has(word.id)) workIdsByWord.set(word.id, new Set());
+          workIdsByWord.get(word.id).add(p.workId);
+        });
+      });
     });
 
     // 学年は決まった並びにしたい。GRADE_ORDER に無いものは末尾へ
@@ -276,20 +309,18 @@
     return {
       words: words,
       works: works,
-      examples: examples,
       passages: passages,
       wordById: wordById,
       workById: workById,
-      exampleById: exampleById,
       passageById: passageById,
       passagesByWork: passagesByWork,
       passagesByWord: passagesByWord,
       passageEntries: passageEntries,
       passageDeck: passageDeck,
+      tokensByPassage: tokensByPassage,
+      paragraphsByWord: paragraphsByWord,
       grades: grades,
       relationsByWord: relationsByWord,
-      examplesByWord: examplesByWord,
-      examplesByWork: examplesByWork,
       wordsByWork: wordsByWork,
       worksByWord: worksByWord,
       workWordNote: workWordNote,
@@ -309,7 +340,6 @@
       getWord: function (id) { return wordById.get(Number(id)) || null; },
       getWork: function (id) { return workById.get(String(id)) || null; },
       relationsOf: function (id) { return relationsByWord.get(Number(id)) || []; },
-      examplesOf: function (id) { return examplesByWord.get(Number(id)) || []; },
       worksOf: function (id) { return worksByWord.get(Number(id)) || []; },
 
       /* --- 文章 ------------------------------------------------- */
@@ -320,8 +350,17 @@
       deckOfPassage: function (id) { return passageDeck.get(String(id)) || []; },
       /** その作品の文章 */
       passagesOfWork: function (id) { return passagesByWork.get(String(id)) || []; },
-      /** その語が出てくる文章（vocab に wordId で載っているもの） */
+      /** その語が出てくる文章（vocab の wordId ∪ 品詞分解の w） */
       passagesOfWord: function (id) { return passagesByWord.get(Number(id)) || []; },
+      /** その文章の品詞分解（段落ごとのトークン配列）。無ければ null */
+      tokensOf: function (id) { return tokensByPassage.get(String(id)) || null; },
+      /** その文章の 1 段落ぶんの品詞分解。無ければ null */
+      tokensOfParagraph: function (id, index) {
+        var paras = tokensByPassage.get(String(id));
+        return (paras && paras[index]) || null;
+      },
+      /** その語が出てくる段落（品詞分解の w が根拠。旧「例文」の置き換え） */
+      paragraphsOfWord: function (id) { return paragraphsByWord.get(Number(id)) || []; },
       /** 五十音順に並んだ全単語（前後ナビ用） */
       sortedByKana: words.slice().sort(function (a, b) { return a.kanaOrder - b.kanaOrder; })
     };

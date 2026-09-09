@@ -197,10 +197,11 @@
             text: '本文の形：' + w.surface + '　（「' + w.passageTitle + '」の脚注語）'
           }));
         }
-        var exs = K.index.examplesOf(w.id);
-        if (exs.length) {
-          feedback.appendChild(C.sentence(exs[0], { highlightWordId: w.id }));
-          feedback.appendChild(el('p', { class: 'example-translation', text: exs[0].translation }));
+        // 用例＝この語が出てくる段落（品詞分解の w が根拠）
+        var usage = C.usageFor(w.id);
+        if (usage) {
+          feedback.appendChild(usage.line);
+          feedback.appendChild(el('p', { class: 'example-translation', text: usage.translation }));
         }
         feedback.appendChild(el('button', {
           class: 'btn btn-primary', type: 'button',

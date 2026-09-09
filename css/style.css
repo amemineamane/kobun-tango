@@ -967,6 +967,8 @@ p { margin: 0 0 .8em; }
 .legend-sample { font-family: var(--font-serif); color: var(--fg); }
 .legend-sample.is-word  { border-bottom: 2px solid var(--accent-dim); }
 .legend-sample.is-extra { border-bottom: 2px dotted var(--fg-faint); }
+/* 品詞分解がある文章は下線の無い語もタップできる。見本は薄い網かけで示す */
+.legend-sample.is-tok   { background: var(--bg-sub); border-radius: 3px; padding: 0 .2em; }
 
 /* --- 本文 --- */
 .passage-body { display: flex; flex-direction: column; gap: var(--sp-4); counter-reset: para; }
@@ -1043,6 +1045,16 @@ p { margin: 0 0 .8em; }
 .pv-extra { border-bottom: 2px dotted var(--fg-faint); }
 /* 要確認は色で分ける（点線／実線の区別を潰さない） */
 .pv-check { border-bottom-color: var(--warn); border-bottom-style: dashed; }
+/* 品詞分解から描いた原文では、下線の無い語もタップできる。
+   下線を足すと「実線＝330 語／点線＝文章の語」の区別が潰れるので、
+   目印は付けずタップ領域だけ広げ、押したときの反応で分かるようにする。
+   横の padding は 0 のまま（足すと語と語のあいだが開いて原文が読みにくい）。 */
+.pv-tok { padding: .15em 0; }
+/* 単語詳細の「この語が出てくる文章」で、その語だけを強調する */
+.pv-hl { background: var(--hl); font-weight: 700; border-radius: 3px; }
+
+/* 段落ごとの「品詞分解を表で見る」 */
+.passage-orig .token-details { margin-top: .35rem; }
 
 /* ============================================================ 15. 学習 */
 .study-stage { margin-top: var(--sp-3); }
@@ -1101,7 +1113,8 @@ p { margin: 0 0 .8em; }
   border: 1px solid var(--line); border-radius: var(--r-md); padding: .6rem .8rem;
 }
 .flashcard-example h3 { margin-bottom: .3rem; }
-.flashcard-example .sentence { font-size: var(--fs-base); line-height: 1.95; }
+.flashcard-example .sentence,
+.flashcard-example .passage-text { font-size: var(--fs-base); line-height: 1.95; }
 .flashcard-more { margin: var(--sp-3) 0 0; font-size: var(--fs-md); font-weight: 700; }
 
 .study-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); }
@@ -1196,7 +1209,8 @@ p { margin: 0 0 .8em; }
 .feedback-word { display: flex; gap: .45rem; align-items: baseline; flex-wrap: wrap; }
 .feedback-kana { font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 700; letter-spacing: .04em; }
 .feedback-meaning { margin: .3rem 0 .6rem; line-height: var(--lh-read); }
-.quiz-feedback .sentence { font-size: var(--fs-base); line-height: 1.95; }
+.quiz-feedback .sentence,
+.quiz-feedback .passage-text { font-size: var(--fs-base); line-height: 1.95; }
 
 .quiz-result { text-align: center; }
 .quiz-result .deck-links { justify-content: center; }

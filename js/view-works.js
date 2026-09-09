@@ -6,7 +6,8 @@
  * 旧 URL の #/works は router.js が #/textbook に転送する。
  *
  * 作品ページの「収録語」は
- *     例文 tokens の wordId  ∪  data/workWords.js  ∪  passages.vocab の wordId
+ *     passages.vocab の wordId  ∪  品詞分解（data/tokens/*.js）の w
+ *     ∪  data/workWords.js の手動タグ
  * の和集合（計算は js/data-index.js の wordsByWork）。
  * ===================================================================== */
 (function () {
@@ -32,16 +33,15 @@
     }
 
     var words = K.index.wordsByWork.get(work.id) || [];
-    var examples = K.index.examplesByWork.get(work.id) || [];
 
-    // 収録語の「由来」を分ける（例文 / 文章 / 手動タグ）
-    var inExample = new Set();
-    examples.forEach(function (ex) {
-      (ex.tokens || []).forEach(function (t) { if (t.wordId != null) inExample.add(t.wordId); });
-    });
+    // 収録語の「由来」を分ける（文章 / 手動タグ）
     var inPassage = new Set();
     K.index.passagesOfWork(work.id).forEach(function (p) {
       (p.vocab || []).forEach(function (v) { if (v.wordId != null) inPassage.add(v.wordId); });
+      // 品詞分解の w も「文章に出てくる語」の根拠
+      (K.index.tokensOf(p.id) || []).forEach(function (list) {
+        (list || []).forEach(function (t) { if (t && t.w != null) inPassage.add(t.w); });
+      });
     });
 
     var section = el('section', { class: 'view view-work' }, [
@@ -83,33 +83,17 @@
       ]));
     }
 
-    /* --- 例文 --- */
-    var exCard = el('div', { class: 'card' }, [
-      el('h2', { class: 'card-title' }, ['例文', el('span', { class: 'muted small', text: '（' + examples.length + '）' })])
-    ]);
-    if (examples.length === 0) {
-      exCard.appendChild(el('p', { class: 'muted', text: 'まだ例文がありません。data/examples.js に workId: "' + work.id + '" の例文を足してください。' }));
-    } else {
-      examples.forEach(function (ex) { exCard.appendChild(C.exampleCard(ex, { showWork: false })); });
-    }
-    section.appendChild(exCard);
-
     /* --- 収録語 --- */
     var listWrap = el('div', { class: 'word-list' });
     words.forEach(function (w) {
       var row = C.wordRow(w);
       var head = row.querySelector('.word-row-head');
-      if (inExample.has(w.id)) {
-        head.appendChild(el('span', {
-          class: 'badge src src-example', text: '例文', title: 'この作品の例文（data/examples.js）に出てくる語'
-        }));
-      }
       if (inPassage.has(w.id)) {
         head.appendChild(el('span', {
-          class: 'badge src src-passage', text: '文章', title: 'この作品の文章（data/passages.js）に出てくる語'
+          class: 'badge src src-passage', text: '文章',
+          title: 'この作品の文章に出てくる語（passages.vocab または品詞分解の w）'
         }));
-      }
-      if (!inExample.has(w.id) && !inPassage.has(w.id)) {
+      } else {
         head.appendChild(el('span', {
           class: 'badge src src-tag', text: 'タグ', title: 'data/workWords.js で手動タグ付けした語'
         }));
@@ -122,7 +106,7 @@
     var qs = U.buildQuery({ work: work.id });
     section.appendChild(el('div', { class: 'card' }, [
       el('h2', { class: 'card-title' }, ['収録語', el('span', { class: 'muted small', text: '（' + words.length + '）' })]),
-      el('p', { class: 'muted small', text: '「例文 tokens の wordId」「data/passages.js の文章の語」「data/workWords.js の手動タグ」の和集合です。' }),
+      el('p', { class: 'muted small', text: '「data/passages.js の文章の語」「品詞分解（data/tokens）の重要語」「data/workWords.js の手動タグ」の和集合です。' }),
       el('div', { class: 'deck-links' }, [
         el('a', { class: 'btn btn-primary', href: '#/study' + qs, text: 'この作品の単語で学習' }),
         el('a', { class: 'btn', href: '#/quiz' + qs, text: 'この作品の単語でクイズ' }),
