@@ -466,7 +466,6 @@ p { margin: 0 0 .8em; }
 .badge.count { background: var(--bg-sub); border-color: transparent; }
 .badge.count-done { background: var(--ok); color: var(--on-solid); border-color: transparent; }
 .badge.grade { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
-.badge.level-label { border-style: dashed; }
 
 .badge.rel { font-size: var(--fs-sm); padding: .1em .75em; font-weight: 700; }
 .badge.src { font-weight: 700; }
@@ -527,7 +526,7 @@ p { margin: 0 0 .8em; }
   color: var(--accent);
   white-space: nowrap;
 }
-.filter-none { font-size: var(--fs-xs); color: var(--fg-faint); }
+.filter-none { font-size: var(--fs-xs); color: var(--fg-muted); }
 
 .filter-bar {
   display: flex;
@@ -1331,7 +1330,6 @@ p { margin: 0 0 .8em; }
 }
 .tile:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-bg); }
 .tile-title { font-weight: 700; font-size: var(--fs-md); }
-.tile-work .tile-title { font-family: var(--font-serif); letter-spacing: .04em; }
 .tile-sub { font-size: var(--fs-xs); }
 
 /* ホーム・使い方の末尾のリンク列 */

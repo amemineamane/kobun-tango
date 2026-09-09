@@ -344,5 +344,6 @@ Service Worker のキャッシュ名はこの版から作るので、版が変�
 ## 動作環境
 
 Chrome / Edge / Firefox / Safari の最近のバージョン。
-`fetch`・ES モジュール・Service Worker を使っていないので、`file://` でも制限なく動く。
+データの読み込みに `fetch` も ES モジュールも使っていないので、`file://` でも制限なく動く
+（Service Worker は http/https でしか登録できないため、`file://` では PWA 機能だけ使えない）。
 スマホ幅にも対応（レスポンシブ）。OS のダークモード設定に自動で追従する。

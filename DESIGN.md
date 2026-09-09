@@ -248,7 +248,7 @@ flowchart LR
 | パス | ビュー | クエリ |
 |---|---|---|
 | `#/` | `view-home` | —（ハッシュ無しで開いたときもここ） |
-| `#/help` | `view-help` | `?to=` 節へスクロール（about / level / search / plan / cards / passage / history / data / env） |
+| `#/help` | `view-help` | `?to=` 節へスクロール（about / level / search / plan / cards / passage / history / data / env / app / share / author） |
 | `#/words` | `view-words` | `?q= &level= &pos= &row= &work= &passage= &status= &sort=` |
 | `#/word/:id` | `view-word` | — |
 | `#/textbook` | `view-passages`（教科書） | `?grade=` |
