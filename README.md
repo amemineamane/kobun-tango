@@ -135,11 +135,18 @@ powershell -ExecutionPolicy Bypass -File .\start.ps1
 
 フィルタで作ったデッキを 1 枚ずつ。表＝見出し語、めくると語義と用例（その語が出てくる段落）。
 
-| キー | 動作 |
+| 操作 | 動作 |
 |---|---|
-| `Space` / `Enter` | めくる |
-| `→` | 覚えた |
-| `←` | まだ（苦手） |
+| `Space` / `Enter`／カードをタップ | めくる |
+| `→`／「覚えた」ボタン／**右へスワイプ** | 覚えた |
+| `←`／「まだ」ボタン／**左へスワイプ** | まだ（苦手） |
+
+**めくる前は「覚えた／まだ」を選べない**（ボタンは薄く、`←` `→` とスワイプも効かない）。
+答えを見ずに記録が付いて進捗が実態とずれるのを防ぐため。押すと「先にめくって答えを確認」と出る。
+
+スワイプは裏面だけ。右か左に 80px 以上払うとカードが飛んで次の語に進み、
+途中で止めて戻せば記録は付かない。指でもマウスのドラッグでも同じように動く
+（縦スクロールは妨げない）。
 
 一周したら「まだの語だけで復習」ができる。
 
@@ -220,6 +227,53 @@ PNG は Chrome の headless スクリーンショットで書き出す。
 
 ---
 
+## アナリティクスの設定
+
+アクセス解析の設定は **`data/site.js` の `analytics`** 1 か所にある。
+**空文字にしておくと、そのサービスは読み込まれない**（両方空なら外部通信はゼロ）。
+
+```js
+analytics: {
+  ga4: 'G-XXXXXXXXXX',   // Google アナリティクス 4 の測定 ID。空なら無効
+  cloudflare: ''         // Cloudflare Web Analytics のトークン。空なら無効
+}
+```
+
+- 計測するのは **http / https で開いたとき**だけ。`file://` では何もしない。
+- `localhost` ／ `127.0.0.1` ／ `*.local` は**デバッグモード**。外部スクリプトを読み込まず、
+  送るはずだった内容を開発者ツールのコンソールに `console.debug` で出すだけ（送信はしない）。
+- 実装は `js/analytics.js`。画面側は `KOBUN.analytics.pageview()` と
+  `KOBUN.analytics.event()` を呼ぶだけで、無効なときは何もしない。
+
+**測定 ID / トークンの取り方**
+
+| サービス | 手順 |
+|---|---|
+| Google アナリティクス 4 | <https://analytics.google.com/> でプロパティを作る → 「データストリーム」でウェブのストリーム（URL は公開ページ）を追加 → 表示される **測定 ID `G-XXXXXXXXXX`** を `ga4` に貼る。 |
+| Cloudflare Web Analytics | <https://dash.cloudflare.com/> → Analytics & Logs → Web Analytics → 「Add a site」で公開ページのホスト名を登録 → 出てくる JS スニペットの **`token` の値**（32 桁の英数字）だけを `cloudflare` に貼る（スニペット自体は貼らない）。 |
+
+貼り替えたら `node tools\bump-version.mjs` を実行してから公開する。
+
+**何を送るか**
+
+| イベント | パラメータ | いつ |
+|---|---|---|
+| `page_view` | `page_path` `page_title` `page_location` | 画面を描き終えたとき（検索語 `?q=` はパスから除く） |
+| `quiz_complete` | `deck` `deck_id` `count` `correct` `score_pct` | クイズを最後まで解いたとき |
+| `study_complete` | `deck` `deck_id` `count` `known` `weak` | フラッシュカードを 1 周したとき |
+| `share` | `method`（native/x/line/copy）`content_type` `item_id` | 共有ボタンを押したとき |
+| `search` | `hit_count` `has_query` | 単語検索（**検索語そのものは送らない**） |
+| `word_view` | `word_id` `level` | 単語詳細を開いたとき |
+| `passage_view` | `passage_id` `work_id` | 文章を開いたとき |
+| `token_tap` | `passage_id` | 原文の語をタップしたとき |
+| `install_prompt` / `app_installed` | `outcome` | ホーム画面に追加したとき |
+| `history_reset` | — | 学習履歴をリセットしたとき |
+
+**送らないもの**：検索語、学習履歴の中身（どの語を覚えたか）、語ごとの「覚えた／まだ」。
+使い方ページの「学習履歴について」には、設定があるときだけこの計測の説明を出す。
+
+---
+
 ## 学習履歴について
 
 - ブラウザの **localStorage** に保存される（キーは `kobun.v1.*`）。
@@ -230,7 +284,9 @@ PNG は Chrome の headless スクリーンショットで書き出す。
   330 語の進捗表示（「全 330 語｜覚えた …」）には混ざらない。
 - 最後に学習したデッキ・最後に開いた文章も覚えていて、ホームの「続きから」に出る
   （`kobun.v1.recent`）。
-- **ブラウザ・端末ごとに別**。同期はしない。**サーバーには一切送らない**。
+- **ブラウザ・端末ごとに別**。同期はしない。**学習履歴の中身（どの語を覚えたか）は
+  サーバーに送らない**（アクセス解析で送るのは「クイズを完走した」などの利用状況だけ。
+  上の「アナリティクスの設定」参照）。
 - 履歴を消すには **使い方ページ（`#/help?to=history`）の「学習履歴をリセットする」**。
   2 段階のボタンになっていて、確認してから消える（進捗・クイズ履歴・「続きから」が対象。
   訳の表示などの画面設定は残る）。ブラウザのサイトデータを削除しても消える。
@@ -265,7 +321,7 @@ D:\kobun_app\
       <文章id>.js         その文章の全文を語に割り、品詞・活用・語義・重要語 id を付けたもの
                           書き方は docs/tokens-guide.md。読み込み設定は tools/sync-tokens.mjs
   js/
-    util.js store.js data-index.js components.js router.js
+    util.js store.js analytics.js data-index.js components.js router.js
     view-home.js view-help.js
     view-words.js view-word.js
     view-passages.js  教科書（#/textbook）＋文章詳細

@@ -301,10 +301,11 @@
 
   /**
    * 文章の 1 段落を描く。vocab の surface をハイライトし、タップで語義を出す。
-   * @param entries K.index.entriesOfPassage(id) の戻り
-   * @param text    paragraphs[].text
+   * @param entries    K.index.entriesOfPassage(id) の戻り
+   * @param text       paragraphs[].text
+   * @param passageId  アクセス解析（token_tap）用。無くても描画は変わらない
    */
-  C.passageLine = function (entries, text) {
+  C.passageLine = function (entries, text, passageId) {
     var wrap = el('p', { class: 'passage-text', lang: 'ja' });
     var list = buildMatcher(entries || []);
     var i = 0;
@@ -329,7 +330,11 @@
             (/要確認/.test(e.note) ? ' pv-check' : ''),
           text: matched,
           title: (e.word ? e.word.kana : matched) + '：' + e.meaning,
-          onClick: function (ev) { ev.stopPropagation(); C.tokenPopup(entryToToken(e, matched), btn); }
+          onClick: function (ev) {
+            ev.stopPropagation();
+            C.tokenPopup(entryToToken(e, matched), btn);
+            if (K.analytics) K.analytics.event('token_tap', { passage_id: passageId || '' });
+          }
         });
         wrap.appendChild(btn);
       })(hit, hit.surface);
@@ -390,7 +395,9 @@
    * 文章の 1 段落を、品詞分解のトークン列から描く。
    * @param entries K.index.entriesOfPassage(id) の戻り（ハイライト用。空でよい）
    * @param tokens  data/tokens のトークン配列（この段落ぶん）
-   * @param opts    { highlightWordId } その語を強調する
+   * @param opts    { highlightWordId, passageId }
+   *                highlightWordId … その語を強調する
+   *                passageId       … アクセス解析（token_tap）用。描画には影響しない
    */
   C.passageTokenLine = function (entries, tokens, opts) {
     opts = opts || {};
@@ -430,7 +437,11 @@
         class: cls,
         text: s,
         title: (tk.pos || '') + (tk.detail ? '・' + tk.detail : '') + (tk.meaning ? '：' + tk.meaning : ''),
-        onClick: function (ev) { ev.stopPropagation(); C.tokenPopup(tk, btn); }
+        onClick: function (ev) {
+          ev.stopPropagation();
+          C.tokenPopup(tk, btn);
+          if (K.analytics) K.analytics.event('token_tap', { passage_id: opts.passageId || '' });
+        }
       });
       wrap.appendChild(btn);
     });
@@ -451,7 +462,8 @@
       return {
         label: (wk ? wk.title : '') + '「' + h.passage.title + '」',
         line: C.passageTokenLine(
-          K.index.entriesOfPassage(h.passage.id), h.tokens, { highlightWordId: wordId }),
+          K.index.entriesOfPassage(h.passage.id), h.tokens,
+          { highlightWordId: wordId, passageId: h.passage.id }),
         translation: h.translation
       };
     }
@@ -857,6 +869,8 @@
    *   url:      共有する絶対 URL（既定：いま開いている画面）
    *   hashtags: ['古文単語帳'] のような配列（# は付けない。既定：site.hashtags）
    *   label:    見出しの文字（既定「共有」）
+   *   contentType: アクセス解析用（'quiz' | 'study' | 'word' | 'passage' | 'work' | 'app'）
+   *   itemId:      アクセス解析用（その語・文章・作品の id。無ければ空）
    * }
    *
    * 端末の共有シート（navigator.share）が使えるのは主にスマホなので、
@@ -888,18 +902,30 @@
 
     function btnLabel(t) { return el('span', { class: 'share-btn-label', text: t }); }
 
+    /** アクセス解析（設定が無ければ no-op）。何を共有したかだけを送る */
+    function track(method) {
+      if (!K.analytics) return;
+      K.analytics.event('share', {
+        method: method,
+        content_type: opts.contentType || '',
+        item_id: opts.itemId == null ? '' : String(opts.itemId)
+      });
+    }
+
     var xLink = el('a', {
       class: 'share-btn share-x',
       href: xIntentUrl(text, url, tags),
       target: '_blank',
-      rel: 'noopener noreferrer'
+      rel: 'noopener noreferrer',
+      onClick: function () { track('x'); }
     }, [icon('x'), btnLabel('X で投稿')]);
 
     var lineLink = el('a', {
       class: 'share-btn share-line',
       href: lineShareUrl(text, url),
       target: '_blank',
-      rel: 'noopener noreferrer'
+      rel: 'noopener noreferrer',
+      onClick: function () { track('line'); }
     }, [icon('line'), btnLabel('LINE で送る')]);
 
     var copyBtn = el('button', {
@@ -908,6 +934,7 @@
       onClick: function () {
         copyToClipboard(url, function (ok) {
           say(ok ? 'コピーしました' : 'コピーできませんでした');
+          if (ok) track('copy');
         });
       }
     }, [icon('link'), btnLabel('リンクをコピー')]);
@@ -928,6 +955,7 @@
           // ユーザー操作のイベントの中で同期的に呼ぶこと（そうしないと拒否される）
           try {
             var p = window.navigator.share({ title: title, text: text, url: url });
+            track('native');
             if (p && p.catch) {
               p.catch(function (err) {
                 // ユーザーが共有シートを閉じただけ（AbortError）は無視する
@@ -963,7 +991,8 @@
       label: opts.label || 'このアプリを共有',
       title: site.name,
       text: (site.name || '古文単語帳') + '｜' + (site.description || ''),
-      url: C.absUrl('#/')
+      url: C.absUrl('#/'),
+      contentType: 'app'
     });
   };
 
@@ -1004,6 +1033,7 @@
   window.addEventListener('appinstalled', function () {
     deferredPrompt = null;
     eachInstallBlock(function (b) { b.hidden = true; });
+    if (K.analytics) K.analytics.event('app_installed', {});
   });
 
   /**
@@ -1023,9 +1053,14 @@
         try {
           p.prompt();
           if (p.userChoice && p.userChoice.then) {
-            p.userChoice.then(function () {
+            p.userChoice.then(function (choice) {
               // 承諾でも辞退でも、同じイベントは二度使えないのでボタンは畳む
               eachInstallBlock(function (b) { b.hidden = true; });
+              if (K.analytics) {
+                K.analytics.event('install_prompt', {
+                  outcome: (choice && choice.outcome) === 'accepted' ? 'accepted' : 'dismissed'
+                });
+              }
             });
           } else {
             eachInstallBlock(function (b) { b.hidden = true; });

@@ -125,7 +125,7 @@ erDiagram
 
 | ファイル | 中身 | 素材との関係 |
 |---|---|---|
-| `data/site.js` | アプリ名・公開 URL・制作者情報 | 新規（データではなく設定。4-c 参照） |
+| `data/site.js` | アプリ名・公開 URL・制作者情報・アクセス解析の設定 | 新規（データではなく設定。4-c / 4-d 参照） |
 | `data/words.js` | 単語 330 語 | 素材 `kobun_words.json` を **無変更** で移し替え |
 | `data/works.js` | 作品 6 件 | 新規（アプリ側の追加データ） |
 | `data/relations.js` | 単語間リンク 57 本 | 新規 |
@@ -306,7 +306,7 @@ flowchart LR
 | **教科書** | 教材を作品別にグループ化した唯一の入口。作品の見出し行は作品ページへのリンクで、作者・時代・ジャンルと文章数・収録語数を添える。各文章カードに段落数・語数・学習進捗（覚えた/総数）。学年でしぼれる。文章がまだ無い作品も「文章はまだありません／収録語 N 語」として出す |
 | **作品ページ** | 作品の書誌と紹介。その作品の文章と収録語（「文章」／「タグ」バッジで由来がわかる）。「この作品の単語で学習／クイズ」 |
 | **文章詳細** | 原文と現代語訳を段落ごとに対応表示（上下／横並びの切替、訳の表示・非表示）。**原文のどの語をタップしても品詞・活用・語義が出る**。段落ごとに「品詞分解を表で見る」。この文章の単語一覧（330 語は詳細へリンク、文章固有語はその場で語義）。「この文章の単語で学習／クイズ」 |
-| **学習** | フィルタしたデッキをカードで。表＝見出し語 → めくると語義＋用例（その語が出てくる段落）。「覚えた／まだ」を記録。Space でめくる、←→ で回答。一周後に「まだの語だけで復習」 |
+| **学習** | フィルタしたデッキをカードで。表＝見出し語 → めくると語義＋用例（その語が出てくる段落）。「覚えた／まだ」を記録。Space でめくる、←→ で回答、**裏面は右／左スワイプでも回答**。**めくる前は回答できない**（ボタンは disabled、キーもスワイプも効かず「先にめくって答えを確認」と出る）。一周後に「まだの語だけで復習」 |
 | **クイズ** | 4択。誤答は **同じ品詞の別語** から取る（SCHEMA.md の推奨）。語→意味／意味→語 の 2 形式。1〜4 の数字キーで回答。結果を localStorage に記録し、間違えた語だけ再出題できる |
 
 ---
@@ -320,6 +320,7 @@ data/site.js        アプリ名・公開 URL・制作者情報（共有と OGP 
 data/*.js           データ（人が編集する）
 js/util.js          DOM の小道具・文字列正規化・検索スコア
 js/store.js         localStorage（学習履歴・設定・クイズ履歴）
+js/analytics.js     アクセス解析（GA4 / Cloudflare。設定が空なら完全に no-op。4-d 参照）
 js/data-index.js    data/*.js から索引をつくる ★ここが接着剤
 js/components.js    画面をまたぐ部品（単語行・関連語カード・原文のトークン描画・品詞分解ポップアップ／一覧表・フィルタ・共有ボタン・制作者行）
 js/router.js        ハッシュルーター
@@ -360,6 +361,8 @@ tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION を更
 | **既定値はバッジにしない** | 一覧の「未学習」バッジは CSS で隠す（`.word-list .badge.status-new`）。330 行すべてに付くバッジは情報量ゼロ。要素は残すので `kobun:progress` の書き換えはそのまま動く |
 | **色だけで意味を伝えない** | クイズの正誤は色＋`○`／`×`、文章の語は色＋線種（実線＝330 語／点線＝文章固有語）。文章詳細には凡例を必ず出す |
 | **スマホではメニューを下タブに** | 640px 以下で `.site-nav` を `position: fixed` の下タブへ。親指の届く位置に置き、上部を本文に使う。高さは `--tab-h`（64px）＋ `env(safe-area-inset-bottom)`、タップ領域は高さ全体。各リンクにインライン SVG（線画・`currentColor`）のアイコンを添え、デスクトップ幅（`.nav-icon`）では非表示にしてラベルのみのピル表示に戻す |
+| **記録は答えを見てから** | フラッシュカードの表面では「覚えた／まだ」を選べない（ボタンは `disabled`、← → とスワイプも無効）。答えを見ずに付いた記録で進捗が実態とずれるほうが害が大きい。押されたら理由（「先にめくって答えを確認」）をボタンの下に 1.6 秒出す |
+| **スワイプは裏面だけ・いつでも戻せる** | 右＝覚えた（緑）／左＝まだ（赤）。80px 動かすまでは確定せず、手を止めて戻せば記録は付かない。指の動きにカードが追従して傾き、ラベルが移動量ぶん濃くなるので「いまどちらに倒れているか」が常に見える。`touch-action: pan-y` と「最初の数 px で縦横を判定」で、縦スクロールは奪わない |
 | **フィルタは畳める** | `C.filterBar` は `<details>` を返す。閉じていても summary に「いま効いている条件」がチップで出る。学習・クイズは既定で畳む（カードを先に見せる） |
 | **コントラストは AA（4.5:1）** | `--fg-muted` は対 `--bg` 5.6:1、重要度バッジの白抜きは 5.8〜7.0:1。ダークも同様に確認済み |
 | **動きは控えめ・止められる** | めくり／正誤のアニメーションは 0.2〜0.3 秒。`prefers-reduced-motion: reduce` で全部止まる |
@@ -482,6 +485,84 @@ Chrome の headless スクリーンショットで PNG にしたもの。作り�
 
 SVG の文字はシステムのフォントで描かれるので、書体指定は必ずフォールバックを並べる
 （Windows は Yu Mincho、Mac は Hiragino Mincho、無ければ `serif`）。
+
+---
+
+## 4-d. アナリティクス（アクセス解析）
+
+### 設計
+
+| 決めごと | 理由 |
+|---|---|
+| **設定は `data/site.js` の `analytics` だけ** | 共有・制作者情報と同じ流儀。ID を差し替える場所を 1 か所にする |
+| **空文字なら何も読み込まない** | 未設定のまま公開しても外部通信ゼロ。`file://` で開く使い方も壊さない |
+| **`http(s)` のときだけ計測する** | `file://` では送り先も参照元も意味がない |
+| **localhost はデバッグモード** | 手元の動作確認で本番の数字を汚さない。`console.debug` に送信内容を出すだけで、外へは 1 バイトも出ない |
+| **ページビューは自前で送る** | ハッシュルーティングなので `gtag` の自動計測では最初の 1 回しか数えられない。`gtag('config', …, { send_page_view: false })` にして、router の描画完了で送る |
+| **分析コードは `js/analytics.js` に閉じる** | 各 view は `KOBUN.analytics.event(...)` を 1 行呼ぶだけ。パスの組み立て・検索語の除外・パラメータの掃除は全部 analytics 側の仕事 |
+| **無効時は no-op** | 呼び出し側に `if (計測してる?)` を書かない。`KOBUN.analytics` は常に存在する |
+| **読み込み順は store の後・router の前** | `data/site.js` を読んだ後であること。router がページビューを呼ぶので router より前 |
+
+```
+data/site.js（設定）
+   └─ js/analytics.js  ── gtag.js を動的挿入（live のときだけ）
+        ├─ js/router.js     描画完了 → pageview(path, title)
+        └─ js/view-*.js     節目だけ event(name, params)
+```
+
+### イベント一覧
+
+| イベント | パラメータ | 送る場所 |
+|---|---|---|
+| `page_view` | `page_path` `page_title` `page_location` | `js/router.js`（`Router.render` の最後） |
+| `quiz_complete` | `deck`（level/pos/work/passage/all）`deck_id` `count` `correct` `score_pct` | `js/view-quiz.js` の結果画面 |
+| `study_complete` | `deck` `deck_id` `count` `known` `weak` | `js/view-study.js` の完走画面（1 周につき 1 回） |
+| `share` | `method`（native/x/line/copy）`content_type`（quiz/study/word/passage/work/app）`item_id` | `js/components.js` の `C.shareButtons`（`contentType` / `itemId` は呼び出し側が渡す） |
+| `search` | `hit_count` `has_query` | `js/view-words.js`（入力が止まってから 1 回） |
+| `word_view` | `word_id` `level` | `js/view-word.js` |
+| `passage_view` | `passage_id` `work_id` | `js/view-passages.js`（文章詳細） |
+| `token_tap` | `passage_id` | `js/components.js` の `passageLine` / `passageTokenLine` |
+| `install_prompt` | `outcome`（accepted/dismissed） | `js/components.js` の `C.installBlock` |
+| `app_installed` | — | `appinstalled` イベント |
+| `history_reset` | — | `js/view-help.js` の 2 段階リセット |
+
+**送らないと決めたもの**
+
+- `study_mark`（1 語ごとの「覚えた／まだ」）… 1 周で数十件になり、意味のある差も出ない。
+  完走イベントの `known` / `weak` で足りる。
+- `search_term`（検索語）… 何を調べたかは個人の関心そのもの。件数だけ送る。
+- 学習履歴の中身（どの語を覚えたか）。
+
+### 無効時の挙動
+
+`KOBUN.site.analytics` の 2 つがどちらも空文字のとき:
+
+- 外部スクリプトを挿入しない。`window.gtag` も `dataLayer` も作らない（**外部通信ゼロ**）。
+- `KOBUN.analytics.pageview()` / `.event()` は呼んでも何も起きない（no-op）。
+- 使い方ページの「学習履歴について」に、計測の段落を**出さない**
+  （同じ節の「サーバーには一切送信しません」の文言も、設定があるときだけ
+  「学習履歴の中身は送信しません」に切り替わる）。
+
+`file://` で開いたときは、設定があっても同じく何もしない。
+
+### プライバシー方針
+
+1. **個人を特定しない。** ログイン・ユーザー ID は無い。GA4 は `anonymize_ip: true`。
+2. **本人の中身は送らない。** 学習履歴・検索語は端末の外に出ない（`js/analytics.js` の
+   `BANNED_PARAM_KEYS` が `q` などのキーを機械的に落とす）。
+3. **URL からも検索語を落とす。** ページビューのパスに残すのは
+   `SAFE_QUERY_KEYS`（level / pos / row / work / passage / status / sort / grade / mode / count / to）だけ。
+   `page_location` も `location.href` をそのまま使わず、この安全なパスから組み立てる。
+4. **書いてあることと実装を一致させる。** 表記の出し分けは `KOBUN.site.analytics` を見る
+   （計測していないのに「送ることがあります」と書かない）。
+
+### Service Worker との関係
+
+`sw.js` の `fetch` ハンドラは **同一オリジン以外を即 `return`** する
+（＝ Service Worker が手を出さず、ブラウザがそのまま出す）。
+googletagmanager.com / google-analytics.com / cloudflareinsights.com はクロスオリジンなので、
+**もともとキャッシュ対象外で素通し**になっている。
+`js/analytics.js` 自体は同一オリジンなので `PRECACHE` に足してある。
 
 ---
 

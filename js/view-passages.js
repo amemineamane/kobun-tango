@@ -191,6 +191,13 @@
       workTitle: work ? work.title : ''
     });
 
+    // アクセス解析（設定が無ければ no-op）
+    if (K.analytics) {
+      K.analytics.event('passage_view', {
+        passage_id: passage.id, work_id: passage.workId || ''
+      });
+    }
+
     var entries = K.index.entriesOfPassage(passage.id);
     var deck = K.index.deckOfPassage(passage.id);
 
@@ -227,7 +234,9 @@
       passage.paragraphs.forEach(function (p, i) {
         var toks = tokenParas ? tokenParas[i] : null;
         var orig = el('div', { class: 'passage-orig' }, [
-          toks ? C.passageTokenLine(entries, toks) : C.passageLine(entries, p.text)
+          toks
+            ? C.passageTokenLine(entries, toks, { passageId: passage.id })
+            : C.passageLine(entries, p.text, passage.id)
         ]);
         // 段落ごとの「品詞分解を表で見る」。原文タップと同じ内容を一覧で読める
         if (toks) {
@@ -356,7 +365,8 @@
     section.appendChild(C.shareButtons({
       label: 'この文章を共有',
       text: (work ? work.title : '') + '『' + passage.title + '』を原文と現代語訳で読む｜古文単語帳',
-      url: C.absUrl('#/passage/' + passage.id)
+      url: C.absUrl('#/passage/' + passage.id),
+      contentType: 'passage', itemId: passage.id
     }));
 
     /* --- 前後の文章 ------------------------------------------------ */

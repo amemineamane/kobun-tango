@@ -142,6 +142,18 @@
       Router.updateNav(route);
       // 画面切り替え時は先頭へ（詳細→詳細のときも読みやすい）
       window.scrollTo(0, 0);
+
+      /* アクセス解析のページビュー（設定が無ければ no-op）。
+         パスの組み立て・検索語の除外は js/analytics.js 側の仕事なので、
+         ここでは「描き終わった」ことと画面の見出しだけを渡す。 */
+      if (K.analytics) K.analytics.pageview(null, Router.screenTitle(container));
+    },
+
+    /** いま描かれている画面の見出し（無ければ <title>） */
+    screenTitle: function (container) {
+      var h = container && container.querySelector && container.querySelector('h1, h2');
+      var t = h && h.textContent ? h.textContent.trim() : '';
+      return t ? t + '｜古文単語帳' : document.title;
     },
 
     updateNav: function (route) {

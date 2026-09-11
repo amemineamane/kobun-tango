@@ -41,6 +41,33 @@
   }
 
   /* ---------------------------------------------------------------
+   * アクセス解析の表記
+   * -------------------------------------------------------------
+   * data/site.js の analytics に設定があるときだけ 1 段落出す。
+   * 設定が空（計測していない）ときに「送ることがあります」と書くのは
+   * 嘘になるので、KOBUN.site.analytics を見て出し分ける。
+   * ------------------------------------------------------------- */
+  function analyticsServices() {
+    var a = (K.site && K.site.analytics) || {};
+    var names = [];
+    if (String(a.ga4 || '').trim()) names.push('Google アナリティクス');
+    if (String(a.cloudflare || '').trim()) names.push('Cloudflare Web Analytics');
+    return names;
+  }
+
+  function analyticsNote() {
+    var names = analyticsServices();
+    if (!names.length) return null;
+    return el('p', { class: 'muted small' }, [
+      'このアプリでは、アクセス解析のため、閲覧した画面やクイズの完走などの利用状況を匿名で計測サービス（',
+      names.join('／'),
+      '）に送ることがあります。',
+      el('b', { text: '学習履歴の中身（どの語を覚えたか）や検索語は送りません。' }),
+      ' 個人を特定する情報も送りません。'
+    ]);
+  }
+
+  /* ---------------------------------------------------------------
    * 学習履歴のリセット（2 段階ボタン）
    * ------------------------------------------------------------- */
   function resetBlock() {
@@ -65,7 +92,11 @@
         wrap.appendChild(el('div', { class: 'deck-links' }, [
           el('button', {
             type: 'button', class: 'btn btn-danger', text: 'はい、すべて消す',
-            onClick: function () { K.store.resetAll(); stage = 'done'; draw(); }
+            onClick: function () {
+              K.store.resetAll();
+              if (K.analytics) K.analytics.event('history_reset', {});
+              stage = 'done'; draw();
+            }
           }),
           el('button', {
             type: 'button', class: 'btn', text: 'やめる',
@@ -177,7 +208,12 @@
     /* --- 5. カードとクイズ ------------------------------------------ */
     section.appendChild(sec('cards', 'フラッシュカードとクイズの操作', [
       el('h3', { class: 'help-h3', text: 'フラッシュカード（学習）' }),
-      el('p', {}, ['カードをタップするか ', kbd('Space'), '（または ', kbd('Enter'), '）でめくります。答えが出たら ', kbd('→'), ' で「覚えた」、', kbd('←'), ' で「まだ」。押した時点で記録されます。']),
+      el('p', {}, ['カードをタップするか ', kbd('Space'), '（または ', kbd('Enter'), '）でめくります。', el('b', { text: 'めくって語義を確認してから' }), '、', kbd('→'), ' で「覚えた」、', kbd('←'), ' で「まだ」。押した時点で記録されます。']),
+      el('p', {}, [
+        '裏面では ', el('b', { text: 'スワイプでも選べます' }),
+        '（右へ払うと「覚えた」、左へ払うと「まだ」。指でもマウスのドラッグでも同じです）。途中で手を止めて戻せば、記録は付きません。'
+      ]),
+      el('p', { class: 'muted small', text: 'めくる前は「覚えた／まだ」を選べません（ボタンは薄く、← → とスワイプも効きません）。答えを見ずに記録が付くと、進捗が実態とずれてしまうためです。' }),
       el('p', { class: 'muted small', text: 'デッキは既定でシャッフルされます（フィルタの下のチェックで止められます）。一周すると「もう一周」「まだの語だけで復習」「クイズに進む」が出ます。' }),
       el('h3', { class: 'help-h3', text: 'クイズ（4 択）' }),
       el('p', {}, [kbd('1'), ' 〜 ', kbd('4'), ' の数字キーで回答できます。出題形式は「語 → 意味」と「意味 → 語」の 2 つ、問題数は 5 / 10 / 20 / 30 から選べます。']),
@@ -212,10 +248,15 @@
       el('ul', { class: 'help-list' }, [
         el('li', { text: '端末やブラウザを変えると引き継がれません（同期はしません）。' }),
         el('li', { text: 'ブラウザの「サイトデータの削除」や、プライベートウィンドウを閉じたときに消えます。' }),
-        el('li', { text: 'サーバーには一切送信しません。アカウント登録もありません。' }),
+        el('li', {
+          text: analyticsServices().length
+            ? '学習履歴の中身（どの語を覚えたか）はサーバーに送信しません。アカウント登録もありません。'
+            : 'サーバーには一切送信しません。アカウント登録もありません。'
+        }),
         el('li', { text: 'localStorage が使えない設定のときは、画面上部に注意が出て、そのタブを閉じるまでの一時保存に切り替わります。' })
       ]),
       el('p', { class: 'muted small', text: '保存キーは単語の id です。同じ仮名の別語（ながむ〔眺む〕/〔詠む〕）が混ざらないようにするためで、単語データを更新しても履歴は残ります。' }),
+      analyticsNote(),
       el('h3', { class: 'help-h3', text: '履歴をリセットする' }),
       resetBlock()
     ]));

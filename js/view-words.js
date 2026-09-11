@@ -26,10 +26,22 @@
     var countEl = el('p', { class: 'result-count' });
     var filterWrap = el('div');
 
+    /* アクセス解析：検索語そのものは送らない（個人の関心が分かってしまうため）。
+       打鍵のたびに送らないよう、入力が止まってから件数だけを 1 回送る。 */
+    var searchTimer = null;
+    function trackSearch(hits) {
+      if (!K.analytics) return;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        K.analytics.event('search', { hit_count: hits, has_query: true });
+      }, 800);
+    }
+
     function drawList() {
       // ?passage= があれば母集団はその文章の語（文章固有語を含む）になる
       var source = C.deckSource(state);
       var words = C.applyFilters(source, state);
+      if (state.q) trackSearch(words.length);
       U.clear(listWrap);
       U.clear(countEl);
 

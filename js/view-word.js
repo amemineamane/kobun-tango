@@ -69,6 +69,11 @@
       return;
     }
 
+    // アクセス解析（設定が無ければ no-op）
+    if (K.analytics) {
+      K.analytics.event('word_view', { word_id: String(word.id), level: word.level || '' });
+    }
+
     var sorted = K.index.sortedByKana;
     var pos = sorted.findIndex(function (w) { return w.id === word.id; });
     var prev = pos > 0 ? sorted[pos - 1] : null;
@@ -179,7 +184,7 @@
           el('span', { class: 'example-section', text: '第 ' + (h.index + 1) + ' 段落' })
         ]),
         el('div', { class: 'example-body' }, [
-          C.passageTokenLine(entries, h.tokens, { highlightWordId: word.id }),
+          C.passageTokenLine(entries, h.tokens, { highlightWordId: word.id, passageId: h.passage.id }),
           el('p', { class: 'example-translation', text: h.translation })
         ]),
         e ? el('p', {
@@ -244,7 +249,8 @@
       label: 'この語を共有',
       // 語義は代表の 1 つだけ（並び順＝入試で問われる順なので先頭が中心の意味）
       text: '『' + word.kana + '』＝' + word.primaryMeaning + '｜古文単語帳',
-      url: C.absUrl('#/word/' + word.id)
+      url: C.absUrl('#/word/' + word.id),
+      contentType: 'word', itemId: word.id
     }));
 
     /* --- 前後ナビ -------------------------------------------------- */

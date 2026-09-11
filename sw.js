@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260910e';
+const CACHE_VERSION = '20260911b';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
@@ -75,6 +75,7 @@ const PRECACHE = [
   /* tokens:end */
   './js/util.js',
   './js/store.js',
+  './js/analytics.js',
   './js/data-index.js',
   './js/components.js',
   './js/router.js',
@@ -127,7 +128,12 @@ self.addEventListener('fetch', function (event) {
   if (req.method !== 'GET') return;
   let url;
   try { url = new URL(req.url); } catch (e) { return; }
-  // 同じオリジンだけ扱う（X・LINE への共有リンクなどは素通し）
+  /* 同じオリジンだけ扱う。ここで return すると、そのリクエストは
+     Service Worker が手を出さずブラウザがそのまま出す（＝素通し）。
+     アクセス解析の外部スクリプトと送信先
+       googletagmanager.com / google-analytics.com / cloudflareinsights.com
+     もクロスオリジンなので、この 1 行でキャッシュ対象から外れている
+     （解析の beacon が古いキャッシュで返る、という事故が起きない）。 */
   if (url.origin !== self.location.origin) return;
   event.respondWith(networkFirst(req));
 });

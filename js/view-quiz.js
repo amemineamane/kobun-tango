@@ -234,6 +234,13 @@
       var wrongs = answers.filter(function (a) { return !a.correct; });
       var pct = Math.round(correct / (answers.length || 1) * 100);
 
+      // アクセス解析：完走したときだけ 1 件（1 問ごとの正誤は送らない）
+      if (K.analytics) {
+        K.analytics.event('quiz_complete', Object.assign(K.analytics.deck(state), {
+          count: answers.length, correct: correct, score_pct: pct
+        }));
+      }
+
       var resultCard = el('div', { class: 'card quiz-result' }, [
         el('h2', { text: '結果' }),
         el('p', { class: 'score' }, [
@@ -274,7 +281,8 @@
         label: '結果を共有',
         text: '古文単語クイズ ' + answers.length + ' 問中 ' + correct + ' 問正解（正答率 ' + pct + '%）！【' +
           C.deckLabel(state) + '】',
-        url: C.absUrl('#/quiz' + U.buildQuery(shareQuery))
+        url: C.absUrl('#/quiz' + U.buildQuery(shareQuery)),
+        contentType: 'quiz', itemId: K.analytics ? K.analytics.deck(state).deck_id : ''
       }));
       stage.appendChild(resultCard);
 

@@ -1087,6 +1087,50 @@ p { margin: 0 0 .8em; }
   position: relative;
   transform-origin: 50% 50%;
   animation: cardIn .22s var(--ease);
+  /* 横のスワイプはカードが受け取り、縦のスクロールはページに任せる */
+  touch-action: pan-y;
+  overflow: hidden;   /* スワイプラベルが角からはみ出さないように */
+}
+
+/* --- スワイプで「覚えた／まだ」（裏面だけ。js/view-study.js） --------- */
+.flashcard.is-dragging {
+  animation: none;            /* めくりアニメと指の追従がぶつからないように */
+  transition: none;
+  cursor: grabbing;
+  user-select: none;
+}
+.flashcard.is-returning { transition: transform .2s var(--ease); }
+.flashcard.is-flying {
+  animation: none;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.swipe-label {
+  position: absolute;
+  top: var(--sp-4);
+  z-index: 2;
+  padding: .15em .8em;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--on-solid);
+  opacity: 0;
+  pointer-events: none;
+}
+/* 色は「覚えた」＝ボタンと同じ緑、「まだ」＝同じ赤（意味と色を全画面でそろえる）。
+   置く側は**動く向きと逆**。右に払うとカードごと右へ出ていくので、
+   右端に置いたラベルは画面外に消えてしまう。左端に出しておけば最後まで見える。 */
+.swipe-known { left:  var(--sp-4); background: var(--ok);     transform: rotate(-7deg); }
+.swipe-weak  { right: var(--sp-4); background: var(--danger); transform: rotate(7deg); }
+
+.flashcard-swipe-hint {
+  margin: var(--sp-3) 0 0;
+  text-align: center;
+  border-top: 1px dashed var(--line);
+  padding-top: var(--sp-2);
 }
 .flashcard.flipped { animation: cardFlip .28s var(--ease); }
 @keyframes cardIn { from { opacity: 0; transform: translateY(8px) scale(.99); } }
@@ -1118,12 +1162,35 @@ p { margin: 0 0 .8em; }
 .flashcard-more { margin: var(--sp-3) 0 0; font-size: var(--fs-md); font-weight: 700; }
 
 .study-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); }
-.study-actions .btn {
+.study-actions .btn,
+.study-actions .judge-slot {
   flex: 1 1 0; min-width: 0;
+}
+.study-actions .btn {
   padding: .75rem .4rem; min-height: 3.1rem;
   font-size: var(--fs-md);
   border-radius: var(--r-md);   /* 縦に伸びても丸くなりすぎないように */
 }
+/* めくる前の「覚えた／まだ」。disabled はクリックイベントを出さないので、
+   理由（先にめくる）を出すために覆いの span でクリックを拾っている */
+.study-actions .judge-slot { display: flex; }
+.study-actions .judge-slot .btn { flex: 1 1 auto; width: 100%; }
+.study-actions .btn:disabled {
+  opacity: .4;
+  cursor: default;
+  filter: grayscale(.35);
+  /* disabled のボタンは click を上に伝えないので、当たり判定を覆いの span に渡す */
+  pointer-events: none;
+}
+.study-actions .judge-slot { cursor: default; }
+.study-actions .btn:disabled:hover { filter: grayscale(.35); }
+
+.study-hint {
+  margin: var(--sp-2) 0 0;
+  text-align: center;
+  min-height: 1.4em;   /* 出たり消えたりでレイアウトが跳ねないように */
+}
+
 @media (max-width: 480px) {
   .study-actions { gap: var(--sp-1); }
   .study-actions .btn { font-size: var(--fs-sm); padding: .7rem .25rem; }

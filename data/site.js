@@ -16,6 +16,8 @@
  *   ・author の各 URL は、空文字にするか "PLACEHOLDER" を含む文字列にすると
  *     画面にリンクが出ない（未設定のまま公開しても壊れないようにしてある）。
  *   ・hashtags は「#」を付けずに書く（X の intent が # を付けるため）。
+ *   ・analytics は **空文字なら無効**。両方空なら計測スクリプトを一切
+ *     読み込まない（外部通信ゼロ）。入れ方は README「アナリティクスの設定」。
  * ===================================================================== */
 window.KOBUN = window.KOBUN || {};
 window.KOBUN.site = {
@@ -28,5 +30,15 @@ window.KOBUN.site = {
     x: 'https://x.com/AmemineAmane',
     youtube: 'https://www.youtube.com/@AmemineAmane',
     booth: 'https://amemineamane.booth.pm/'
+  },
+
+  /* アクセス解析（js/analytics.js が読む）。
+     空文字なら、そのサービスは読み込まない。両方空なら外部通信ゼロ。
+     ・ga4        … Google アナリティクス 4 の測定 ID（'G-XXXXXXXXXX'）
+     ・cloudflare … Cloudflare Web Analytics のサイトトークン（32 桁の英数字）
+     localhost で開いたときは送信せず、console.debug に内容を出すだけ。 */
+  analytics: {
+    ga4: 'G-3ZBSTP6LZB',
+    cloudflare: ''
   }
 };
