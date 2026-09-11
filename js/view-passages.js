@@ -47,6 +47,21 @@
     });
   }
 
+  /** 作品の出題バッジの列（work.exam が無ければ null） */
+  function examBadgeRow(work) {
+    var badges = C.examBadges(K.index.examsOfWork(work.id));
+    if (!badges.length) return null;
+    return el('p', { class: 'textbook-work-exam' }, badges);
+  }
+
+  /** summary の 1 文目だけを取る（一覧を 1 行に収めるため） */
+  function firstSentence(text) {
+    var s = String(text || '');
+    var i = s.indexOf('。');
+    if (i >= 0) s = s.slice(0, i + 1);
+    return s.length > 80 ? s.slice(0, 80) + '…' : s;
+  }
+
   /** 文章カード 1 枚（教科書一覧と作品ページで同じ見た目にする） */
   function passageCard(p) {
     var sum = progressOf(p);
@@ -72,13 +87,22 @@
    * 作品ごとに文章（教材）をまとめて並べる。作品の見出しは作品ページへの
    * リンクを兼ねるので、「作品から入る」「文章から入る」が 1 画面で済む。
    * 文章がまだ無い作品（作品タグだけの作品）も、収録語の数を添えて出す。
+   *
+   * 一覧は 2 つのセクションに分かれる。
+   *   1. 教科書の定番教材 … data/works.js の順（＝教科書での定番順）
+   *   2. 共通テスト・センター試験の出典作品 … work.exam を持つ作品を
+   *      **出題年の新しい順**（K.index.examWorks）に並べる。
+   *      本文のある作品は文章カード、本文が未収録の作品は畳んだ 1 行で出す。
+   * 同じ作品が両方に出ることがある（源氏物語は桐壺＝定番教材、
+   * 若菜下＝2025 年共通テストの出典）。文章ごとに置き場所を決めている。
    * ------------------------------------------------------------- */
   function renderTextbook(params, query, container) {
     var state = Object.assign({}, query);
+    var EXAM = K.index.EXAM_GRADE;
 
     var section = el('section', { class: 'view view-textbook' }, [
       el('h1', { class: 'view-title', text: '教科書' }),
-      el('p', { class: 'view-lead', text: '教科書に定番として載る古典教材を、作品ごとにまとめました。文章を選ぶと原文と現代語訳が読め、「その文章に出てくる単語だけ」で学習・クイズができます。作品名からは、その作品の書誌や収録語をまとめた作品ページへ進めます。' })
+      el('p', { class: 'view-lead', text: '教科書に定番として載る古典教材と、大学入学共通テスト・センター試験で出典になった作品を、作品ごとにまとめました。文章を選ぶと原文と現代語訳が読め、「その文章に出てくる単語だけ」で学習・クイズができます。作品名からは、その作品の書誌や収録語をまとめた作品ページへ進めます。' })
     ]);
 
     var listWrap = el('div');
@@ -109,49 +133,128 @@
       }
     }
 
+    /** いま効いている学年フィルタに合う文章か */
+    function matchGrade(p) {
+      if (!state.grade) return true;
+      return (p.grade || []).indexOf(state.grade) >= 0;
+    }
+
+    /** 作品 1 件のカード（見出し＋文章カード、または「文章はまだありません」） */
+    function workCard(work, list, opts) {
+      opts = opts || {};
+      var words = K.index.wordsByWork.get(work.id) || [];
+      var meta = [work.author, work.era, work.genre].filter(Boolean).join('　/　');
+
+      var head = el('div', { class: 'textbook-work-head' }, [
+        el('h2', { class: 'card-title textbook-work-title' }, [
+          el('a', { class: 'textbook-work-link', href: '#/work/' + work.id, text: work.title }),
+          el('span', { class: 'textbook-work-go muted small', text: '作品ページ →' })
+        ]),
+        opts.exam ? examBadgeRow(work) : null,
+        meta ? el('p', { class: 'textbook-work-meta muted small', text: meta }) : null,
+        el('p', { class: 'textbook-work-stats' }, [
+          el('span', { class: 'badge count', text: list.length ? '文章 ' + list.length : '文章 なし' }),
+          el('span', { class: 'badge count', text: '収録語 ' + words.length })
+        ])
+      ]);
+
+      var body;
+      if (list.length) {
+        body = el('div', { class: 'passage-grid' });
+        list.forEach(function (p) { body.appendChild(passageCard(p)); });
+      } else {
+        body = el('p', { class: 'textbook-empty muted' }, [
+          (opts.exam ? '本文は未収録（作品の解説のみ）' : '文章はまだありません')
+            + '／収録語 ' + words.length + ' 語　',
+          el('a', { href: '#/work/' + work.id, text: '作品ページで見る →' })
+        ]);
+      }
+
+      return el('div', { class: 'card textbook-work' }, [head, body]);
+    }
+
+    /** 本文が未収録の出典作品。一覧が長くなりすぎないよう 1 行に畳む */
+    function examBriefRow(work) {
+      var words = K.index.wordsByWork.get(work.id) || [];
+      var meta = [work.author, work.era, work.genre].filter(Boolean).join('　/　');
+      return el('div', { class: 'textbook-brief' }, [
+        el('p', { class: 'textbook-brief-head' }, [
+          el('a', { class: 'textbook-brief-title', href: '#/work/' + work.id, text: work.title })
+        ].concat(C.examBadges(K.index.examsOfWork(work.id)))),
+        meta ? el('p', { class: 'textbook-brief-meta muted small', text: meta }) : null,
+        el('p', { class: 'textbook-brief-summary', text: firstSentence(work.summary) }),
+        el('p', { class: 'textbook-brief-foot' }, [
+          el('span', {
+            class: 'muted small',
+            text: '本文は未収録（作品の解説のみ）' + (words.length ? '／収録語 ' + words.length + ' 語' : '')
+          }),
+          el('a', { class: 'small', href: '#/work/' + work.id, text: '作品ページ →' })
+        ])
+      ]);
+    }
+
     function drawList() {
       U.clear(listWrap);
       var shown = 0;
 
+      /* --- 1. 教科書の定番教材 ------------------------------------
+       * 入試の出典として入れた文章（grade が '入試'）は下のセクションに回す。
+       * 文章がまだ無い作品は収録語つきで出すが、入試の出典作品はここには出さない
+       * （下のセクションに必ず出るので、二重に並べない）。
+       * ---------------------------------------------------------- */
+      var classicWrap = el('div');
+      var classicCount = 0;
       K.index.works.forEach(function (work) {
-        var all = K.index.passagesOfWork(work.id);
-        var list = all.filter(function (p) {
-          if (!state.grade) return true;
-          return (p.grade || []).indexOf(state.grade) >= 0;
+        var all = K.index.passagesOfWork(work.id).filter(function (p) {
+          return !K.index.isExamPassage(p);
         });
-        // 学年でしぼっているときは、該当する文章がある作品だけを出す。
-        // しぼっていないときは、文章がまだ無い作品も収録語つきで出す。
-        if (!list.length && state.grade) return;
-        shown += list.length;
-
-        var words = K.index.wordsByWork.get(work.id) || [];
-        var meta = [work.author, work.era, work.genre].filter(Boolean).join('　/　');
-
-        var head = el('div', { class: 'textbook-work-head' }, [
-          el('h2', { class: 'card-title textbook-work-title' }, [
-            el('a', { class: 'textbook-work-link', href: '#/work/' + work.id, text: work.title }),
-            el('span', { class: 'textbook-work-go muted small', text: '作品ページ →' })
-          ]),
-          meta ? el('p', { class: 'textbook-work-meta muted small', text: meta }) : null,
-          el('p', { class: 'textbook-work-stats' }, [
-            el('span', { class: 'badge count', text: list.length ? '文章 ' + list.length : '文章 なし' }),
-            el('span', { class: 'badge count', text: '収録語 ' + words.length })
-          ])
-        ]);
-
-        var body;
-        if (list.length) {
-          body = el('div', { class: 'passage-grid' });
-          list.forEach(function (p) { body.appendChild(passageCard(p)); });
-        } else {
-          body = el('p', { class: 'textbook-empty muted' }, [
-            '文章はまだありません／収録語 ' + words.length + ' 語　',
-            el('a', { href: '#/work/' + work.id, text: '作品ページで見る →' })
-          ]);
-        }
-
-        listWrap.appendChild(el('div', { class: 'card textbook-work' }, [head, body]));
+        var list = all.filter(matchGrade);
+        var isExamWork = K.index.examsOfWork(work.id).length > 0;
+        if (!list.length && (state.grade || isExamWork)) return;
+        classicCount += list.length;
+        classicWrap.appendChild(workCard(work, list));
       });
+
+      if (classicWrap.childNodes.length) {
+        listWrap.appendChild(el('div', { class: 'textbook-section-head' }, [
+          el('h2', { class: 'textbook-section-title', text: '教科書の定番教材' }),
+          el('p', { class: 'muted small', text: '中学・高校の教科書に繰り返し採られる教材です。学年の目安は編集部の判断によるものなので、目安として使ってください。' })
+        ]));
+        listWrap.appendChild(classicWrap);
+        shown += classicCount;
+      }
+
+      /* --- 2. 共通テスト・センター試験の出典作品 -------------------
+       * K.index.examWorks（出題年の新しい順）をそのまま並べる。
+       * 本文のある作品は文章カード、未収録の作品は畳んだ 1 行。
+       * 学年フィルタで「入試」以外を選んでいるときは、このセクションごと出さない。
+       * ---------------------------------------------------------- */
+      var examWrap = el('div');
+      var examCount = 0;
+      var showBrief = !state.grade || state.grade === EXAM;
+      K.index.examWorks.forEach(function (work) {
+        var all = K.index.passagesOfWork(work.id).filter(K.index.isExamPassage);
+        var list = all.filter(matchGrade);
+        if (list.length) {
+          examCount += list.length;
+          examWrap.appendChild(workCard(work, list, { exam: true }));
+        } else if (showBrief) {
+          examCount += 1;
+          examWrap.appendChild(examBriefRow(work));
+        }
+      });
+
+      if (examWrap.childNodes.length) {
+        var withText = K.index.passages.filter(K.index.isExamPassage).length;
+        listWrap.appendChild(el('div', { class: 'textbook-section-head is-exam' }, [
+          el('h2', { class: 'textbook-section-title', text: '共通テスト・センター試験の出典作品' }),
+          el('p', { class: 'small', text: '共通テストは、教科書に載っていない作品から出題されます。だからこそ、初見の文章を単語と文法だけで読む練習が要ります。' }),
+          el('p', { class: 'small', text: '2016 年度以降の出典 ' + K.index.examWorks.length + ' 作品を、出題年の新しい順に並べました。本文のある ' + withText + ' 編は原文・現代語訳・品詞分解で読め、その文章に出てくる単語だけで学習できます。' }),
+          el('p', { class: 'muted small', text: '収めたのは原文と、このアプリのために書き下ろした現代語訳だけです（試験の設問・注・リード文は載せていません）。本文が未収録の作品も、作者・時代・ジャンルと出題された場面が作品ページで読めます。' })
+        ]));
+        listWrap.appendChild(examWrap);
+        shown += examCount;
+      }
 
       if (shown === 0) {
         listWrap.appendChild(el('div', { class: 'notice' }, [
@@ -213,11 +316,31 @@
       work ? el('a', { href: '#/work/' + work.id, text: work.title }) : null
     ]));
 
+    /* 入試の出典から採った文章は、タイトルのそばに出題バッジを出す。
+       part / section は works.js 側（同じ年の出題）から借りて説明に添える。
+       「この本文がそのまま出題された」とは限らないので（同じ作品の別の場面を
+       収めたものがある）、断定はせず、詳しくは passage.note に書いてある。 */
+    var pexam = passage.exam || null;
+    var workExam = pexam
+      ? K.index.examsOfWork(passage.workId).filter(function (e) { return e.year === pexam.year; })[0]
+      : null;
+    var examInfo = pexam ? Object.assign({}, workExam || {}, pexam) : null;
+
     section.appendChild(el('header', { class: 'passage-head' }, [
       el('div', { class: 'word-head-badges' },
-        (work ? [el('span', { class: 'badge pos', text: work.genre })] : []).concat(gradeBadges(passage))),
+        (work ? [el('span', { class: 'badge pos', text: work.genre })] : [])
+          .concat(gradeBadges(passage))
+          .concat(examInfo ? [C.examBadge(examInfo)] : [])),
       el('h1', { class: 'view-title passage-title', text: passage.title }),
-      el('p', { class: 'muted', text: (work ? work.title + '　/　' + work.author : '') + (passage.section ? '　/　' + passage.section : '') })
+      el('p', { class: 'muted', text: (work ? work.title + '　/　' + work.author : '') + (passage.section ? '　/　' + passage.section : '') }),
+      examInfo ? el('p', { class: 'passage-exam-note small' }, [
+        el('span', {
+          text: examInfo.year + ' 年度' + (examInfo.test || '')
+            + (examInfo.part && examInfo.part !== '本試験' ? '（' + examInfo.part + '）' : '')
+            + 'の出典作品です。'
+        }),
+        el('a', { href: '#/textbook?grade=' + encodeURIComponent(K.index.EXAM_GRADE), text: 'ほかの出典作品 →' })
+      ]) : null
     ]));
 
     /* --- 本文 ------------------------------------------------------ */

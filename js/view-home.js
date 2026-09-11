@@ -10,8 +10,8 @@
  *   3. おすすめ           … 苦手が溜まっていれば復習を先頭に固定。そのうえで、
  *                          未学習が残る文章・作品・重要度/品詞（無ければ五十音行）から
  *                          日付シードの擬似乱数で毎日 2〜3 件を選んで添える
- *   4. 入口カード         … 重要度・品詞・教科書の文章へのショートカット
- *                          （作品への入口は「教科書」#/textbook に一本化した）
+ *   4. 入口カード         … 重要度・品詞・教科書の文章・入試の出典作品への
+ *                          ショートカット（作品への入口は「教科書」#/textbook に一本化した）
  *   5. フッターのリンク   … 使い方 / データについて
  *
  * リンク先は既存のクエリ形式に合わせる（#/words?level=S など）。
@@ -439,6 +439,40 @@
     return card;
   }
 
+  /* 入試（共通テスト・センター試験）の出典作品への入口。
+     教科書ページの後半のセクション（#/textbook?grade=入試）に直行する。
+     並びは K.index.examWorks（出題年の新しい順）をそのまま使う。 */
+  function examCard() {
+    var works = K.index.examWorks;
+    if (!works.length) return null;
+    var withText = K.index.passages.filter(K.index.isExamPassage);
+    var href = '#/textbook?grade=' + encodeURIComponent(K.index.EXAM_GRADE);
+
+    var card = el('div', { class: 'card' }, [
+      el('h2', { class: 'card-title' }, [
+        '入試の出典作品',
+        el('span', { class: 'muted small', text: '（' + works.length + ' 作品）' })
+      ]),
+      el('p', { class: 'muted small', text: '共通テストは教科書に載らない作品から出題されます。2016 年度以降の出典を出題年の新しい順に並べました。本文のある ' + withText.length + ' 編は原文・現代語訳・品詞分解で読めます。' })
+    ]);
+
+    // 直近の 6 作品だけ名前で見せる（全部は教科書の入試セクションへ）
+    var list = el('div', { class: 'tile-list' });
+    works.slice(0, 6).forEach(function (w) {
+      var e = K.index.examsOfWork(w.id)[0];
+      var n = K.index.passagesOfWork(w.id).filter(K.index.isExamPassage).length;
+      list.appendChild(el('a', { class: 'tile', href: '#/work/' + w.id }, [
+        el('span', { class: 'tile-title', text: w.title }),
+        el('span', { class: 'tile-sub muted', text: (e ? e.year + ' ' + e.test : '') + (n ? '　本文 ' + n + ' 編' : '') })
+      ]));
+    });
+    card.appendChild(list);
+    card.appendChild(el('p', { class: 'home-more' }, [
+      el('a', { href: href, text: '入試の出典作品をすべて見る →' })
+    ]));
+    return card;
+  }
+
   /* ---------------------------------------------------------------
    * 描画
    * ------------------------------------------------------------- */
@@ -450,7 +484,7 @@
       el('p', { class: 'home-hero-lead' }, [
         '入試向けの古文単語 ',
         el('b', { text: K.index.words.length + ' 語' }),
-        ' と、教科書の定番教材 ',
+        ' と、教科書の定番教材・共通テストの出典 ',
         el('b', { text: K.index.passages.length + ' 編' }),
         ' の文章で学ぶ単語帳です。'
       ]),
@@ -474,6 +508,8 @@
     section.appendChild(levelCard());
     section.appendChild(posCard());
     section.appendChild(passageCard());
+    var ec = examCard();
+    if (ec) section.appendChild(ec);
 
     section.appendChild(el('div', { class: 'card home-share' }, [
       el('h2', { class: 'card-title', text: 'このアプリを共有' }),

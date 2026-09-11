@@ -54,6 +54,11 @@
   --level-B:    #1f6b7a;   /* 応用  ：青緑     白抜き 6.1:1 */
   --level-P:    #6b625a;   /* 文章固有語：無彩色 */
   --on-level:   #ffffff;   /* 重要度バッジの文字色 */
+
+  /* 入試の出題（共通テスト・センター試験）。重要度の赤橙青緑とも
+     学年バッジの藍とも混ざらないように、藤色を 1 色だけ足す。 */
+  --exam:       #5b4b8a;   /* 文字・罫（対 --bg 6.9:1／対 --exam-bg 6.1:1） */
+  --exam-bg:    #ece7f5;   /* バッジ・セクションの地 */
   --on-solid:   #ffffff;   /* 塗りボタン・塗りバッジの文字色 */
 
   /* --- 余白（4px 刻み） --------------------------------------------- */
@@ -134,6 +139,9 @@
     --level-P:    #a89e90;
     --on-level:   #1b1917;
     --on-solid:   #1b1917;
+
+    --exam:       #b9a8e0;   /* 藤色 対 --bg 8.1:1／対 --exam-bg 6.1:1 */
+    --exam-bg:    #332c47;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
     --shadow-md: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
@@ -466,6 +474,21 @@ p { margin: 0 0 .8em; }
 .badge.count { background: var(--bg-sub); border-color: transparent; }
 .badge.count-done { background: var(--ok); color: var(--on-solid); border-color: transparent; }
 .badge.grade { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+
+/* 出題バッジ（共通テスト・センター試験）。
+   年（太字・等幅数字）＋試験名を必ず並べる。本試験以外だけ 3 つめの語が付く。 */
+.badge.exam {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .3em;
+  background: var(--exam-bg);
+  color: var(--exam);
+  border-color: transparent;
+  font-weight: 600;
+}
+.exam-year { font-weight: 800; font-size: 1.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+.exam-test { letter-spacing: .03em; }
+.exam-part { font-size: .92em; opacity: .85; }
 
 .badge.rel { font-size: var(--fs-sm); padding: .1em .75em; font-weight: 700; }
 .badge.src { font-weight: 700; }
@@ -920,6 +943,71 @@ p { margin: 0 0 .8em; }
 .textbook-work-meta { margin: .2rem 0 .4rem; }
 .textbook-work-stats { margin: 0; display: flex; gap: .35rem; flex-wrap: wrap; }
 .textbook-empty { font-size: var(--fs-sm); margin: 0; }
+.textbook-work-exam { margin: .35rem 0 .1rem; display: flex; gap: .35rem; flex-wrap: wrap; }
+
+/* 教科書は「定番教材」と「入試の出典作品」の 2 セクションに分かれる。
+   見出しはカードの外に置き、入試側だけ藤色の帯で区別する（色 + 見出しの語）。 */
+.textbook-section-head { margin: var(--sp-6) 0 var(--sp-3); }
+.textbook-section-head:first-child { margin-top: var(--sp-2); }
+.textbook-section-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-xl);
+  margin: 0 0 .3rem;
+  letter-spacing: .04em;
+}
+.textbook-section-head p { margin: .25rem 0 0; line-height: var(--lh-body); max-width: 44em; }
+.textbook-section-head.is-exam {
+  border-left: 4px solid var(--exam);
+  background: var(--exam-bg);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+}
+.textbook-section-head.is-exam .textbook-section-title { color: var(--exam); }
+
+/* 本文が未収録の出典作品は、カードを畳んだ 1 行にする（12 件あるため） */
+.textbook-brief {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--exam);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  padding: .55rem .85rem;
+  margin-bottom: var(--sp-2);
+}
+.textbook-brief-head {
+  margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem;
+}
+.textbook-brief-title {
+  font-family: var(--font-serif); font-weight: 700;
+  font-size: var(--fs-lg); letter-spacing: .03em;
+}
+.textbook-brief-meta { margin: .1rem 0 0; }
+.textbook-brief-summary {
+  margin: .2rem 0 .3rem; font-size: var(--fs-sm);
+  line-height: var(--lh-body); color: var(--fg);
+}
+.textbook-brief-foot {
+  margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .8rem;
+  align-items: baseline; justify-content: space-between;
+}
+
+/* 作品ページの「入試での出題」 */
+.work-exam-badges { margin: 0 0 .4rem; display: flex; gap: .35rem; flex-wrap: wrap; }
+.exam-card { border-left: 4px solid var(--exam); }
+.exam-list { list-style: none; margin: 0 0 var(--sp-3); padding: 0; }
+.exam-list-item {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem;
+  padding: .35rem 0; border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+.exam-list-item:last-child { border-bottom: 0; }
+.exam-list-part { font-weight: 700; }
+.exam-list-section { flex: 1 1 12rem; min-width: 0; }
+
+/* 文章ページの出題の 1 行 */
+.passage-exam-note {
+  margin: .35rem 0 0; display: flex; flex-wrap: wrap; gap: .3rem .7rem;
+  align-items: baseline; color: var(--exam);
+}
 
 /* ============================================================ 14. 文章 */
 .passage-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-3); }

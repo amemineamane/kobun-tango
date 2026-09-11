@@ -91,6 +91,33 @@ const KANA_ROWS = ['あ行', 'か行', 'さ行', 'た行', 'な行', 'は行', '
 /** 関連語を逆向きに出すときのラベル（js/data-index.js の INVERSE_TYPE と同じ） */
 const INVERSE_TYPE = { 派生: '派生元', 段階: '段階' };
 
+/* --- 入試の出題（共通テスト・センター試験） --------------------------
+ * data/works.js の work.exam（配列）と data/passages.js の passage.exam。
+ * 画面側（js/components.js の C.examBadge）と同じ見た目・同じ言い回しにする。
+ * ------------------------------------------------------------------ */
+/** その作品の出題歴を新しい順に */
+const examsOf = (wk) => (((wk && wk.exam) || []).slice()
+  .sort((a, b) => (b.year || 0) - (a.year || 0)));
+
+/** 「2025 年度 共通テスト 本試験 若菜下（文章II）」のような 1 行 */
+function examLabel(e, withSection = false) {
+  return [
+    `${e.year} 年度`, e.test, e.part,
+    withSection && e.section && e.section !== '—' ? e.section : ''
+  ].filter(Boolean).join('　');
+}
+
+/** 出題バッジ（クラス名はアプリと共通。css/style.css の .badge.exam） */
+function examBadgeHtml(e) {
+  if (!e || e.year == null) return '';
+  const part = e.part && e.part !== '本試験'
+    ? `<span class="exam-part">${esc(e.part)}</span>` : '';
+  return `<span class="badge exam" title="${esc(examLabel(e, true))} に出題">` +
+    `<span class="exam-year">${esc(e.year)}</span>` +
+    (e.test ? `<span class="exam-test">${esc(e.test)}</span>` : '') +
+    part + '</span>';
+}
+
 /* --- 小道具 ---------------------------------------------------------- */
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -461,9 +488,17 @@ function passagePage(p) {
   const tk = tokens[p.id] || null;
   const vocab = p.vocab || [];
   const firstText = (p.paragraphs[0] || {}).text || '';
+  /* 入試の出典から採った文章は、出題年・試験名を見出しと description に出す。
+     part / section は works.js 側（同じ年の出題）から借りる。 */
+  const pexam = p.exam
+    ? Object.assign({}, examsOf(wk).filter((e) => e.year === p.exam.year)[0] || {}, p.exam)
+    : null;
+  const examSentence = pexam
+    ? `${pexam.year} 年度${pexam.test || ''}${pexam.part && pexam.part !== '本試験' ? '（' + pexam.part + '）' : ''}の出典作品。`
+    : '';
   const desc = clamp(
     `${workTitle}「${p.title}」${p.section ? '（' + p.section + '）' : ''}の原文「${firstText.slice(0, 24)}…」と現代語訳、` +
-    `${tk ? '全文の品詞分解（品詞・活用・語義）' : '重要語の語義'}。この文章に出てくる古文単語 ${vocab.length} 語の意味つき。`
+    `${tk ? '全文の品詞分解（品詞・活用・語義）' : '重要語の語義'}。${examSentence}この文章に出てくる古文単語 ${vocab.length} 語の意味つき。`
   );
 
   const crumbs = [
@@ -474,10 +509,10 @@ function passagePage(p) {
   ];
 
   let body = `<header class="passage-head">
-<p class="word-head-badges">${wk ? `<span class="badge pos">${esc(wk.genre)}</span>` : ''}${(p.grade || []).map((g) => `<span class="badge grade">${esc(g)}</span>`).join('')}</p>
+<p class="word-head-badges">${wk ? `<span class="badge pos">${esc(wk.genre)}</span>` : ''}${(p.grade || []).map((g) => `<span class="badge grade">${esc(g)}</span>`).join('')}${pexam ? examBadgeHtml(pexam) : ''}</p>
 <h1 class="view-title passage-title">${esc(p.title)}（${esc(workTitle)}）の現代語訳と品詞分解</h1>
 <p class="muted">${esc(workTitle)}${wk ? '　/　' + esc(wk.author) : ''}${p.section ? '　/　' + esc(p.section) : ''}${wk ? '　/　' + esc(wk.era) : ''}</p>
-<p class="view-lead">${esc(workTitle)}「${esc(p.title)}」の原文を段落ごとに現代語訳と並べ、${tk ? '全語の品詞分解を表にしました。' : '重要語の語義をまとめました。'}作品の解説は<a href="../k/${esc(p.workId)}.html">${esc(workTitle)}のページ</a>へ。</p>
+${pexam ? `<p class="passage-exam-note small">${esc(examSentence)}<a href="../k/${esc(p.workId)}.html">出題歴を見る →</a></p>\n` : ''}<p class="view-lead">${esc(workTitle)}「${esc(p.title)}」の原文を段落ごとに現代語訳と並べ、${tk ? '全語の品詞分解を表にしました。' : '重要語の語義をまとめました。'}作品の解説は<a href="../k/${esc(p.workId)}.html">${esc(workTitle)}のページ</a>へ。</p>
 </header>
 `;
 
@@ -557,11 +592,16 @@ ${rows.map((t) => {
       author: authorLd,
       publisher: authorLd,
       isPartOf: wk ? { '@type': 'Book', name: wk.title, author: { '@type': 'Person', name: wk.author }, url: BASE + `k/${wk.id}.html` } : undefined,
-      about: vocab.filter((v) => v.wordId != null && wordById.has(v.wordId)).slice(0, 20).map((v) => ({
-        '@type': 'DefinedTerm',
-        name: wordById.get(v.wordId).kana,
-        url: BASE + `w/${v.wordId}.html`
-      }))
+      about: (pexam ? [{
+        '@type': 'Thing',
+        name: `${pexam.year} 年度${pexam.test || ''}${pexam.part ? '（' + pexam.part + '）' : ''} 国語（古文）の出典`
+      }] : []).concat(
+        vocab.filter((v) => v.wordId != null && wordById.has(v.wordId)).slice(0, 20).map((v) => ({
+          '@type': 'DefinedTerm',
+          name: wordById.get(v.wordId).kana,
+          url: BASE + `w/${v.wordId}.html`
+        }))
+      )
     },
     breadcrumbLd(rel, crumbs)
   ];
@@ -581,10 +621,19 @@ function workPage(wk) {
   const wordIds = Array.from(wordIdsByWork.get(wk.id) || [])
     .map((id) => wordById.get(id))
     .sort((a, b) => a.kanaOrder - b.kanaOrder);
-  const title = `${wk.title}（${wk.author}）の教材と古文単語｜${SITE.name}`;
-  const desc = clamp(
-    `${wk.title}（${wk.author}・${wk.era}／${wk.genre}）の教科書教材 ${list.length} 編の原文と現代語訳、` +
-    `この作品で押さえたい古文単語 ${wordIds.length} 語。${wk.summary}`
+  const exams = examsOf(wk);
+  const examYears = exams.map((e) => `${e.year} 年度${e.test || ''}`).join('・');
+  /* 本文が未収録の作品（入試の出典として作品情報だけ登録したもの）は、
+     「教材 0 編・単語 0 語」と書いても意味が無いので、書誌と出題歴を前に出す。 */
+  const title = list.length
+    ? `${wk.title}（${wk.author}）の教材と古文単語｜${SITE.name}`
+    : `${wk.title}（${wk.author}）の解説${exams.length ? 'と入試での出題' : ''}｜${SITE.name}`;
+  const desc = clamp(list.length
+    ? `${wk.title}（${wk.author}・${wk.era}／${wk.genre}）の教科書教材 ${list.length} 編の原文と現代語訳、` +
+      `この作品で押さえたい古文単語 ${wordIds.length} 語。` +
+      (exams.length ? `${examYears}の古文の出典。` : '') + wk.summary
+    : `${wk.title}（${wk.author}・${wk.era}／${wk.genre}）の作者・成立時代・ジャンルとあらすじ。` +
+      (exams.length ? `${examYears}の国語（古文）の出典。` : '') + wk.summary
   );
 
   const crumbs = [
@@ -596,10 +645,23 @@ function workPage(wk) {
   let body = `<header class="work-head">
 <p class="word-head-badges"><span class="badge pos">${esc(wk.genre)}</span></p>
 <h1 class="view-title">${esc(wk.title)}</h1>
-<p class="work-meta muted">${esc(wk.author)}　/　${esc(wk.era)}　/　${esc(wk.genre)}</p>
+${exams.length ? `<p class="work-exam-badges">${exams.map(examBadgeHtml).join('')}</p>\n` : ''}<p class="work-meta muted">${esc(wk.author)}　/　${esc(wk.era)}　/　${esc(wk.genre)}</p>
 <p class="work-summary">${esc(wk.summary)}</p>
 </header>
 `;
+
+  /* 入試での出題（年・試験・本試験/第1日程・出題箇所） */
+  if (exams.length) {
+    body += `<div class="card exam-card"><h2 class="card-title">${esc(wk.title)}の入試での出題</h2>
+<ul class="exam-list">` +
+      exams.map((e) => `<li class="exam-list-item">${examBadgeHtml(e)}` +
+        `<span class="exam-list-part">${esc(e.part || '')}</span>` +
+        ((e.section && e.section !== '—') ? `<span class="exam-list-section muted">出題箇所：${esc(e.section)}</span>` : '') +
+        '</li>').join('') +
+      `</ul>
+<p class="muted small">大学入学共通テスト（2021 年度〜）・センター試験（2016〜2020 年度）の国語（古文）の出典です。収めているのは著作権保護期間の満了した原文と、このサイトで書き下ろした現代語訳だけで、試験の設問・注・リード文は載せていません。</p>
+<p class="home-more"><a href="index.html">ほかの作品を見る →</a></p></div>\n`;
+  }
 
   if (list.length) {
     body += `<div class="card"><h2 class="card-title">${esc(wk.title)}の教材（${list.length}）</h2><div class="passage-grid">` +
@@ -610,7 +672,11 @@ function workPage(wk) {
 <p class="passage-card-stats"><span class="badge count">${p.paragraphs.length} 段落</span><span class="badge count">${(p.vocab || []).length} 語</span></p></a>`).join('') +
       `</div></div>\n`;
   } else {
-    body += `<div class="card"><h2 class="card-title">${esc(wk.title)}の教材</h2><p class="muted">文章はまだ収録していません。</p></div>\n`;
+    body += `<div class="card"><h2 class="card-title">${esc(wk.title)}の教材</h2><p class="muted">${exams.length
+      ? '本文は未収録です。信頼できる翻刻を確認できた作品から順に収めているため、この作品は作品情報（作者・時代・ジャンルと出題された場面）だけを載せています。'
+      : '文章はまだ収録していません。'}</p>` +
+      (exams.length ? `<p class="home-more"><a href="../p/index.html">本文つきの教材を読む →</a></p>` : '') +
+      `</div>\n`;
   }
 
   if (wordIds.length) {
@@ -626,9 +692,14 @@ function workPage(wk) {
       name: wk.title,
       author: { '@type': 'Person', name: wk.author },
       genre: wk.genre,
-      description: `${wk.summary}（成立：${wk.era}）`,
+      description: `${wk.summary}（成立：${wk.era}）` +
+        (exams.length ? `　大学入学共通テスト・センター試験 国語（古文）の出典：${exams.map((e) => examLabel(e, true)).join('／')}` : ''),
       inLanguage: 'ja',
       url: BASE + rel,
+      about: exams.length ? exams.map((e) => ({
+        '@type': 'Thing',
+        name: `${e.year} 年度${e.test || ''}${e.part ? '（' + e.part + '）' : ''} 国語（古文）の出典`
+      })) : undefined,
       hasPart: list.map((p) => ({
         '@type': 'CreativeWork',
         name: p.title,
@@ -717,7 +788,7 @@ function passageIndexPage() {
   ];
 
   let body = `<h1 class="view-title">教科書の古典教材 ${passages.length} 編</h1>
-<p class="view-lead">中学・高校の教科書に定番として載る古典教材を、原文・現代語訳・全文の品詞分解つきで収録しています。作品名から作品の解説へ、教材名から本文へ進めます。<a href="../w/index.html">古文単語 ${words.length} 語の一覧</a>／<a href="../k/index.html">作品一覧</a></p>
+<p class="view-lead">中学・高校の教科書に定番として載る古典教材と、大学入学共通テスト・センター試験で出典になった作品の本文を、原文・現代語訳・全文の品詞分解つきで収録しています。作品名から作品の解説へ、教材名から本文へ進めます。<a href="../w/index.html">古文単語 ${words.length} 語の一覧</a>／<a href="../k/index.html">作品一覧</a></p>
 `;
 
   works.forEach((wk) => {
@@ -725,10 +796,10 @@ function passageIndexPage() {
     if (!list.length) return;
     body += `<div class="card">
 <h2 class="card-title"><a href="../k/${esc(wk.id)}.html">${esc(wk.title)}</a></h2>
-<p class="muted small">${esc(wk.author)}　/　${esc(wk.era)}　/　${esc(wk.genre)}</p>
+${examsOf(wk).length ? `<p class="textbook-work-exam">${examsOf(wk).map(examBadgeHtml).join('')}</p>\n` : ''}<p class="muted small">${esc(wk.author)}　/　${esc(wk.era)}　/　${esc(wk.genre)}</p>
 <div class="passage-grid">` +
       list.map((p) => `<a class="passage-card" href="${esc(p.id)}.html">
-<div class="passage-card-head"><span class="passage-card-title">${esc(p.title)}</span></div>
+<div class="passage-card-head"><span class="passage-card-title">${esc(p.title)}</span>${p.exam ? examBadgeHtml(Object.assign({}, examsOf(wk).filter((e) => e.year === p.exam.year)[0] || {}, p.exam)) : ''}</div>
 <p class="passage-card-section muted">${esc(p.section || '')}${(p.grade || []).length ? '　/　' + esc(p.grade.join('・')) : ''}</p>
 <p class="passage-card-lead">${esc(((p.paragraphs[0] || {}).text || '').slice(0, 40))}…</p>
 <p class="passage-card-stats"><span class="badge count">${p.paragraphs.length} 段落</span><span class="badge count">${(p.vocab || []).length} 語</span>${tokens[p.id] ? '<span class="badge count">品詞分解あり</span>' : ''}</p></a>`).join('') +
@@ -755,14 +826,14 @@ function workIndexPage() {
   ];
 
   let body = `<h1 class="view-title">古典作品 ${works.length} 作</h1>
-<p class="view-lead">教材を収録している古典作品の一覧です。作品ごとに、収録している教科書教材（原文・現代語訳・品詞分解）と、その作品で押さえたい古文単語がまとまっています。<a href="../w/index.html">古文単語 ${words.length} 語の一覧</a>／<a href="../p/index.html">教科書の文章一覧</a></p>
+<p class="view-lead">教材を収録している古典作品と、大学入学共通テスト・センター試験の出典になった作品の一覧です。作品ごとに、収録している教材（原文・現代語訳・品詞分解）・入試での出題歴・その作品で押さえたい古文単語がまとまっています。<a href="../w/index.html">古文単語 ${words.length} 語の一覧</a>／<a href="../p/index.html">教科書の文章一覧</a></p>
 <div class="passage-grid">
 `;
   works.forEach((wk) => {
     const list = passagesByWork.get(wk.id) || [];
     const n = (wordIdsByWork.get(wk.id) || new Set()).size;
     body += `<a class="passage-card" href="${esc(wk.id)}.html">
-<div class="passage-card-head"><span class="passage-card-title">${esc(wk.title)}</span><span class="badge pos">${esc(wk.genre)}</span></div>
+<div class="passage-card-head"><span class="passage-card-title">${esc(wk.title)}</span><span class="badge pos">${esc(wk.genre)}</span>${examsOf(wk).map(examBadgeHtml).join('')}</div>
 <p class="passage-card-section muted">${esc(wk.author)}　/　${esc(wk.era)}</p>
 <p class="passage-card-lead">${esc(wk.summary.slice(0, 70))}…</p>
 <p class="passage-card-stats"><span class="badge count">教材 ${list.length} 編</span><span class="badge count">収録語 ${n} 語</span></p></a>`;

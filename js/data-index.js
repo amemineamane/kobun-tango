@@ -19,6 +19,8 @@
  *   passageDeck      Map<string, Array<Word|PassageWord>>  学習・クイズのデッキ
  *   tokensByPassage  Map<string, Array<Array<Token>>>  品詞分解（段落ごと）
  *   paragraphsByWord Map<number, Array<ParagraphHit>>  その語が出てくる段落
+ *   examWorks        Array<Work>  入試（共通テスト・センター試験）の出典作品を
+ *                    出題年の新しい順に並べたもの（work.exam を持つ作品）
  *   posList / kanaRows / levels / grades … フィルタの選択肢
  *
  * 【品詞分解（data/tokens/*.js）】
@@ -54,8 +56,27 @@
     '段階': '段階'
   };
 
-  /** 文章の「学年」フィルタの並び順。ここに無い値は末尾に回る。 */
-  var GRADE_ORDER = ['中1', '中2', '中3', '高校'];
+  /** 文章の「学年」フィルタの並び順。ここに無い値は末尾に回る。
+   *  '入試' は学年ではなく「大学入学共通テスト・センター試験の出典」を指すラベルで、
+   *  教科書ページでは専用のセクション（出題年の新しい順）に分けて出す。 */
+  var GRADE_ORDER = ['中1', '中2', '中3', '高校', '入試'];
+
+  /** 入試の学年ラベル（data/passages.js の grade と、教科書の 2 セクション分けで共有する） */
+  var EXAM_GRADE = '入試';
+
+  /** その作品の出題歴を新しい順に並べた配列（無ければ []） */
+  function examList(work) {
+    return ((work && work.exam) || []).slice().sort(function (a, b) {
+      return (b.year || 0) - (a.year || 0);
+    });
+  }
+
+  /** その作品の最新の出題年（無ければ 0） */
+  function latestExamYear(work) {
+    return ((work && work.exam) || []).reduce(function (max, e) {
+      return e && e.year > max ? e.year : max;
+    }, 0);
+  }
 
   /** 文章固有語を Word と同じ形に包む。学習・クイズがそのまま扱えるようにする。 */
   function makePassageWord(passage, entry, index) {
@@ -264,6 +285,20 @@
       return ia - ib;
     });
 
+    /* --- 入試の出典作品 --------------------------------------------
+     * works.js の exam（出題歴の配列）を持つ作品を、出題年の新しい順に並べる。
+     * 同じ年が複数あるときは作品名の五十音順で安定させる。
+     * 教科書ページの「共通テスト・センター試験の出典作品」セクションと
+     * ホームの入口カードがこの並びをそのまま使う。
+     * ------------------------------------------------------------- */
+    var examWorks = works.filter(function (w) { return (w.exam || []).length > 0; })
+      .slice()
+      .sort(function (a, b) {
+        var ya = latestExamYear(a), yb = latestExamYear(b);
+        if (ya !== yb) return yb - ya;
+        return String(a.title).localeCompare(String(b.title), 'ja');
+      });
+
     var wordsByWork = new Map();
     wordIdsByWork.forEach(function (set, workId) {
       var list = Array.from(set).map(function (id) { return wordById.get(id); })
@@ -320,6 +355,8 @@
       tokensByPassage: tokensByPassage,
       paragraphsByWord: paragraphsByWord,
       grades: grades,
+      examWorks: examWorks,
+      EXAM_GRADE: EXAM_GRADE,
       relationsByWord: relationsByWord,
       wordsByWork: wordsByWork,
       worksByWord: worksByWord,
@@ -341,6 +378,29 @@
       getWork: function (id) { return workById.get(String(id)) || null; },
       relationsOf: function (id) { return relationsByWord.get(Number(id)) || []; },
       worksOf: function (id) { return worksByWord.get(Number(id)) || []; },
+
+      /* --- 入試の出題歴 ------------------------------------------ *
+       * work.exam は配列（1 回の出題 = 1 要素）、passage.exam は 1 つのオブジェクト。
+       * どちらも未定義に耐えるので、呼び出し側で有無を気にしなくてよい。
+       * ------------------------------------------------------------ */
+      /** その作品の出題歴（新しい順）。無ければ [] */
+      examsOfWork: function (id) {
+        return examList(workById.get(String(id)));
+      },
+      /** その作品の最新の出題年。出題歴が無ければ 0 */
+      examYearOfWork: function (id) {
+        return latestExamYear(workById.get(String(id)));
+      },
+      /** その文章の出題（{ year, test }）。無ければ null */
+      examOfPassage: function (id) {
+        var p = passageById.get(String(id));
+        return (p && p.exam) || null;
+      },
+      /** その文章が入試の出典か（grade に '入試' を持つ、または exam がある） */
+      isExamPassage: function (p) {
+        if (!p) return false;
+        return !!p.exam || (p.grade || []).indexOf(EXAM_GRADE) >= 0;
+      },
 
       /* --- 文章 ------------------------------------------------- */
       getPassage: function (id) { return passageById.get(String(id)) || null; },

@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260911e';
+const CACHE_VERSION = '20260911f';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
@@ -53,6 +53,7 @@ const PRECACHE = [
      `node tools/sync-tokens.mjs` が index.html と一緒に自動生成する。 */
   /* tokens:begin */
   './data/tokens/genji-kiritsubo.js',
+  './data/tokens/genji-wakana.js',
   './data/tokens/heike-gion.js',
   './data/tokens/hojoki-yukukawa.js',
   './data/tokens/hosomichi-tabidachi.js',
@@ -60,13 +61,19 @@ const PRECACHE = [
   './data/tokens/ise-azuma.js',
   './data/tokens/ise-tsutsuizutsu.js',
   './data/tokens/kokin-kanajo.js',
+  './data/tokens/konjaku-kannon.js',
+  './data/tokens/konjaku-oni.js',
   './data/tokens/makura-chunagon.js',
   './data/tokens/makura-haru.js',
   './data/tokens/makura-utsukushiki.js',
   './data/tokens/makura-yuki.js',
+  './data/tokens/masukagami-jo.js',
+  './data/tokens/masukagami-saigu.js',
   './data/tokens/sarashina-kadode.js',
   './data/tokens/taketori-oitachi.js',
   './data/tokens/tosa-kadode.js',
+  './data/tokens/towazu-kuretake.js',
+  './data/tokens/towazu-saigu.js',
   './data/tokens/tsurezure-jo.js',
   './data/tokens/tsurezure-koumyo.js',
   './data/tokens/tsurezure-ninnaji.js',

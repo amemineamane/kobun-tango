@@ -6,6 +6,7 @@
  *   C.levelBadge(word)     S / A / B のバッジ（記号＋ラベル）
  *   C.levelLegend(opts)    重要度の意味を説明する凡例
  *   C.deckLabel(query)     クエリを 1 行の日本語にする
+ *   C.examBadge(exam)      出題バッジ（2025 共通テスト）／C.examBadges(list)
  *   C.statusBadge(id)      学習状態のバッジ
  *   C.statusButtons(id)    「未学習／苦手／覚えた」の切り替えボタン
  *   C.tokenPopup(token)    品詞分解のポップアップを出す
@@ -74,6 +75,35 @@
 
   C.posBadge = function (word) {
     return el('span', { class: 'badge pos', text: word.pos });
+  };
+
+  /**
+   * 出題バッジ（大学入学共通テスト・センター試験の出典）。
+   *   data/works.js の work.exam の 1 要素 … { year, test, part, section }
+   *   data/passages.js の passage.exam     … { year, test }
+   * のどちらでも受ける（足りないキーは黙って落とす）。
+   *
+   * 色は重要度（S/A/B）とも学年バッジ（藍）とも混ざらないよう、
+   * 専用のトークン（--exam / --exam-bg）を使う。「2025 共通テスト」のように
+   * **年と試験名を必ず併記**する（年だけ・試験名だけでは意味が伝わらないため）。
+   * 本試験以外（第1日程・第2日程・追試験）のときだけ 3 つめの語を足し、
+   * 出題箇所（section）は title 属性に回してバッジを短く保つ。
+   */
+  C.examBadge = function (exam) {
+    if (!exam || exam.year == null) return null;
+    var part = exam.part && exam.part !== '本試験' ? exam.part : '';
+    var tip = [exam.year + ' 年度', exam.test, exam.part, (exam.section && exam.section !== '—') ? exam.section : '']
+      .filter(Boolean).join('　');
+    return el('span', { class: 'badge exam', title: tip + ' に出題' }, [
+      el('span', { class: 'exam-year', text: exam.year }),
+      exam.test ? el('span', { class: 'exam-test', text: exam.test }) : null,
+      part ? el('span', { class: 'exam-part', text: part }) : null
+    ]);
+  };
+
+  /** 出題バッジの配列（work.exam をそのまま渡す）。null は落とす */
+  C.examBadges = function (list) {
+    return (list || []).map(C.examBadge).filter(Boolean);
   };
 
   C.statusBadge = function (id) {

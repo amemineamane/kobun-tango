@@ -44,14 +44,41 @@
       });
     });
 
+    // 入試（共通テスト・センター試験）の出題歴。新しい順。無ければ []
+    var exams = K.index.examsOfWork(work.id);
+
     var section = el('section', { class: 'view view-work' }, [
       el('div', { class: 'crumbs' }, [el('a', { href: '#/textbook', text: '← 教科書' })]),
       el('header', { class: 'work-head' }, [
         el('h1', { class: 'view-title', text: work.title }),
+        exams.length ? el('p', { class: 'work-exam-badges' }, C.examBadges(exams)) : null,
         el('p', { class: 'work-meta muted', text: work.author + '　/　' + work.era + '　/　' + work.genre }),
         el('p', { class: 'work-summary', text: work.summary })
       ])
     ]);
+
+    /* --- 入試での出題 ---------------------------------------------
+     * 年・試験・本試験/第1日程・出題箇所を 1 か所にまとめて出す。
+     * 本文が未収録の作品では、このカードと summary・収録語がページの中身になる。
+     * ------------------------------------------------------------- */
+    if (exams.length) {
+      section.appendChild(el('div', { class: 'card exam-card' }, [
+        el('h2', { class: 'card-title', text: '入試での出題' }),
+        el('ul', { class: 'exam-list' }, exams.map(function (e) {
+          return el('li', { class: 'exam-list-item' }, [
+            C.examBadge(e),
+            el('span', { class: 'exam-list-part', text: e.part || '' }),
+            (e.section && e.section !== '—')
+              ? el('span', { class: 'exam-list-section muted', text: '出題箇所：' + e.section })
+              : null
+          ]);
+        })),
+        el('p', { class: 'muted small', text: '大学入学共通テスト（2021 年度〜）・センター試験（2016〜2020 年度）の国語・古文の出典です。試験の設問・注・リード文は載せていません（大学入試センターの著作物のため）。' }),
+        el('p', { class: 'home-more' }, [
+          el('a', { href: '#/textbook?grade=' + encodeURIComponent(K.index.EXAM_GRADE), text: 'ほかの出典作品を見る →' })
+        ])
+      ]));
+    }
 
     /* --- 文章（教材） --- */
     var passages = K.index.passagesOfWork(work.id);
@@ -81,6 +108,18 @@
         el('p', { class: 'muted small', text: '原文と現代語訳、その文章に出てくる語をまとめて読めます。' }),
         pgrid
       ]));
+    } else {
+      /* 本文が未収録の作品（入試の出典として作品情報だけ登録したものが中心）。
+         何も出さないとページが空に見えるので、理由と次の一手を書いておく。 */
+      section.appendChild(el('div', { class: 'card' }, [
+        el('h2', { class: 'card-title', text: '文章（教材）' }),
+        el('p', { class: 'muted', text: exams.length
+          ? '本文は未収録です。信頼できる翻刻を確認できた作品から順に収めているため、この作品は作品情報（作者・時代・ジャンルと出題された場面）だけを載せています。'
+          : 'この作品の文章はまだ収録していません。' }),
+        exams.length ? el('p', { class: 'home-more' }, [
+          el('a', { href: '#/textbook?grade=' + encodeURIComponent(K.index.EXAM_GRADE), text: '本文つきの出典作品を読む →' })
+        ]) : null
+      ]));
     }
 
     /* --- 収録語 --- */
@@ -107,12 +146,14 @@
     section.appendChild(el('div', { class: 'card' }, [
       el('h2', { class: 'card-title' }, ['収録語', el('span', { class: 'muted small', text: '（' + words.length + '）' })]),
       el('p', { class: 'muted small', text: '「data/passages.js の文章の語」「品詞分解（data/tokens）の重要語」「data/workWords.js の手動タグ」の和集合です。' }),
-      el('div', { class: 'deck-links' }, [
+      // 収録語が 1 語も無い作品（本文未収録の出典作品）では、
+      // 空のデッキに送っても仕方がないのでボタンを出さない
+      words.length ? el('div', { class: 'deck-links' }, [
         el('a', { class: 'btn btn-primary', href: '#/study' + qs, text: 'この作品の単語で学習' }),
         el('a', { class: 'btn', href: '#/quiz' + qs, text: 'この作品の単語でクイズ' }),
         el('a', { class: 'btn btn-ghost', href: '#/words' + qs, text: '一覧で見る' })
-      ]),
-      words.length ? listWrap : el('p', { class: 'muted', text: 'まだ紐づいた語がありません。' })
+      ]) : null,
+      words.length ? listWrap : el('p', { class: 'muted', text: 'まだ紐づいた語がありません。本文を収めるか、data/workWords.js にこの作品で押さえたい語を足すと、ここに並びます。' })
     ]));
 
     /* --- 共有 --- */
