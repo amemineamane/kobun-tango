@@ -1,0 +1,5 @@
+# tools/build-seo.mjs が生成しています。手で編集しないこと。
+User-agent: *
+Allow: /
+
+Sitemap: https://amemineamane.github.io/kobun-tango/sitemap.xml

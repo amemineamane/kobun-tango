@@ -20,7 +20,8 @@
  *   file:// で直接開く用途にも影響しない（file:// はクエリ文字列を
  *   無視してファイルを解決するので、そのまま動く）。
  *
- *   あわせて sw.js の CACHE_VERSION も同じ値にする。
+ *   あわせて sw.js の CACHE_VERSION と、SEO 用の生成ページ（w/ p/ k/ の
+ *   *.html。tools/build-seo.mjs の出力）の ?v=... も同じ値に揃える。
  *   Service Worker のキャッシュ名がここから作られるので、版を上げると
  *   古いキャッシュが activate のときに捨てられる。
  *   （index.html だけ上げて sw.js を忘れると、オフライン用のキャッシュに
@@ -33,6 +34,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const indexPath = path.join(__dirname, '..', 'index.html');
 const swPath = path.join(__dirname, '..', 'sw.js');
+/** SEO 用の静的ページの置き場（tools/build-seo.mjs が作る） */
+const SEO_DIRS = ['w', 'p', 'k'];
 
 function todayStamp() {
   const d = new Date();
@@ -83,6 +86,35 @@ function main() {
   console.log('index.html の ?v=... を ' + version + ' に更新しました（' + count + ' 箇所）。');
 
   bumpServiceWorker(version);
+  bumpSeoPages(version);
+}
+
+/** SEO 用の生成ページ（w/ p/ k/ の *.html）の ?v=... も同じ版に揃える。
+ *  中身は tools/build-seo.mjs が作るので、ここでは版だけ書き換える
+ *  （build-seo は生成時点の index.html の版を借りるため、bump のあとも一致する）。 */
+function bumpSeoPages(version) {
+  let files = 0;
+  let hits = 0;
+  for (const dir of SEO_DIRS) {
+    const abs = path.join(__dirname, '..', dir);
+    if (!fs.existsSync(abs)) continue;
+    for (const name of fs.readdirSync(abs)) {
+      if (!name.endsWith('.html')) continue;
+      const p = path.join(abs, name);
+      const src = fs.readFileSync(p, 'utf8');
+      const out = src.replace(/\?v=[^"'\s]+/g, '?v=' + version);
+      if (out !== src) {
+        fs.writeFileSync(p, out, 'utf8');
+        hits += out.split('?v=' + version).length - 1;
+      }
+      files++;
+    }
+  }
+  if (files === 0) {
+    console.log('SEO の生成ページ（w/ p/ k/）はまだありません。node tools/build-seo.mjs で作れます。');
+    return;
+  }
+  console.log('SEO の生成ページ ' + files + ' 枚の ?v=... を ' + version + ' に揃えました。');
 }
 
 /** sw.js の CACHE_VERSION を index.html と同じ版に揃える */

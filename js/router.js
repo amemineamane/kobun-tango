@@ -22,6 +22,14 @@
  *   #/passages → #/textbook   （文章一覧を教科書に統合）
  *   ブックマークや外部リンクを壊さないため、履歴に残さず差し替える。
  *
+ * 【SEO（DESIGN.md 4-e）】
+ *   ハッシュ遷移のたびに document.title を画面の見出しに合わせ、
+ *   <link rel="canonical"> を対応する静的ページ（w/39.html など。
+ *   tools/build-seo.mjs の生成物）の絶対 URL に書き換える。
+ *   対応するページが無い画面（学習・クイズ・使い方）はトップを指す。
+ *   共有ボタンの URL は **ハッシュのまま**（履歴・PWA との整合のため。
+ *   canonical で「正式な URL は静的ページ」と伝えれば検索側の重複は起きない）。
+ *
  * 【ルートを足すには】
  *   1. ROUTES に { pattern, view } を 1 行足す。
  *      pattern は '/word/:id' のように書けば :id が params.id に入る。
@@ -33,6 +41,10 @@
 
   var K = window.KOBUN;
   var U = K.util;
+
+  /* index.html に書いてある既定の <title>（ホームと、対応する画面が無いとき用）。
+     読み込み時点の値を控えておき、以後は画面ごとに書き換える。 */
+  var DEFAULT_TITLE = document.title;
 
   var ROUTES = [
     { pattern: '/', view: 'home' },
@@ -146,17 +158,60 @@
       // 画面切り替え時は先頭へ（詳細→詳細のときも読みやすい）
       window.scrollTo(0, 0);
 
+      /* 検索エンジン向けに <title> と canonical を画面に合わせる（4-e. SEO）。
+         見出しは解析のページタイトルと同じものを使う。 */
+      var title = Router.screenTitle(container);
+      Router.updateHead(route, title);
+
       /* アクセス解析のページビュー（設定が無ければ no-op）。
          パスの組み立て・検索語の除外は js/analytics.js 側の仕事なので、
          ここでは「描き終わった」ことと画面の見出しだけを渡す。 */
-      if (K.analytics) K.analytics.pageview(null, Router.screenTitle(container));
+      if (K.analytics) K.analytics.pageview(null, title);
     },
 
     /** いま描かれている画面の見出し（無ければ <title>） */
     screenTitle: function (container) {
       var h = container && container.querySelector && container.querySelector('h1, h2');
       var t = h && h.textContent ? h.textContent.trim() : '';
-      return t ? t + '｜古文単語帳' : document.title;
+      return t ? t + '｜古文単語帳' : DEFAULT_TITLE;
+    },
+
+    /**
+     * ハッシュの画面に対応する静的ページ（tools/build-seo.mjs の生成物）の相対パス。
+     * 対応するページが無い画面（学習・クイズ・使い方など）は '' を返し、
+     * canonical はサイトのトップになる。
+     */
+    staticPath: function (route) {
+      var idx = K.index;
+      if (!idx) return '';
+      var w;
+      switch (route.view) {
+        case 'word':
+          w = idx.getWord(route.params.id);
+          return w ? 'w/' + w.id + '.html' : '';
+        case 'words': return 'w/index.html';
+        case 'passage':
+          return idx.getPassage(route.params.id) ? 'p/' + route.params.id + '.html' : '';
+        case 'textbook': return 'p/index.html';
+        case 'work':
+          return idx.getWork(route.params.workId) ? 'k/' + route.params.workId + '.html' : '';
+        default: return '';
+      }
+    },
+
+    /**
+     * <title> と <link rel="canonical"> を画面に合わせて書き換える。
+     * canonical は必ず **公開ページの絶対 URL**（data/site.js の url が土台）。
+     * 手元の file:// や localhost を canonical に出さないため、
+     * C.absUrl と違って「いま開いている URL」は使わない。
+     */
+    updateHead: function (route, title) {
+      document.title = (route.view === 'home' || !title) ? DEFAULT_TITLE : title;
+      var link = document.querySelector('link[rel="canonical"]');
+      if (!link) return;
+      var base = (K.site && K.site.url) || location.href.split('#')[0];
+      if (base.charAt(base.length - 1) !== '/') base += '/';
+      link.setAttribute('href', base + Router.staticPath(route));
     },
 
     updateNav: function (route) {

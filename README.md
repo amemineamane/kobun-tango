@@ -368,10 +368,17 @@ D:\kobun_app\
     view-works.js     作品ページ（#/work/:workId）
     view-study.js view-quiz.js
     app.js
+  w/  p/  k/          ★ 検索エンジン向けの静的ページ（tools/build-seo.mjs の生成物。手で編集しない）
+    w/<単語id>.html     単語ページ（330 枚）＋ w/index.html（重要度・五十音の一覧）
+    p/<文章id>.html     文章ページ（原文・現代語訳・品詞分解の表）＋ p/index.html
+    k/<作品id>.html     作品ページ＋ k/index.html
+  sitemap.xml         同上（生成物）
+  robots.txt          同上（生成物。Sitemap: 行つき）
   tools/validate.mjs        データ整合性チェック（最後に validate-tokens.mjs も呼ぶ）
   tools/validate-tokens.mjs 品詞分解（data/tokens/*.js）のチェック
   tools/sync-tokens.mjs     data/tokens/ の中身から index.html と sw.js の読み込みを作り直す
-  tools/bump-version.mjs    公開前のキャッシュバスター更新（sw.js の版も一緒に上げる）
+  tools/build-seo.mjs       data/*.js から検索エンジン向けの静的ページ・sitemap・robots を生成
+  tools/bump-version.mjs    公開前のキャッシュバスター更新（sw.js と生成ページの版も一緒に上げる）
   docs/tokens-guide.md      品詞分解データの仕様書（担当割り表つき）
   docs/verification.md      原文・語義の裏取り記録
   docs/legacy/examples.js   旧「例文」データ（読み込んでいない。経緯は DESIGN.md 5.2）
@@ -384,12 +391,20 @@ D:\kobun_app\
 `data/` の各ファイルの先頭に、日本語で「役割」と「追加のしかた」を書いてある。
 詳しい手順は **[DESIGN.md](DESIGN.md) の「5. 拡張ポイント」** を参照。
 
-足したあとは必ず検証する:
+足したあとは、**この順番で**コマンドを流す（どれもデータから作り直すだけなので、
+途中まで実行しても壊れない。エラーが 0 になってから commit すること）:
 
 ```powershell
 cd D:\kobun_app
-node tools\validate.mjs
+node tools\sync-tokens.mjs    # 品詞分解のファイルを足した／消したときだけ
+node tools\build-seo.mjs      # 検索エンジン向けの静的ページ（w/ p/ k/）と sitemap.xml を作り直す
+node tools\validate.mjs       # データ整合性チェック（最後に validate-tokens.mjs も呼ぶ）
+node tools\bump-version.mjs   # ?v=... と sw.js の CACHE_VERSION と生成ページの版を揃える
+# ここまでエラー 0 なら commit → push
 ```
+
+`build-seo` を忘れると、検索結果に出るページだけ古いデータのままになる
+（アプリ本体は `data/*.js` を直接読むので正しく動いてしまい、気づきにくい）。
 
 チェックする内容:
 
@@ -429,6 +444,68 @@ node tools\validate.mjs
 4. `node tools\sync-tokens.mjs` を実行する。`index.html` の `<script>` と
    `sw.js` の `PRECACHE` が `data/tokens/` の実際の中身から作り直される
    （手で書くと、存在しないファイルを指して 404 になりやすい）。
+5. `node tools\build-seo.mjs` を実行する。品詞分解が文章ページ（`p/<文章id>.html`）の
+   一覧表と、単語ページの用例に反映される。
+
+---
+
+## 検索エンジン向けの静的ページ（SEO）
+
+アプリはハッシュルーティング（`#/word/39`）なので、検索エンジンからは
+**`index.html` 1 枚のサイト**にしか見えない。そこで `data/*.js` から
+**実 HTML を機械的に生成**し、単語・文章・作品を 1 ページずつ検索結果に出せるようにしてある。
+設計の考え方は [DESIGN.md「4-e. SEO」](DESIGN.md) を参照。
+
+```powershell
+cd D:\kobun_app
+node tools\build-seo.mjs
+```
+
+| 生成物 | 中身 |
+|---|---|
+| `w/<単語id>.html`（330 枚） | 見出し語・漢字・品詞・重要度・語義一覧・関連語・その語が出てくる段落（原文と現代語訳つき）・登場作品・五十音の前後 |
+| `w/index.html` | 330 語を重要度別と五十音別に並べた一覧 |
+| `p/<文章id>.html` | 作品・教材名・段落ごとの原文と現代語訳・**全語の品詞分解の表**（表層形／基本形／品詞／活用／語義）・その文章の重要語 |
+| `p/index.html` | 教材の一覧（作品ごと） |
+| `k/<作品id>.html` | 作者・時代・ジャンル・概要・収録教材・収録語 |
+| `k/index.html` | 作品の一覧 |
+| `sitemap.xml` / `robots.txt` | 上のすべての URL（`lastmod` は生成日）と `Sitemap:` 行 |
+
+- 生成ページは**アプリと同じ `css/style.css`** を読み、簡易ヘッダと「アプリで開く」
+  （`../#/word/39`）を置くだけ。**JS でのリダイレクトはしない**
+  （クローラにも読者にも本文をそのまま読ませる。PWA としてスタンドアロン起動しているときだけ
+  アプリ側の画面に置き換える小さなスクリプトが入っている）。
+- アプリ名・公開 URL・制作者は `data/site.js` から取るので、名前や URL を変えたら
+  `build-seo` を流し直すだけでよい。
+- **生成物は手で編集しない**（次の実行で消える）。`w/ p/ k/` の `*.html` は毎回作り直される。
+- 生成ページは `sw.js` の precache には**入れない**（枚数が多い。
+  network-first の通常の fetch で足りる）。
+- 共有ボタンの URL は**ハッシュのまま**（`#/word/39`）。履歴・PWA との整合を優先し、
+  「正式な URL はこちら」は各画面の `<link rel="canonical">` で伝えている
+  （`js/router.js` がハッシュ遷移のたびに `w/39.html` などへ書き換える）。
+
+### Search Console に登録する
+
+1. <https://search.google.com/search-console/> でプロパティ（URL プレフィックス）
+   `https://amemineamane.github.io/kobun-tango/` を追加する。
+2. 所有権の確認方法として「HTML タグ」を選び、表示される
+   `<meta name="google-site-verification" content="○○○">` の **content の値**をコピーする。
+3. `index.html` の `<head>` にコメントで用意してある枠の
+   **コメント記号（`<!--` と `-->`）を外して**、content に貼る。
+
+   ```html
+   <meta name="google-site-verification" content="ここに貼る">
+   ```
+4. `node tools\bump-version.mjs` を実行してから commit・push する。
+5. GitHub Pages に反映されたら、Search Console で「確認」を押す。
+6. 確認できたら左メニューの **「サイトマップ」** に
+   `https://amemineamane.github.io/kobun-tango/sitemap.xml`
+   を送信する（プロパティのルートが `/kobun-tango/` なので `sitemap.xml` と入力すればよい）。
+
+> `robots.txt` もリポジトリの直下に生成しているが、GitHub Pages の
+> プロジェクトページでは実際に読まれるのはドメイン直下
+> （`https://amemineamane.github.io/robots.txt`）のほうなので、
+> クロールの入口はサイトマップの送信で確保している。
 
 ---
 
@@ -447,7 +524,8 @@ node tools\bump-version.mjs
 ```
 
 `index.html` 内の `?v=...` をすべて今日の日付＋連番に一括更新し、
-**あわせて `sw.js` の `CACHE_VERSION` も同じ値にする**（引数なし）。
+**あわせて `sw.js` の `CACHE_VERSION` と、SEO 用の生成ページ（`w/ p/ k/` の `*.html`）の
+`?v=...` も同じ値にする**（引数なし）。
 Service Worker のキャッシュ名はこの版から作るので、版が変わると古いキャッシュが捨てられる。
 タグの並びなど `index.html` の構造は変えないので、`file://` で直接開く用途にも影響しない。
 

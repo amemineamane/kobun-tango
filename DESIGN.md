@@ -350,8 +350,13 @@ js/app.js           起動＋Service Worker の登録・更新バー
 manifest.webmanifest    ホーム画面に追加（PWA）の設定
 sw.js               Service Worker（network-first。オフラインと「アプリとして追加」用）
 assets/             アイコン（icon*.svg / *.png・favicon.svg）と OGP 画像（ogp.svg / ogp.png）
+w/ p/ k/            SEO 用の静的ページ（tools/build-seo.mjs の生成物。手で編集しない。4-e）
+sitemap.xml         同上（生成物）
+robots.txt          同上（生成物）
 tools/validate.mjs      データ整合性チェック（Node）
-tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION を更新（公開前に実行）
+tools/build-seo.mjs     data/*.js から SEO 用の静的ページ・sitemap・robots を生成（4-e）
+tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION、
+                        生成ページの ?v=... を更新（公開前に実行）
 ```
 
 依存の向きは一方向：`data → data-index → components → view-* → app`。
@@ -584,6 +589,104 @@ data/site.js（設定）
 googletagmanager.com / google-analytics.com / cloudflareinsights.com はクロスオリジンなので、
 **もともとキャッシュ対象外で素通し**になっている。
 `js/analytics.js` 自体は同一オリジンなので `PRECACHE` に足してある。
+
+---
+
+## 4-e. SEO（検索エンジン向けの静的ページ）
+
+### 課題
+
+画面遷移が `#/word/39` のハッシュなので、検索エンジンから見ると
+**`index.html` 1 枚のサイト**でしかない。中身（単語 330 語・教材・作品）は
+JavaScript を実行しないと現れず、実行されても URL が 1 つなので
+「古文単語 をかし 意味」「春はあけぼの 現代語訳 品詞分解」のような検索に
+個別のページを出せない。かといって History API に変えると
+`file://` で開く前提（1. 基本方針）が崩れる。
+
+### 方針
+
+| 決めごと | 理由 |
+|---|---|
+| **アプリは変えず、静的ページを別に生成する** | `tools/build-seo.mjs` が `data/*.js` から実 HTML を作る。アプリ（`index.html` ＋ハッシュ）はそのまま。触るのは `index.html` の `<head>` と `js/router.js` の canonical 更新だけ |
+| **生成物は毎回作り直す** | データを足したら `node tools/build-seo.mjs` を流すだけで追随する。`w/ p/ k/` の `*.html` は実行のたびに消して作り直すので、消えたデータの残骸が残らない。**手で編集しない** |
+| **アプリと同じ CSS を読む** | `css/style.css` をそのまま使い、クラス名も画面と同じ（`.word-row` `.token-table` `.passage-card` …）。見た目の二重管理をしない |
+| **JS でリダイレクトしない** | クローラにも読者にも本文をそのまま読ませる。導線は「アプリで開く」ボタン（`../#/word/39`）1 つ。例外は末尾の小さな `<script>` で、**PWA としてスタンドアロン起動しているときだけ**アプリ側の画面に置き換える |
+| **名称・URL・制作者は `data/site.js` から** | 4-c と同じ流儀。ハードコードしない（URL を変えたら `build-seo` を流し直すだけ） |
+| **生成ページを `sw.js` の precache に入れない** | 365 枚もあり、インストール時に全部取りに行くのは重い。network-first の通常の fetch で十分（オフラインでも一度開いたページは読める） |
+| **共有ボタンの URL はハッシュのまま** | 下記 |
+
+### 生成物
+
+```
+w/<単語id>.html    330 枚  見出し語・漢字・品詞・重要度・語義一覧・関連語（リンク）・
+                           その語が出てくる段落（原文の該当語を <strong>・文章ページへリンク）・
+                           登場作品・五十音の前後
+w/index.html               330 語の一覧（重要度別＋五十音別）
+p/<文章id>.html     20 枚  作品・教材名・段落ごとの原文と現代語訳・
+                           **全語の品詞分解を <table> で**（表層形／基本形／品詞／活用／語義。
+                           検索語「品詞分解」に効かせるため）・この文章の重要語
+p/index.html               教材の一覧（作品ごと）
+k/<作品id>.html     12 枚  作者・時代・ジャンル・概要・収録教材・収録語
+k/index.html               作品の一覧
+sitemap.xml                上のすべて＋トップ（lastmod は生成日）
+robots.txt                 Sitemap: 行つき
+```
+
+各ページに `<title>` / `<meta name="description">`（80〜120 字）/
+`<link rel="canonical">`（自身の絶対 URL）/ OGP・X カード（画像は `assets/ogp.png`）/
+`lang="ja"` / パンくず（ホーム › 教科書 › 作品 › 文章）/ **JSON-LD** を入れている。
+
+| ページ | JSON-LD |
+|---|---|
+| トップ（`index.html`） | `WebSite` ＋ `SoftwareApplication`（`applicationCategory: EducationalApplication`、`author` は `data/site.js` の制作者） |
+| 単語 | `DefinedTerm`（`inDefinedTermSet` で「古文単語 330 語」の単語帳を指す）＋ `BreadcrumbList` |
+| 文章 | `Article`（`isPartOf` に作品の `Book`、`about` に収録語）＋ `BreadcrumbList` |
+| 作品 | `Book`（`hasPart` に収録教材）＋ `BreadcrumbList` |
+| 一覧 | `CollectionPage` ＋ `BreadcrumbList` |
+
+**内部リンクを密に**してある。単語 ⇄ 関連語 ⇄ 文章 ⇄ 作品が相互に張られ、
+どのページからも 3 つの一覧（`w/index.html` `p/index.html` `k/index.html`）へ行ける。
+品詞分解の表の語義欄からも、330 語なら単語ページへ飛ぶ。
+
+### アプリ側（最小限）
+
+`js/router.js` が描画のたびに 2 つだけ書き換える。
+
+- `document.title` … `Router.screenTitle()`（画面の見出し ＋「｜古文単語帳」）。
+  ホームと未知の画面は `index.html` に書いてある既定の `<title>` に戻す。
+- `<link rel="canonical">` … `Router.staticPath(route)` が返す静的ページ
+  （`#/word/39` → `w/39.html`、`#/words` → `w/index.html`、`#/textbook` → `p/index.html`、
+  `#/work/:id` → `k/:id.html`、`#/passage/:id` → `p/:id.html`）。
+  対応するページが無い画面（学習・クイズ・使い方・規約）と存在しない id はトップを指す。
+  土台は **必ず `KOBUN.site.url`**（`C.absUrl` と違って「いま開いている URL」は使わない。
+  `file://` や `localhost` を canonical に出さないため）。
+
+### 共有 URL をハッシュのままにした理由
+
+共有ボタン（`C.shareButtons`）が配るのは今までどおり `…/#/word/39` で、
+静的ページ（`…/w/39.html`）には**変えていない**。
+
+1. **履歴と PWA の整合**。共有されたリンクを踏んだ人がそのままアプリを使い続けられる。
+   静的ページを配ると、そこから「アプリで開く」を押させる 1 手間が増える。
+2. **ホーム画面に追加している人**は `start_url`（`./`）のスコープ内でだけアプリとして開く。
+   `w/39.html` は同じスコープなのでアプリとして開いてしまい、ハッシュより戻りにくい。
+3. **重複は canonical で解決する**。ハッシュ URL は検索エンジンから見れば
+   すべて `index.html` 1 つで、その canonical が静的ページを指すので、
+   評価は静的ページ側に集まる（共有された URL が検索インデックスを分散させない）。
+
+### 更新手順
+
+```
+sync-tokens → build-seo → validate → bump-version → commit → push
+```
+
+`build-seo` を忘れると、**アプリは正しいのに検索結果のページだけ古い**という
+気づきにくい状態になる。`bump-version` は `index.html` と `sw.js` に加えて
+生成ページの `?v=...` も同じ版に揃える（`build-seo` は生成時点の `index.html` の版を
+借りるので、最後に `bump-version` を流せば全部そろう）。
+
+Search Console の所有権確認タグの枠は `index.html` の `<head>` にコメントで置いてある
+（手順は README「検索エンジン向けの静的ページ（SEO）」）。
 
 ---
 
