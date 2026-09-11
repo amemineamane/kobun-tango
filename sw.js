@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260911b';
+const CACHE_VERSION = '20260911c';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
@@ -87,6 +87,7 @@ const PRECACHE = [
   './js/view-study.js',
   './js/view-quiz.js',
   './js/view-help.js',
+  './js/view-terms.js',
   './js/app.js',
   './assets/favicon.svg',
   './assets/icon-192.png',

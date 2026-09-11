@@ -14,6 +14,8 @@
  *   #/passage/:id      文章詳細（:id は passages.js の id）
  *   #/study            フラッシュカード（?level= &pos= &work= &passage= &status= を取る）
  *   #/quiz             4択クイズ（同上）
+ *   #/terms            利用規約・プライバシーポリシー（?to=privacy で節までスクロール）
+ *                      ナビには入れない（フッタ・使い方・ホーム末尾からのリンク）
  *
  * 旧 URL（REDIRECTS）:
  *   #/works    → #/textbook   （作品一覧を教科書に統合）
@@ -41,7 +43,8 @@
     { pattern: '/work/:workId', view: 'work' },
     { pattern: '/passage/:id', view: 'passage' },
     { pattern: '/study', view: 'study' },
-    { pattern: '/quiz', view: 'quiz' }
+    { pattern: '/quiz', view: 'quiz' },
+    { pattern: '/terms', view: 'terms' }
   ];
 
   /** 旧パス → 新パス。クエリ（?grade= など）はそのまま引き継ぐ。 */

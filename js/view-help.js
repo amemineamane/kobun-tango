@@ -58,12 +58,16 @@
   function analyticsNote() {
     var names = analyticsServices();
     if (!names.length) return null;
+    /* 長い説明は #/terms?to=privacy に置き、ここは 2〜3 行に留める
+       （何を送って何を送らないかの詳細は 1 か所に集める）。 */
     return el('p', { class: 'muted small' }, [
-      'このアプリでは、アクセス解析のため、閲覧した画面やクイズの完走などの利用状況を匿名で計測サービス（',
+      'アクセス解析のため、閲覧した画面やクイズの完走などの利用状況を匿名で ',
       names.join('／'),
-      '）に送ることがあります。',
-      el('b', { text: '学習履歴の中身（どの語を覚えたか）や検索語は送りません。' }),
-      ' 個人を特定する情報も送りません。'
+      ' に送っています。',
+      el('b', { text: '検索語と学習履歴の中身（どの語を覚えたか）は送りません。' }),
+      ' 詳しくは ',
+      el('a', { href: '#/terms?to=privacy', text: 'プライバシーポリシー' }),
+      ' をご覧ください。'
     ]);
   }
 
@@ -258,7 +262,12 @@
       el('p', { class: 'muted small', text: '保存キーは単語の id です。同じ仮名の別語（ながむ〔眺む〕/〔詠む〕）が混ざらないようにするためで、単語データを更新しても履歴は残ります。' }),
       analyticsNote(),
       el('h3', { class: 'help-h3', text: '履歴をリセットする' }),
-      resetBlock()
+      resetBlock(),
+      el('p', { class: 'muted small' }, [
+        '学習履歴や利用状況の扱いは ',
+        el('a', { href: '#/terms?to=privacy', text: 'プライバシーポリシー' }),
+        ' にまとめています。'
+      ])
     ]));
 
     /* --- 8. データ -------------------------------------------------- */
@@ -314,13 +323,19 @@
 
     /* --- 12. 制作 --------------------------------------------------- */
     section.appendChild(sec('author', '制作', [
-      C.authorBlock()
+      C.authorBlock(),
+      el('p', { class: 'muted small' }, [
+        'このアプリの利用条件と、個人情報・アクセス解析の扱いは ',
+        el('a', { href: '#/terms', text: '利用規約・プライバシーポリシー' }),
+        ' をご覧ください。'
+      ])
     ]));
 
     section.appendChild(el('div', { class: 'home-foot' }, [
       el('a', { href: '#/', text: 'ホームへ戻る' }),
       el('a', { href: '#/words', text: '単語一覧へ' }),
-      el('a', { href: '#/textbook', text: '教科書へ' })
+      el('a', { href: '#/textbook', text: '教科書へ' }),
+      el('a', { href: '#/terms', text: '利用規約・プライバシーポリシー' })
     ]));
 
     container.appendChild(section);

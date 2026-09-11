@@ -1119,7 +1119,10 @@
     return out;
   };
 
-  /** 「制作：雨峰あまね ＋ アイコンリンク」の 1 行（ホーム末尾・共通フッタ用） */
+  /**
+   * 「制作：雨峰あまね ＋ アイコンリンク」の 1 行（ホーム末尾・共通フッタ用）。
+   * @param opts { services, labels, legal: true で「利用規約・プライバシーポリシー」を添える }
+   */
   C.authorLine = function (opts) {
     opts = opts || {};
     var a = (K.site && K.site.author) || {};
@@ -1130,7 +1133,10 @@
     });
     return el('p', { class: 'author-line' }, [
       el('span', { class: 'author-line-name', text: '制作：' + a.name })
-    ].concat(links.length ? [el('span', { class: 'author-links' }, links)] : []));
+    ].concat(links.length ? [el('span', { class: 'author-links' }, links)] : [])
+      .concat(opts.legal ? [
+        el('a', { class: 'author-line-legal', href: '#/terms', text: '利用規約・プライバシーポリシー' })
+      ] : []));
   };
 
   /** 使い方ページの「制作」節の中身（名前＋ラベル付きリンク＋一言） */

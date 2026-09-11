@@ -37,9 +37,11 @@
     }
 
     /* 共通フッタの制作者行。index.html には直書きせず、data/site.js の値から描く
-       （名前や URL を変えるときに触る場所を 1 か所にするため）。 */
+       （名前や URL を変えるときに触る場所を 1 か所にするため）。
+       legal: true で「利用規約・プライバシーポリシー」（#/terms）も同じ行に出す。
+       ナビには入れない画面なので、全画面から届く導線はここが本命。 */
     if (stat && stat.parentNode && K.components && K.components.authorLine) {
-      var line = K.components.authorLine();
+      var line = K.components.authorLine({ legal: true });
       if (line) stat.parentNode.appendChild(line);
     }
 

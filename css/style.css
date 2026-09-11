@@ -1591,6 +1591,25 @@ kbd.key {
 .home-author { margin-top: var(--sp-4); }
 .site-footer .author-line { margin-top: var(--sp-2); }
 
+/* 制作者行に添える「利用規約・プライバシーポリシー」（#/terms への全画面共通の導線） */
+.author-line-legal {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: .15rem .5rem;
+  border-radius: var(--r-pill);
+  color: var(--fg-muted);
+}
+.author-line-legal:hover { background: var(--accent-bg); color: var(--accent); text-decoration: none; }
+
+/* 利用規約・プライバシーポリシー（#/terms）。本文の体裁は使い方ページと共用する */
+.view-terms .help-section li { line-height: var(--lh-read); }
+.terms-date {
+  margin: var(--sp-5) 0 var(--sp-4);
+  text-align: right;
+  line-height: var(--lh-body);
+}
+
 @media (max-width: 640px) {
   .share-btn { padding: .35rem .7rem; }
 }

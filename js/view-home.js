@@ -484,7 +484,8 @@
     section.appendChild(el('div', { class: 'home-foot' }, [
       el('a', { href: '#/help', text: '使い方' }),
       el('a', { href: '#/help?to=data', text: 'データについて' }),
-      el('a', { href: '#/help?to=history', text: '学習履歴について' })
+      el('a', { href: '#/help?to=history', text: '学習履歴について' }),
+      el('a', { href: '#/terms', text: '利用規約・プライバシーポリシー' })
     ]));
 
     // 末尾に制作者（フッター相当の小さな行）
