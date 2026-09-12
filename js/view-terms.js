@@ -122,7 +122,51 @@
           ' は ' + who + ' に帰属します（教科書や市販書籍の訳文を転載したものではありません）。'],
         '個人が自分の学習のために使うこと（画面を見て覚える、印刷して手元で使う、友人にURLを教えるなど）は自由です。許可を取る必要はありません。',
         ['ただし、', el('b', { text: '無断での転載・再配布・改変しての配布・販売、および自動的な収集（スクレイピング等）はご遠慮ください。' })],
-        ['出典（アプリ名と URL）を明記したうえでの', el('b', { text: '引用' }), ' は、正当な範囲で行っていただけます。']
+        ['出典（アプリ名と URL）を明記したうえでの', el('b', { text: '引用' }), ' は、正当な範囲で行っていただけます。'],
+        ['ただし次条の', el('b', { text: '「本文の出典とライセンス」' }),
+          ' に挙げた原文については、もとのライセンス（CC BY-SA）が優先します。それらの原文は、もとの著作権者名とページの URL を明記し、同じライセンスで公開する限り、この規約の制限を受けずに転載・再配布していただけます。']
+      ]),
+
+      h3('第 3 条の 2（本文の出典とライセンス）'),
+      p([
+        '古典の原文そのものは保護期間が満了していますが、web で公開されている',
+        el('b', { text: '翻刻（写本・版本の字を起こしたもの）や校訂本文（諸本を比べ、句読点や表記を整えたもの）' }),
+        ' には、公開者がライセンスを設けている場合があります。本アプリが本文を採った先と、その条件は次のとおりです。'
+      ]),
+      ul([
+        [
+          el('b', { text: 'やたナビTEXT の校訂本文' }),
+          '（伊勢物語 第一段・第四段／徒然草 第十一段・第八十九段／十訓抄 三の一／とはずがたり 巻一）… ',
+          '校訂: ', el('b', { text: '中川聡（Satoshi Nakagawa）' }), '／',
+          ext('https://yatanavi.org/text/', 'yatanavi.org/text/'),
+          '／ライセンス ',
+          ext('https://creativecommons.org/licenses/by-sa/4.0/deed.ja', 'CC BY-SA 4.0'),
+          '。同サイトの今昔物語集は翻刻（著作権なし）です。'
+        ],
+        [
+          el('b', { text: '日本語版 Wikisource「源氏物語（渋谷栄一校訂）」' }),
+          '（桐壺・若菜下）… 校訂: ', el('b', { text: '渋谷栄一' }), '／',
+          ext('https://ja.wikisource.org/wiki/源氏物語_(渋谷栄一校訂)', 'ja.wikisource.org'),
+          '／ライセンス ',
+          ext('https://creativecommons.org/licenses/by-sa/3.0/deed.ja', 'CC BY-SA 3.0'),
+          '。'
+        ],
+        [
+          el('b', { text: '日本語版 Wikisource のその他の翻刻' }),
+          '（竹取物語〈國民文庫〉／土佐日記・蜻蛉日記・大鏡・方丈記〈國文大觀〉／更級日記〈有朋堂文庫〉／増鏡〈校註増鏡〉／伊勢物語〈群書類従〉／枕草子／古今和歌集仮名序／おくのほそ道）… ',
+          ext('https://ja.wikisource.org/', 'ja.wikisource.org'),
+          '。底本はいずれも著作権の保護期間が満了した刊本です。サイトのライセンスは ',
+          ext('https://creativecommons.org/licenses/by-sa/4.0/deed.ja', 'CC BY-SA 4.0'),
+          '。'
+        ],
+        [
+          '本文は上のいずれについても、教科書で一般的な本文に合わせて',
+          el('b', { text: '表記・句読点・段落を整え、抜粋し（省いた箇所は「（中略）」）' }),
+          '、旧字体・旧仮名づかいを通行の字体に改めています。',
+          'どの教材をどこから採ったか、底本による異同の一覧は、公開リポジトリの ',
+          el('code', { text: 'docs/passage-notes.md' }),
+          ' と ', el('code', { text: 'docs/copyright-review.md' }), ' にあります。'
+        ]
       ]),
 
       h3('第 4 条（禁止事項）'),
@@ -218,6 +262,12 @@
       ], 'muted small'));
       out.push(ul([
         ext('https://policies.google.com/privacy', 'Google プライバシー ポリシー'),
+        // Google アナリティクス利用規約 7（プライバシー）が掲示を求めているページ
+        [
+          ext('https://policies.google.com/technologies/partner-sites',
+            'Google のサービスを使用するサイトやアプリから収集した情報の Google による使用'),
+          ' … Google がデータをどう扱うかの説明です。'
+        ],
         ext('https://marketingplatform.google.com/about/analytics/terms/jp/', 'Google アナリティクス利用規約'),
         [
           ext('https://tools.google.com/dlpage/gaoptout', 'Google アナリティクス オプトアウト アドオン'),

@@ -170,7 +170,14 @@ passages.forEach((p, i) => {
   passageIds.add(p.id);
   if (!workById.has(p.workId)) err(at, `workId="${p.workId}" が works に存在しません`);
   if (!p.title) err(at, 'title がありません');
-  if (!p.note) warn(at, 'note が空です（校閲状況を書いておくと後で助かります）');
+  // note は「画面に出る 1 文」だけにしたので、空でも警告しない。
+  // 出典・底本異同・校閲の作業記録は docs/passage-notes.md 側にある。
+  if (p.note && p.note.length > 120) {
+    warn(at, `note が長すぎます（${p.note.length} 字）。出典・底本異同・作業記録は docs/passage-notes.md へ`);
+  }
+  if (p.note && /(https?:\/\/|底本異同|確認済|要確認|修正:|Wikisource|やたナビ|機械照合)/.test(p.note)) {
+    warn(at, 'note に出典・底本・作業記録らしい語があります。docs/passage-notes.md へ移してください');
+  }
 
   if (!Array.isArray(p.paragraphs) || p.paragraphs.length === 0) {
     err(at, 'paragraphs が空です');

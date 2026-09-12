@@ -815,7 +815,14 @@
    *
    * アイコンは外部フォントを使えないのでインライン SVG の線画にする
    * （ヘッダのナビと同じ流儀：viewBox 24×24・currentColor・stroke-width 1.8）。
-   * 商標ロゴの厳密な再現はしない（X は交差する 2 本、LINE は吹き出し）。
+   * **公式ロゴは一切使わず、似せもしない**（docs/copyright-review.md §7）:
+   *   ・LINE ソーシャルプラグインの利用ガイドラインは「専用アイコンの代わりに
+   *     当社が指定するテキスト文字を使用することができます」としつつ、
+   *     「専用アイコンと類似する商標、ロゴ、アイコンその他の標章を表示しては
+   *     なりません」とも定める。そこで LINE は**吹き出しをやめて紙飛行機**にし、
+   *     ラベルは公式の指定テキスト「LINEで送る」をそのまま使う。
+   *   ・X は交差する 2 本の線だけ（ロゴの再現ではない）。ラベルは X の
+   *     用語表（Twitter→X、Tweet→post）に合わせて「X で投稿」。
    * ------------------------------------------------------------- */
 
   var SVG_ATTRS = 'viewBox="0 0 24 24" width="18" height="18" fill="none" ' +
@@ -829,9 +836,9 @@
            '<path d="M8.3 13.2 15.7 17"/>',
     // X：交差する 2 本の線に単純化したもの
     x: '<path d="M4.5 4.5 19.5 19.5"/><path d="M19.5 4.5 4.5 19.5"/>',
-    // LINE：吹き出し（尾を左下に出す）
-    line: '<path d="M12 4.2c-4.7 0-8.5 2.9-8.5 6.5 0 3.2 2.9 5.8 6.8 6.4l-.7 3.1 ' +
-          '3.6-2.6c4.2-.4 7.3-3.2 7.3-6.9 0-3.6-3.8-6.5-8.5-6.5z"/>',
+    // LINE で送る：紙飛行機（＝「送る」の意。LINE の専用アイコンには似せない）
+    line: '<path d="M21 3.6 2.8 11.2l6.5 2.3z"/><path d="M21 3.6 13.4 21l-4.1-7.5z"/>' +
+          '<path d="M9.3 13.5 21 3.6"/>',
     // リンクをコピー：鎖
     link: '<path d="M10.2 13.8a3.6 3.6 0 0 0 5.1 0l2.8-2.8a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4"/>' +
           '<path d="M13.8 10.2a3.6 3.6 0 0 0-5.1 0l-2.8 2.8a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4"/>',
@@ -880,7 +887,7 @@
   function xIntentUrl(text, url, tags) {
     var q = 'text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
     if (tags && tags.length) q += '&hashtags=' + encodeURIComponent(tags.join(','));
-    return 'https://twitter.com/intent/tweet?' + q;
+    return 'https://x.com/intent/tweet?' + q;
   }
 
   function lineShareUrl(text, url) {
@@ -987,7 +994,8 @@
       target: '_blank',
       rel: 'noopener noreferrer',
       onClick: function () { track('line'); }
-    }, [icon('line'), btnLabel('LINE で送る')]);
+      // ラベルは LINE の指定テキスト（デザインガイドの日本語の推奨表記）そのまま
+    }, [icon('line'), btnLabel('LINEで送る')]);
 
     var copyBtn = el('button', {
       type: 'button',
