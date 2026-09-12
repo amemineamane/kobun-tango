@@ -20,6 +20,11 @@
  *                wordId 無しの vocab に meaning があるか /
  *                同じ wordId を 1 文章に 2 回書いていないか /
  *                wordId ありの surface が見出し語・漢字表記と字面で繋がるか（警告）
+ *   [grammar]    古典文法（data/grammar.js）。tools/validate-grammar.mjs を
+ *                子プロセスとして呼ぶ（id の重複・table の要素数・match が
+ *                コーパスに当たるか・取りこぼし）。文法データは用例を持たず
+ *                「match 規則」でコーパスと結びつくので、検査も
+ *                js/data-index.js を通して画面と同じ経路で行う。
  *   [tokens]     品詞分解（data/tokens/*.js）。最後に tools/validate-tokens.mjs を
  *                子プロセスとして呼び、その出力をそのまま流す。
  *                品詞分解は 1 文章 1 ファイルで分担して書き足していくので、
@@ -268,4 +273,19 @@ if (fs.existsSync(tokenValidator)) {
   console.log('（tools/validate-tokens.mjs が無いので品詞分解の検査は飛ばしました）');
 }
 
-process.exit(errors.length === 0 && !tokenFailed ? 0 : 1);
+/* --- 古典文法の検査を続けて走らせる --------------------------------- *
+ * data/grammar.js は用例を持たず、コーパス（data/tokens/*.js）と
+ * match 規則で結びつく。品詞分解のあとに走らせるのは、
+ * 「取りこぼし」の一覧が最新の品詞分解を前提にしているため。
+ * ------------------------------------------------------------------- */
+console.log('');
+const grammarValidator = path.join(ROOT, 'tools', 'validate-grammar.mjs');
+let grammarFailed = false;
+if (fs.existsSync(grammarValidator)) {
+  const r = spawnSync(process.execPath, [grammarValidator], { stdio: 'inherit' });
+  grammarFailed = r.status !== 0;
+} else {
+  console.log('（tools/validate-grammar.mjs が無いので文法データの検査は飛ばしました）');
+}
+
+process.exit(errors.length === 0 && !tokenFailed && !grammarFailed ? 0 : 1);

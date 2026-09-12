@@ -19,6 +19,9 @@
  *   p/index.html         文章一覧（作品ごと）
  *   k/<workId>.html      作品ページ
  *   k/index.html         作品一覧
+ *   g/index.html         古典文法のトップ（分野の一覧）
+ *   g/<category>/index.html       分野の一覧（助動詞・助詞・敬語・活用・識別）
+ *   g/<category>/<id>.html        文法項目（接続・活用表・意味・用例つき）
  *   sitemap.xml          上のすべて＋トップ
  *   robots.txt           Sitemap: 行つき
  *
@@ -42,7 +45,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /* --- data/*.js を Node 上で評価して window.KOBUN を組み立てる --------- *
  * tools/validate.mjs と同じやり方。ブラウザが読むのと同じファイルを使う。 */
-const DATA_FILES = ['site.js', 'words.js', 'works.js', 'relations.js', 'workWords.js', 'passages.js'];
+const DATA_FILES = ['site.js', 'words.js', 'works.js', 'relations.js', 'workWords.js', 'passages.js', 'grammar.js'];
 const sandbox = { window: {}, console };
 vm.createContext(sandbox);
 
@@ -58,6 +61,13 @@ const tokenFiles = fs.existsSync(tokensDir)
   : [];
 for (const f of tokenFiles) runFile(path.join(tokensDir, f));
 
+/* 文法ページの用例は「match 規則でコーパスを走査する」ので、
+   その照合コードを二重に書かないよう **js/data-index.js をそのまま読む**
+   （DOM を触らないので Node 上でも動く）。
+   これで画面に出る用例と静的ページの用例が必ず同じになる。 */
+runFile(path.join(ROOT, 'js', 'util.js'));
+runFile(path.join(ROOT, 'js', 'data-index.js'));
+
 const K = sandbox.window.KOBUN;
 const SITE = K.site;
 const words = K.words || [];
@@ -66,6 +76,9 @@ const passages = K.passages || [];
 const relations = K.relations || [];
 const workWords = K.workWords || [];
 const tokens = K.tokens || {};
+const grammar = K.grammar || null;
+/** js/data-index.js が組み立てた索引（文法の用例抽出に使う） */
+const gidx = K.index;
 
 /* --- 定数 ------------------------------------------------------------ */
 const BASE = SITE.url.endsWith('/') ? SITE.url : SITE.url + '/';
@@ -140,12 +153,20 @@ function writeFile(rel, body) {
   fs.writeFileSync(p, body, 'utf8');
 }
 
-/** 生成ディレクトリの *.html を消してから作り直す（消えたデータの残骸を残さない） */
+/** 生成ディレクトリの *.html を消してから作り直す（消えたデータの残骸を残さない）。
+ *  g/ は 1 段深い（g/<category>/*.html）ので、子ディレクトリもたどる。 */
 function cleanDir(dir) {
   const p = path.join(ROOT, dir);
   if (!fs.existsSync(p)) return;
-  for (const f of fs.readdirSync(p)) {
-    if (f.endsWith('.html')) fs.unlinkSync(path.join(p, f));
+  for (const f of fs.readdirSync(p, { withFileTypes: true })) {
+    const full = path.join(p, f.name);
+    if (f.isDirectory()) {
+      cleanDir(path.join(dir, f.name));
+      // 空になった子ディレクトリは畳む（カテゴリを消したときに残骸を残さない）
+      try { if (!fs.readdirSync(full).length) fs.rmdirSync(full); } catch (e) { /* 残っていてよい */ }
+    } else if (f.name.endsWith('.html')) {
+      fs.unlinkSync(full);
+    }
   }
 }
 
@@ -230,11 +251,13 @@ passages.forEach((p) => {
  * ===================================================================== */
 
 /**
- * 1 枚の HTML を組み立てる。生成ページはすべて 1 階層下（w/ p/ k/）にあるので、
- * アプリの資産へは '../' で届く。
+ * 1 枚の HTML を組み立てる。生成ページは 1 階層下（w/ p/ k/ g/）か
+ * 2 階層下（g/<category>/）にあるので、アプリの資産までの戻り方は
+ * o.up（既定 '../'）で切り替える。
  *
  * @param {object} o
  *   o.rel        このページの相対パス（'w/39.html'）
+ *   o.up         アプリのルートまでの相対パス（既定 '../'。2 階層下なら '../../'）
  *   o.title      <title>
  *   o.desc       <meta name="description">
  *   o.graph      JSON-LD の @graph に入れる配列
@@ -244,6 +267,7 @@ passages.forEach((p) => {
  */
 function renderPage(o) {
   const url = BASE + o.rel;
+  const up = o.up || '../';
   const crumbHtml = o.crumbs.map((c, i) => {
     const last = i === o.crumbs.length - 1;
     const item = last
@@ -253,9 +277,9 @@ function renderPage(o) {
   }).join('');
 
   const appLink = o.appHash
-    ? `<p class="deck-links"><a class="btn btn-primary" href="../${esc(o.appHash)}">アプリで開く</a>` +
-      `<a class="btn" href="../">古文単語帳のトップへ</a></p>`
-    : `<p class="deck-links"><a class="btn btn-primary" href="../">古文単語帳のトップへ</a></p>`;
+    ? `<p class="deck-links"><a class="btn btn-primary" href="${up}${esc(o.appHash)}">アプリで開く</a>` +
+      `<a class="btn" href="${up}">古文単語帳のトップへ</a></p>`
+    : `<p class="deck-links"><a class="btn btn-primary" href="${up}">古文単語帳のトップへ</a></p>`;
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -279,12 +303,12 @@ function renderPage(o) {
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@AmemineAmane">
 <meta name="twitter:creator" content="@AmemineAmane">
-<link rel="icon" href="../assets/favicon.svg?v=${VERSION}" type="image/svg+xml">
-<link rel="icon" href="../assets/icon-192.png?v=${VERSION}" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=${VERSION}">
+<link rel="icon" href="${up}assets/favicon.svg?v=${VERSION}" type="image/svg+xml">
+<link rel="icon" href="${up}assets/icon-192.png?v=${VERSION}" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="${up}assets/apple-touch-icon.png?v=${VERSION}">
 <meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1b1917" media="(prefers-color-scheme: dark)">
-<link rel="stylesheet" href="../css/style.css?v=${VERSION}">
+<link rel="stylesheet" href="${up}css/style.css?v=${VERSION}">
 ${jsonld({ '@context': 'https://schema.org', '@graph': o.graph })}
 <!-- このファイルは tools/build-seo.mjs が data/*.js から生成しています。手で編集しないこと。 -->
 </head>
@@ -292,13 +316,14 @@ ${jsonld({ '@context': 'https://schema.org', '@graph': o.graph })}
 
 <header class="site-header">
   <div class="site-header-inner">
-    <p class="site-title"><a href="../">${esc(SITE.name)}</a></p>
+    <p class="site-title"><a href="${up}">${esc(SITE.name)}</a></p>
     <nav class="site-nav" aria-label="かんたんメニュー">
-      <a href="../w/index.html">単語一覧</a>
-      <a href="../p/index.html">教科書の文章</a>
-      <a href="../k/index.html">作品</a>
+      <a href="${up}w/index.html">単語一覧</a>
+      <a href="${up}p/index.html">教科書の文章</a>
+      <a href="${up}k/index.html">作品</a>
+      <a href="${up}g/index.html">古典文法</a>
     </nav>
-    <a class="site-help-link" href="../#/help">使い方</a>
+    <a class="site-help-link" href="${up}#/help">使い方</a>
   </div>
 </header>
 
@@ -311,7 +336,7 @@ ${appLink}
 </main>
 
 <footer class="site-footer">
-  <p class="muted small">制作：${esc(SITE.author.name)}　/　<a href="../#/terms">利用規約・プライバシーポリシー</a>　/　<a href="../">${esc(SITE.name)}</a></p>
+  <p class="muted small">制作：${esc(SITE.author.name)}　/　<a href="${up}#/terms">利用規約・プライバシーポリシー</a>　/　<a href="${up}">${esc(SITE.name)}</a></p>
 </footer>
 
 <!-- ホーム画面に追加（PWA）としてスタンドアロン起動しているときだけ、
@@ -321,7 +346,7 @@ ${appLink}
 (function () {
   try {
     var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-    if (standalone) location.replace('../${o.appHash || ''}');
+    if (standalone) location.replace('${up}${o.appHash || ''}');
   } catch (e) { /* 何もしない */ }
 })();
 </script>
@@ -848,6 +873,353 @@ function workIndexPage() {
 }
 
 /* =====================================================================
+ * 古典文法ページ  g/index.html ・ g/<category>/index.html ・ g/<category>/<id>.html
+ * ---------------------------------------------------------------------
+ * 用例は data/grammar.js の match 規則で data/tokens/*.js を走査したもの。
+ * 照合は js/data-index.js の grammarExamples() を **そのまま呼ぶ**ので、
+ * アプリの画面に出る用例と一字一句同じものが並ぶ。
+ * JSON-LD は解説記事なので Article。
+ * ===================================================================== */
+const GRAMMAR_CAT_LABEL = {
+  aux: '助動詞', particle: '助詞', keigo: '敬語', conj: '活用', ident: '識別'
+};
+const FORM_HEAD = ['未然形', '連用形', '終止形', '連体形', '已然形', '命令形'];
+
+const grammarCats = grammar ? (gidx.grammarCategories || []) : [];
+
+function grammarEntryName(e) {
+  return e.name || e.word || e.title || e.id;
+}
+
+/** 活用表（6 列）の HTML。table は必ず 6 要素（tools/validate-grammar.mjs が検査する） */
+function conjTableHtml(rows, headLabel) {
+  return `<div class="table-scroll"><table class="token-table conj-table">
+<thead><tr><th>${esc(headLabel || '語')}</th>${FORM_HEAD.map((f) => `<th>${f}</th>`).join('')}</tr></thead>
+<tbody>
+${rows.map((r) => `<tr><th class="conj-row-head" scope="row"><span class="conj-row-name">${esc(r.name)}</span>` +
+    (r.sub ? `<span class="conj-row-sub muted">${esc(r.sub)}</span>` : '') + '</th>' +
+    (r.table || []).map((v) => `<td class="conj-cell${v === '○' ? ' is-none' : ''}">${esc(v)}</td>`).join('') +
+    '</tr>').join('\n')}
+</tbody></table></div>`;
+}
+
+/** tips / lead に書いた **強調** を <b> にする（アプリ側の richText と同じ流儀） */
+function gRich(text) {
+  return String(text == null ? '' : text).split('**')
+    .map((part, i) => (i % 2 ? `<b>${esc(part)}</b>` : esc(part))).join('');
+}
+
+/** 用例の一覧（文をそのまま出し、該当語を <strong> にする） */
+function grammarExamplesHtml(entry, opts) {
+  opts = opts || {};
+  const list = gidx.grammarExamples(entry, { limit: opts.limit || 12, match: opts.match });
+  if (!list.length) {
+    return `<p class="muted small">${esc(opts.empty || '収録している教材の中には、この用法の例がまだありません。')}</p>`;
+  }
+  return list.map((ex) => {
+    const wk = workById.get(ex.passage.workId);
+    const label = gidx.grammarMeaningLabel(ex.token.m);
+    const text = ex.sentenceTokens.map((t, i) => {
+      const str = esc((t && t.s) || '');
+      return i === ex.hitIndex ? `<strong class="grammar-ex-hit">${str}</strong>` : str;
+    }).join('');
+    const meta = [
+      label ? `<span class="badge grammar-label">${esc(label)}</span>` : '',
+      ex.token.f ? `<span class="grammar-ex-form">${esc(ex.token.f)}</span>` : '',
+      ex.token.c ? `<span class="grammar-ex-form muted">${esc(ex.token.c)}</span>` : '',
+      `<span class="grammar-ex-src muted">${esc((wk ? wk.title : '') + '「' + ex.passage.title + '」')}` +
+        `<span class="grammar-ex-para">第 ${ex.paraIndex + 1} 段落</span></span>`
+    ].join('');
+    return `<a class="grammar-ex" href="../../p/${esc(ex.passageId)}.html">
+<p class="grammar-ex-text" lang="ja">${text}</p>
+<p class="grammar-ex-meta">${meta}</p></a>`;
+  }).join('\n');
+}
+
+/** 文法項目 1 件のページ */
+// Windows では aux/con/nul などが予約名でフォルダに使えないため、静的ページのディレクトリ名は別名にする
+const CAT_DIR = { aux: 'jodoshi' };
+const catDir = (c) => CAT_DIR[c] || c;
+function grammarPage(entry) {
+  const cat = entry.category;
+  const catLabel = GRAMMAR_CAT_LABEL[cat] || '文法';
+  const rel = `g/${catDir(cat)}/${entry.id}.html`;
+  const name = grammarEntryName(entry);
+  const up = '../../';
+
+  const meanings = entry.meanings || [];
+  const title = cat === 'ident'
+    ? `${entry.title}｜古文の識別｜${SITE.name}`
+    : cat === 'keigo'
+      ? `古文の敬語「${name}」の意味と用例（${entry.kind}語）｜${SITE.name}`
+      : cat === 'conj'
+        ? `古文の${name}活用の活用表と見分け方（例：${entry.example}）｜${SITE.name}`
+        : `古文${catLabel}「${name}」の意味・接続・活用と見分け方｜${SITE.name}`;
+
+  const descBase = cat === 'ident'
+    ? `${entry.title}。${(entry.cases || []).map((c) => c.label).join('／')}の見分け方を、教科書教材の原文から取った用例つきでまとめました。`
+    : cat === 'keigo'
+      ? `古文の敬語「${name}」は${entry.kind}語で「${entry.meaning}」の意味。もとの語は${entry.plain || '—'}。教科書教材の原文での用例つき。`
+      : cat === 'conj'
+        ? `古文の${name}（例：${entry.example}）の活用表（未然形〜命令形）と見分け方。教科書教材の原文での用例つき。`
+        : `古文${catLabel}「${name}」の意味は${meanings.map((m) => m.label).join('・')}。接続は${entry.attach}、活用は${entry.conj || '活用しない'}。意味ごとの見分け方と教材の原文での用例つき。`;
+  const desc = clamp(descBase);
+
+  const crumbs = [
+    { label: 'ホーム', href: up, abs: BASE },
+    { label: '古典文法', href: '../index.html', abs: BASE + 'g/index.html' },
+    { label: catLabel, href: 'index.html', abs: BASE + `g/${catDir(cat)}/index.html` },
+    { label: name, href: rel }
+  ];
+
+  let body = `<header class="grammar-head">
+<p class="word-head-badges"><span class="badge pos">${esc(catLabel)}</span>` +
+    (entry.kind ? `<span class="badge grammar-label">${esc(entry.kind)}${cat === 'keigo' ? '語' : ''}</span>` : '') +
+    `</p>
+<h1 class="view-title grammar-title">${esc(cat === 'ident' ? entry.title : name)}</h1>
+`;
+  if (entry.lead) body += `<p class="view-lead">${gRich(entry.lead)}</p>\n`;
+  body += '</header>\n';
+
+  if (cat === 'aux' || cat === 'particle') {
+    body += `<div class="card"><h2 class="card-title">接続と活用</h2>
+<dl class="help-dl grammar-facts"><dt>分類</dt><dd>${esc(entry.kind)}</dd>
+<dt>接続</dt><dd>${esc(entry.attach || '—')}</dd>` +
+      (entry.conj ? `<dt>活用の型</dt><dd>${esc(entry.conj)}</dd>` : '') + '</dl>\n';
+    if (entry.table) body += conjTableHtml([{ name, sub: entry.conj, table: entry.table }], '語') + '\n';
+    body += '</div>\n';
+
+    body += `<div class="card"><h2 class="card-title">意味と見分け方（${meanings.length} 通り）</h2>
+<dl class="help-dl grammar-meanings">
+${meanings.map((m) => `<dt><span class="badge grammar-label">${esc(m.label)}</span><span class="grammar-gloss">${esc(m.gloss)}</span></dt>` +
+      `<dd>${gRich(m.how || '')}</dd>`).join('\n')}
+</dl></div>\n`;
+  } else if (cat === 'keigo') {
+    const w = entry.wordId != null ? wordById.get(entry.wordId) : null;
+    body += `<div class="card"><h2 class="card-title">この語について</h2>
+<dl class="help-dl grammar-facts">
+<dt>敬意の種類</dt><dd>${esc(entry.kind)}語</dd>
+<dt>もとの語</dt><dd>${esc(entry.plain || '—')}</dd>
+<dt>訳</dt><dd>${esc(entry.meaning)}</dd>` +
+      (entry.kanji ? `<dt>漢字表記</dt><dd>${esc(entry.kanji)}</dd>` : '') + `</dl>\n`;
+    if (w) {
+      body += `<div class="chip-list"><a class="chip" href="${up}w/${w.id}.html">` +
+        `<span class="chip-kana">${esc(w.kana)}</span>` +
+        (w.kanji ? `<span class="chip-kanji">〔${esc(w.kanji)}〕</span>` : '') +
+        `<span class="chip-meaning">${esc(w.primaryMeaning)}</span>` +
+        `<span class="chip-extra">330 語の詳細へ</span></a></div>\n`;
+    }
+    body += '</div>\n';
+  } else if (cat === 'conj') {
+    body += `<div class="card"><h2 class="card-title">活用表（例：${esc(entry.example)}）</h2>
+${conjTableHtml([{ name, sub: entry.example, table: entry.table }], '種類')}
+<p class="grammar-tips">${gRich(entry.how || '')}</p></div>\n`;
+  } else if (cat === 'ident') {
+    (entry.cases || []).forEach((c, i) => {
+      body += `<div class="card grammar-case"><h2 class="card-title">` +
+        `<span class="grammar-case-num">${i + 1}</span>${esc(c.label)}</h2>
+<p>${gRich(c.how || '')}</p>` +
+        (c.example ? `<p class="grammar-case-example" lang="ja">${esc(c.example)}</p>` : '') +
+        `<h3 class="rel-type">教材の用例</h3>
+${grammarExamplesHtml(null, { match: c.match, limit: 5, empty: 'この場合の例は、収録している教材の中にはまだありません。' })}
+</div>\n`;
+    });
+  }
+
+  if (cat !== 'ident') {
+    body += `<div class="card"><h2 class="card-title">教材に出てくる用例</h2>
+<p class="muted small">教科書教材 ${passages.length} 編の品詞分解から自動で集めています。文をたどるとその教材の原文と現代語訳が読めます。</p>
+${grammarExamplesHtml(entry)}
+</div>\n`;
+  }
+
+  if (entry.tips) {
+    body += `<div class="card"><h2 class="card-title">${cat === 'ident' ? '見分けの手順' : '識別の要点'}</h2>
+<p class="grammar-tips">${gRich(entry.tips)}</p>` +
+      (entry.note ? `<p class="grammar-note needs-check">${gRich(entry.note)}</p>` : '') + '</div>\n';
+  }
+
+  const related = (entry.related || []).map((id) => gidx.getGrammar(id)).filter(Boolean);
+  if (related.length) {
+    body += `<div class="card"><h2 class="card-title">関連する項目</h2><div class="chip-list">` +
+      related.map((e) => `<a class="chip" href="../${esc(e.category)}/${esc(e.id)}.html">` +
+        `<span class="chip-kana">${esc(grammarEntryName(e))}</span>` +
+        `<span class="chip-extra">${esc(GRAMMAR_CAT_LABEL[e.category] || '')}</span></a>`).join('') +
+      `</div></div>\n`;
+  }
+
+  const graph = [
+    {
+      '@type': 'Article',
+      '@id': BASE + rel + '#article',
+      headline: cat === 'ident' ? entry.title : `古文${catLabel}「${name}」`,
+      description: desc,
+      inLanguage: 'ja',
+      url: BASE + rel,
+      mainEntityOfPage: BASE + rel,
+      image: OGP,
+      dateModified: TODAY,
+      author: authorLd,
+      publisher: authorLd,
+      articleSection: catLabel,
+      about: meanings.length
+        ? meanings.map((m) => ({ '@type': 'Thing', name: `${name}（${m.label}）＝${m.gloss}` }))
+        : undefined,
+      isPartOf: {
+        '@type': 'CollectionPage',
+        name: `古典文法（${catLabel}）`,
+        url: BASE + `g/${catDir(cat)}/index.html`
+      }
+    },
+    breadcrumbLd(rel, crumbs)
+  ];
+
+  return renderPage({
+    rel, up, title, desc, graph, crumbs,
+    appHash: `#/grammar/${cat}/${entry.id}`, body
+  });
+}
+
+/** 分野ごとの一覧  g/<category>/index.html */
+function grammarCategoryIndexPage(cat) {
+  const rel = `g/${catDir(cat.key)}/index.html`;
+  const catLabel = cat.label;
+  const up = '../../';
+  const list = gidx.grammarList(cat.key);
+  const title = `古文の${catLabel}一覧（${list.length} 項目）｜${SITE.name}`;
+  const desc = clamp(`高校古典文法の${catLabel}を ${list.length} 項目にまとめた一覧。${cat.desc}教科書教材の原文から取った用例つきで、項目ごとに読めます。`);
+  const crumbs = [
+    { label: 'ホーム', href: up, abs: BASE },
+    { label: '古典文法', href: '../index.html', abs: BASE + 'g/index.html' },
+    { label: catLabel, href: rel }
+  ];
+
+  let body = `<h1 class="view-title">古文の${esc(catLabel)}（${list.length} 項目）</h1>
+<p class="view-lead">${esc(cat.desc)}各項目のページに、接続・活用表・意味ごとの見分け方と、教科書教材 ${passages.length} 編の原文から取った用例があります。</p>
+`;
+
+  function itemsCard(heading, items) {
+    return `<div class="card"><h2 class="card-title">${esc(heading)}</h2><div class="grammar-list">` +
+      items.map((e) => `<a class="grammar-item" href="${esc(e.id)}.html">` +
+        `<span class="grammar-item-name">${esc(grammarEntryName(e))}</span>` +
+        `<span class="grammar-item-kind">${esc(e.kind || (e.cases ? e.cases.length + ' 通り' : ''))}</span>` +
+        (e.attach ? `<span class="grammar-item-attach muted">${esc(e.attach)}</span>` : '') +
+        `</a>`).join('') + `</div></div>\n`;
+  }
+
+  if (cat.key === 'aux') {
+    gidx.grammarAuxGroups.forEach((g) => { body += itemsCard(g.label, g.items); });
+    body += `<div class="card"><h2 class="card-title">助動詞の活用表（まとめ）</h2>
+<p class="muted small">「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べています。</p>
+${conjTableHtml(list.map((a) => ({ name: a.name, sub: a.conj, table: a.table })), '助動詞')}</div>\n`;
+  } else if (cat.key === 'particle') {
+    gidx.grammarParticleGroups.forEach((g) => { body += itemsCard(g.label, g.items); });
+    const kk = gidx.grammarKakari;
+    if (kk) {
+      body += `<div class="card"><h2 class="card-title">係り結び</h2><p>${gRich(kk.intro)}</p>
+<div class="table-scroll"><table class="token-table kakari-table">
+<thead><tr><th>係助詞</th><th>意味</th><th>結び</th><th>メモ</th></tr></thead><tbody>
+${(kk.rows || []).map((r) => `<tr><th class="conj-row-head" scope="row">${esc(r.particle)}</th>` +
+        `<td>${esc(r.meaning)}</td><td><b>${esc(r.end)}</b></td><td class="td-meaning">${esc(r.note || '')}</td></tr>`).join('\n')}
+</tbody></table></div>
+<ul class="help-list">${(kk.notes || []).map((n) => `<li>${gRich(n)}</li>`).join('')}</ul></div>\n`;
+    }
+  } else if (cat.key === 'keigo') {
+    body += `<div class="card"><h2 class="card-title">敬語の 3 種類</h2><p>${gRich(gidx.grammarKeigoIntro)}</p></div>\n`;
+    gidx.grammarKeigoGroups.forEach((g) => {
+      body += `<div class="card"><h2 class="card-title">${esc(g.label)}語（${g.items.length} 語）</h2>
+<p class="muted small">${esc(g.desc)}</p>
+<div class="table-scroll"><table class="token-table keigo-table">
+<thead><tr><th>敬語</th><th>もとの語</th><th>訳</th><th>330 語</th></tr></thead><tbody>
+${g.items.map((w) => {
+        const word = w.wordId != null ? wordById.get(w.wordId) : null;
+        return `<tr><th class="conj-row-head" scope="row">` +
+          `<a class="grammar-keigo-link" href="${esc(w.id)}.html">${esc(w.word)}</a>` +
+          (w.kanji ? `<span class="conj-row-sub muted">〔${esc(w.kanji)}〕</span>` : '') + '</th>' +
+          `<td class="td-base">${esc(w.plain || '—')}</td>` +
+          `<td class="td-meaning">${esc(w.meaning)}</td>` +
+          `<td class="td-link">${word ? `<a href="${up}w/${word.id}.html">${esc(word.kana)}</a>` : '<span class="muted">—</span>'}</td></tr>`;
+      }).join('\n')}
+</tbody></table></div></div>\n`;
+    });
+    body += `<div class="card"><h2 class="card-title">敬語を読むときの要点</h2>` +
+      gidx.grammarKeigoNotes.map((n) => `<p class="grammar-tips">${gRich(n)}</p>`).join('') + '</div>\n';
+  } else if (cat.key === 'conj') {
+    const cj = gidx.grammarConjugation;
+    body += `<p>${gRich(cj.intro)}</p>\n`;
+    (cj.groups || []).forEach((g) => {
+      body += `<div class="card"><h2 class="card-title">${esc(g.title)}</h2>
+<p class="muted small">${esc(g.desc)}</p>
+${conjTableHtml((g.rows || []).map((r) => ({ name: r.name, sub: r.example, table: r.table })), '種類')}
+<dl class="help-dl">${(g.rows || []).map((r) => `<dt><a href="${esc(r.id)}.html">${esc(r.name)}（${esc(r.example)}）</a></dt><dd>${gRich(r.how)}</dd>`).join('')}</dl>
+</div>\n`;
+    });
+    body += `<div class="card"><h2 class="card-title">見分け方のこつ</h2>` +
+      (cj.tips || []).map((t) => `<p class="grammar-tips">${gRich(t)}</p>`).join('') + '</div>\n';
+  } else if (cat.key === 'ident') {
+    body += itemsCard('識別の項目', list);
+  }
+
+  return renderPage({
+    rel, up, title, desc,
+    graph: collectionLd(rel, `古文の${catLabel}一覧`, desc, crumbs),
+    crumbs, appHash: `#/grammar/${cat.key}`, body
+  });
+}
+
+/** 古典文法のトップ  g/index.html */
+function grammarIndexPage() {
+  const rel = 'g/index.html';
+  const up = '../';
+  const total = grammarCats.reduce((n, c) => n + c.count, 0);
+  const title = `古典文法まとめ（助動詞・助詞・敬語・活用・識別）｜${SITE.name}`;
+  const desc = clamp(
+    `高校古典文法を ${grammarCats.length} 分野・${total} 項目にまとめました。助動詞の接続と活用表、助詞の用法と係り結び、敬語、動詞・形容詞の活用、「ぬ」「なり」「に」の識別。` +
+    `用例はすべて教科書教材 ${passages.length} 編の原文から取っています。`
+  );
+  const crumbs = [
+    { label: 'ホーム', href: up, abs: BASE },
+    { label: '古典文法', href: rel }
+  ];
+
+  let body = `<h1 class="view-title">古典文法まとめ</h1>
+<p class="view-lead">助動詞・助詞・敬語・活用・識別を ${total} 項目にまとめました。用例は手で書いた例文ではなく、<b>教科書教材 ${passages.length} 編の原文の品詞分解</b>から自動で集めたものです。<a href="${up}w/index.html">古文単語 ${words.length} 語</a>／<a href="${up}p/index.html">教科書の文章</a>／<a href="${up}k/index.html">作品</a></p>
+<div class="card"><h2 class="card-title">分野から選ぶ</h2><div class="entry-grid">` +
+    grammarCats.map((c) => `<a class="entry-card" href="${esc(c.key)}/index.html">
+<span class="entry-card-head"><span class="entry-card-title">${esc(c.label)}</span>` +
+      `<span class="entry-card-count">${c.count} 項目</span></span>
+<span class="entry-card-desc">${esc(c.desc)}</span></a>`).join('') +
+    `</div></div>\n`;
+
+  /* 助動詞は接続別に全語を並べる（この 1 枚から全項目へ 1 クリックで行ける） */
+  gidx.grammarAuxGroups.forEach((g) => {
+    body += `<div class="card"><h2 class="card-title">助動詞 — ${esc(g.label)}</h2><div class="grammar-list">` +
+      g.items.map((a) => `<a class="grammar-item" href="aux/${esc(a.id)}.html">` +
+        `<span class="grammar-item-name">${esc(a.name)}</span>` +
+        `<span class="grammar-item-kind">${esc(a.kind)}</span>` +
+        `<span class="grammar-item-attach muted">${esc(a.conj)}</span></a>`).join('') +
+      `</div></div>\n`;
+  });
+
+  body += `<div class="card"><h2 class="card-title">識別（同じ字面を見分ける）</h2><div class="chip-list">` +
+    gidx.grammarList('ident').map((e) => `<a class="chip" href="ident/${esc(e.id)}.html">` +
+      `<span class="chip-kana">${esc(e.title)}</span></a>`).join('') +
+    `</div></div>\n`;
+
+  body += `<div class="card"><h2 class="card-title">助詞</h2>` +
+    gidx.grammarParticleGroups.map((g) => `<h3 class="rel-type">${esc(g.label)}</h3><div class="chip-list">` +
+      g.items.map((pp) => `<a class="chip" href="particle/${esc(pp.id)}.html">` +
+        `<span class="chip-kana">${esc(pp.name)}</span></a>`).join('') + '</div>').join('') +
+    `</div>\n`;
+
+  return renderPage({
+    rel, up, title, desc,
+    graph: collectionLd(rel, '古典文法まとめ', desc, crumbs),
+    crumbs, appHash: '#/grammar', body
+  });
+}
+
+/* =====================================================================
  * sitemap.xml / robots.txt
  * ===================================================================== */
 function buildSitemap(urls) {
@@ -876,6 +1248,7 @@ function buildRobots() {
 cleanDir('w');
 cleanDir('p');
 cleanDir('k');
+cleanDir('g');
 
 const sitemap = [{ loc: BASE, changefreq: 'weekly', priority: '1.0' }];
 
@@ -903,14 +1276,33 @@ works.forEach((wk) => {
 writeFile('k/index.html', workIndexPage());
 sitemap.push({ loc: `${BASE}k/index.html`, changefreq: 'weekly', priority: '0.9' });
 
+/* --- 古典文法 ------------------------------------------------------- */
+let grammarPages = 0;
+if (grammar && grammarCats.length) {
+  writeFile('g/index.html', grammarIndexPage());
+  sitemap.push({ loc: `${BASE}g/index.html`, changefreq: 'weekly', priority: '0.9' });
+  grammarPages++;
+  for (const cat of grammarCats) {
+    writeFile(`g/${catDir(cat.key)}/index.html`, grammarCategoryIndexPage(cat));
+    sitemap.push({ loc: `${BASE}g/${catDir(cat.key)}/index.html`, changefreq: 'weekly', priority: '0.8' });
+    grammarPages++;
+    for (const entry of gidx.grammarList(cat.key)) {
+      writeFile(`g/${catDir(cat.key)}/${entry.id}.html`, grammarPage(entry));
+      sitemap.push({ loc: `${BASE}g/${catDir(cat.key)}/${entry.id}.html`, changefreq: 'monthly', priority: '0.7' });
+      grammarPages++;
+    }
+  }
+}
+
 writeFile('sitemap.xml', buildSitemap(sitemap));
 writeFile('robots.txt', buildRobots());
 
 console.log(`単語ページ   w/*.html        ${words.length} 件`);
 console.log(`文章ページ   p/*.html        ${passages.length} 件（品詞分解の行 ${tokenRows}）`);
 console.log(`作品ページ   k/*.html        ${works.length} 件`);
+console.log(`文法ページ   g/**/*.html     ${grammarPages} 件（${grammarCats.map((c) => c.label + ' ' + c.count).join('・')}）`);
 console.log(`一覧ページ   w/p/k index      3 件`);
 console.log(`sitemap.xml                  ${sitemap.length} URL（lastmod ${TODAY}）`);
 console.log(`robots.txt                   Sitemap: ${BASE}sitemap.xml`);
-console.log(`合計 ${words.length + passages.length + works.length + 3} ページ（?v=${VERSION}）`);
+console.log(`合計 ${words.length + passages.length + works.length + 3 + grammarPages} ページ（?v=${VERSION}）`);
 console.log('公開前に node tools/bump-version.mjs を実行してください（生成ページの ?v= も揃います）。');

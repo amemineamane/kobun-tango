@@ -22,6 +22,18 @@
  *   examWorks        Array<Work>  入試（共通テスト・センター試験）の出典作品を
  *                    出題年の新しい順に並べたもの（work.exam を持つ作品）
  *   posList / kanaRows / levels / grades … フィルタの選択肢
+ *   grammarById      Map<string, Entry>  data/grammar.js の全エントリ（カテゴリ横断）
+ *   grammarCategories Array<{key,label,desc,count}>  文法画面のカテゴリ
+ *   grammarAuxGroups Array<{attach, items}>  助動詞を接続でグループ化したもの
+ *
+ * 【文法（data/grammar.js）】
+ *   助動詞・助詞・敬語・活用・識別は「解説」なので、索引は 3 つだけ。
+ *     grammarById        … id 1 本で引く（#/grammar/aux/nu のルーティング用）
+ *     grammarExamples()  … match 規則でコーパス（tokens）を走査して用例を集める
+ *     grammarOfToken()   … 逆引き。トークンから文法エントリを引く（ポップアップ用）
+ *   **用例をデータに書かない**のがこの設計の要点で、教材（passages ＋ tokens）が
+ *   増えれば文法ページの用例も自動で増える。そのため grammar.js 側は
+ *   「どういうトークンがその文法項目か」という規則（match）だけを持つ。
  *
  * 【品詞分解（data/tokens/*.js）】
  *   window.KOBUN.tokens は { passageId: [ [token, …], … ] } の素の連想配列で、
@@ -76,6 +88,134 @@
     return ((work && work.exam) || []).reduce(function (max, e) {
       return e && e.year > max ? e.year : max;
     }, 0);
+  }
+
+  /* ===================================================================
+   * 文法（data/grammar.js）と品詞分解（data/tokens/*.js）のつなぎ
+   * -------------------------------------------------------------------
+   * grammar.js の match 規則でトークンを判定する。規則の形は
+   *   { s, sEnd, b, p, c, f, m }  … 書いたキーだけを見る
+   *   s/b/p/c/f … 完全一致（配列ならどれかに一致）
+   *   sEnd      … 表層形の末尾一致（活用語尾だけを問題にするとき）
+   *   m         … 用法ラベルの前方一致（'完了' で '（完了）〜た' に当たる）
+   * 規則は 1 つでも配列でもよい（同じ項目に書き方が複数あるとき）。
+   * =================================================================== */
+
+  /** 文法のカテゴリ（URL のキー・画面の見出し・並び順をここ 1 か所で決める） */
+  var GRAMMAR_CATEGORIES = [
+    { key: 'aux', label: '助動詞', desc: '接続・活用・意味と、文中での見分け方。' },
+    { key: 'particle', label: '助詞', desc: '格助詞・接続助詞・係助詞・副助詞・終助詞と係り結び。' },
+    { key: 'keigo', label: '敬語', desc: '尊敬・謙譲・丁寧の主要な語と、敬意の方向。' },
+    { key: 'conj', label: '活用', desc: '動詞 9 種・形容詞・形容動詞の活用表と見分け方。' },
+    { key: 'ident', label: '識別', desc: '「ぬ」「なり」「に」など、同じ字面を見分ける手順。' }
+  ];
+
+  /** 助動詞の一覧を接続でグループ化するときの見出しと並び順 */
+  var ATTACH_GROUPS = [
+    { key: '未然形', label: '未然形に接続' },
+    { key: '連用形', label: '連用形に接続' },
+    { key: '終止形', label: '終止形に接続（ラ変型には連体形）' },
+    { key: '四段の已然形', label: 'サ変の未然形・四段の已然形に接続' },
+    { key: '', label: '体言・連体形に接続' }
+  ];
+
+  function attachGroupKey(attach) {
+    var a = String(attach || '');
+    for (var i = 0; i < ATTACH_GROUPS.length; i++) {
+      var k = ATTACH_GROUPS[i].key;
+      if (k && a.indexOf(k) === 0) return k;
+    }
+    return '';
+  }
+
+  /** m（'（完了）〜てしまった'）の「（　）」の中身を取り出す。無ければ '' */
+  function meaningLabel(m) {
+    var mt = /^[（(]([^）)]*)[）)]/.exec(String(m || ''));
+    return mt ? mt[1] : '';
+  }
+
+  /** 規則の 1 キーぶんの照合（値は文字列でも配列でもよい） */
+  function eq(ruleValue, actual) {
+    if (ruleValue == null) return true;
+    var a = String(actual == null ? '' : actual);
+    if (Array.isArray(ruleValue)) {
+      for (var i = 0; i < ruleValue.length; i++) if (String(ruleValue[i]) === a) return true;
+      return false;
+    }
+    return String(ruleValue) === a;
+  }
+
+  function endsWithAny(ruleValue, actual) {
+    if (ruleValue == null) return true;
+    var a = String(actual == null ? '' : actual);
+    var list = Array.isArray(ruleValue) ? ruleValue : [ruleValue];
+    for (var i = 0; i < list.length; i++) {
+      var s = String(list[i]);
+      if (s && a.length >= s.length && a.slice(a.length - s.length) === s) return true;
+    }
+    return false;
+  }
+
+  /** m の前方一致。'完了' も '（完了）' も受ける。'伝聞' は '（伝聞推定）' にも当たる */
+  function matchMeaning(ruleValue, tokenM) {
+    if (ruleValue == null) return true;
+    var raw = String(tokenM == null ? '' : tokenM);
+    var label = meaningLabel(raw);
+    var list = Array.isArray(ruleValue) ? ruleValue : [ruleValue];
+    for (var i = 0; i < list.length; i++) {
+      var r = String(list[i]).replace(/^[（(]/, '').replace(/[）)]$/, '');
+      if (!r) continue;
+      if (label && label.indexOf(r) === 0) return true;
+      if (raw.indexOf(r) === 0) return true;
+    }
+    return false;
+  }
+
+  /** 規則 1 つとトークン 1 つの照合 */
+  function matchRule(rule, t) {
+    if (!rule || !t) return false;
+    if (!eq(rule.s, t.s)) return false;
+    if (!endsWithAny(rule.sEnd, t.s)) return false;
+    if (!eq(rule.b, t.b)) return false;
+    if (!eq(rule.p, t.p)) return false;
+    if (!eq(rule.c, t.c)) return false;
+    if (!eq(rule.f, t.f)) return false;
+    if (!matchMeaning(rule.m, t.m)) return false;
+    return true;
+  }
+
+  /** match（1 つ or 配列）とトークンの照合 */
+  function matchAny(match, t) {
+    if (!match) return false;
+    var list = Array.isArray(match) ? match : [match];
+    for (var i = 0; i < list.length; i++) if (matchRule(list[i], t)) return true;
+    return false;
+  }
+
+  /** 展開済みトークン（surface/base/pos/detail/meaning）を素のキーに戻す */
+  function rawToken(t) {
+    if (!t) return null;
+    if (t.s != null || t.p != null) return t;   // もう素の形
+    var detail = String(t.detail || '').split('・');
+    return {
+      s: t.surface, b: t.base, p: t.pos,
+      c: detail[0] || '', f: detail[1] || '',
+      m: t.meaning, w: t.wordId, n: t.note
+    };
+  }
+
+  /** その段落のトークン列で、idx を含む 1 文の範囲 [from, to]（「。」で区切る） */
+  function sentenceRange(list, idx) {
+    var from = 0, to = list.length - 1;
+    var i;
+    for (i = idx - 1; i >= 0; i--) {
+      if (/。/.test((list[i] && list[i].s) || '')) { from = i + 1; break; }
+    }
+    for (i = idx; i < list.length; i++) {
+      if (/。/.test((list[i] && list[i].s) || '')) { to = i; break; }
+    }
+    if (from > idx) from = idx;
+    return [from, to];
   }
 
   /** 文章固有語を Word と同じ形に包む。学習・クイズがそのまま扱えるようにする。 */
@@ -341,6 +481,71 @@
     var levelByCode = new Map();
     levels.forEach(function (l) { levelByCode.set(l.code, l); });
 
+    /* --- 文法（data/grammar.js） ----------------------------------- *
+     * エントリは「助動詞・助詞・敬語・活用・識別」の 5 カテゴリに散っているが、
+     * URL（#/grammar/aux/nu）からは id 1 本で引きたいので 1 つの Map にまとめる。
+     * category を各エントリに書き足しておくと、画面側が
+     * 「どのカテゴリの詳細を描くか」を分岐できる。
+     * ---------------------------------------------------------------- */
+    var grammar = K.grammar || null;
+    var grammarById = new Map();
+    var grammarLists = { aux: [], particle: [], keigo: [], conj: [], ident: [] };
+
+    function registerGrammar(list, category) {
+      (list || []).forEach(function (e) {
+        if (!e || !e.id) return;
+        e.category = category;
+        grammarById.set(e.id, e);
+        grammarLists[category].push(e);
+      });
+    }
+
+    if (grammar) {
+      registerGrammar(grammar.auxiliaries, 'aux');
+      registerGrammar(grammar.particles, 'particle');
+      registerGrammar(grammar.keigo && grammar.keigo.words, 'keigo');
+      registerGrammar(grammar.identification, 'ident');
+      // 活用は「表の行」がエントリ（詳細ページは持たず、カテゴリページの表で見せる）
+      ((grammar.conjugation && grammar.conjugation.groups) || []).forEach(function (g) {
+        (g.rows || []).forEach(function (r) {
+          if (!r || !r.id) return;
+          r.category = 'conj';
+          r.groupTitle = g.title;
+          grammarById.set(r.id, r);
+          grammarLists.conj.push(r);
+        });
+      });
+    }
+
+    var grammarCategories = GRAMMAR_CATEGORIES.map(function (c) {
+      return {
+        key: c.key, label: c.label, desc: c.desc,
+        count: grammarLists[c.key].length
+      };
+    }).filter(function (c) { return c.count > 0; });
+
+    /* 助動詞の一覧は接続でグループ化して並べる（教科書の助動詞表と同じ順序）。 */
+    var grammarAuxGroups = ATTACH_GROUPS.map(function (g) {
+      return {
+        key: g.key, label: g.label,
+        items: grammarLists.aux.filter(function (a) { return attachGroupKey(a.attach) === g.key; })
+      };
+    }).filter(function (g) { return g.items.length > 0; });
+
+    /* 助詞の一覧は kind（格助詞・接続助詞・…）でグループ化して並べる。 */
+    var PARTICLE_KINDS = ['格助詞', '接続助詞', '係助詞', '副助詞', '終助詞', '間投助詞'];
+    var grammarParticleGroups = PARTICLE_KINDS.map(function (k) {
+      return { key: k, label: k, items: grammarLists.particle.filter(function (p) { return p.kind === k; }) };
+    }).filter(function (g) { return g.items.length > 0; });
+
+    /* 敬語は kind（尊敬・謙譲・丁寧）でグループ化して表にする。 */
+    var grammarKeigoGroups = (((grammar && grammar.keigo) || {}).groups || []).map(function (g) {
+      return {
+        key: g.kind, label: g.kind, desc: g.desc,
+        items: grammarLists.keigo.filter(function (w) { return w.kind === g.kind; })
+      };
+    }).filter(function (g) { return g.items.length > 0; });
+
     return {
       words: words,
       works: works,
@@ -421,6 +626,157 @@
       },
       /** その語が出てくる段落（品詞分解の w が根拠。旧「例文」の置き換え） */
       paragraphsOfWord: function (id) { return paragraphsByWord.get(Number(id)) || []; },
+      /* --- 文法（data/grammar.js） -------------------------------- */
+      grammar: grammar,
+      grammarById: grammarById,
+      grammarCategories: grammarCategories,
+      grammarAuxGroups: grammarAuxGroups,
+      grammarParticleGroups: grammarParticleGroups,
+      grammarKeigoGroups: grammarKeigoGroups,
+      grammarKakari: (grammar && grammar.kakari) || null,
+      grammarConjugation: (grammar && grammar.conjugation) || null,
+      grammarKeigoNotes: ((grammar && grammar.keigo) || {}).notes || [],
+      grammarKeigoIntro: ((grammar && grammar.keigo) || {}).intro || '',
+
+      /** カテゴリのメタ情報（key / label / desc / count）。無ければ null */
+      grammarCategory: function (key) {
+        var hit = grammarCategories.filter(function (c) { return c.key === key; });
+        return hit.length ? hit[0] : null;
+      },
+      /** そのカテゴリのエントリ一覧 */
+      grammarList: function (key) { return grammarLists[key] ? grammarLists[key].slice() : []; },
+      /** id で文法エントリを引く（カテゴリ横断）。無ければ null */
+      getGrammar: function (id) { return grammarById.get(String(id)) || null; },
+
+      /**
+       * その文法エントリの用例をコーパス（data/tokens/*.js）から集める。
+       *
+       * @param entry  grammar.js のエントリ、または match 規則そのもの
+       * @param opts   { limit: 20, match: 規則を上書き }
+       * @returns Array<{
+       *   passageId, passage, paraIndex, tokenIndex,
+       *   sentence,        該当トークンを含む 1 文（「。」で区切った文字列）
+       *   sentenceTokens,  その 1 文のトークン配列（描画用）
+       *   hitIndex,        sentenceTokens の中で該当トークンが何番目か
+       *   token            該当トークン（素のキー s/b/p/c/f/m/w/n）
+       * }>
+       *
+       * 上限は 20 件。**文章ごとに分散させる**（1 編に偏らないよう
+       * 文章を回りながら 1 件ずつ拾う）。文章の並びは passages.js の順。
+       */
+      grammarExamples: function (entry, opts) {
+        opts = opts || {};
+        var match = opts.match || (entry && entry.match) || entry;
+        if (!match) return [];
+        var limit = opts.limit == null ? 20 : opts.limit;
+
+        // 文章ごとにヒットを溜める（あとで round-robin で取り出す）
+        var buckets = [];
+        passages.forEach(function (p) {
+          var paras = tokensByPassage.get(p.id);
+          if (!paras) return;
+          var found = [];
+          paras.forEach(function (list, paraIndex) {
+            if (!Array.isArray(list)) return;
+            list.forEach(function (t, tokenIndex) {
+              if (!t || t.p === '記号') return;
+              if (!matchAny(match, t)) return;
+              var range = sentenceRange(list, tokenIndex);
+              var sentenceTokens = list.slice(range[0], range[1] + 1);
+              found.push({
+                passageId: p.id,
+                passage: p,
+                paraIndex: paraIndex,
+                tokenIndex: tokenIndex,
+                sentence: sentenceTokens.map(function (x) { return (x && x.s) || ''; }).join(''),
+                sentenceTokens: sentenceTokens,
+                hitIndex: tokenIndex - range[0],
+                token: t
+              });
+            });
+          });
+          if (found.length) buckets.push(found);
+        });
+
+        var out = [];
+        var round = 0;
+        var added = true;
+        while (added && out.length < limit) {
+          added = false;
+          for (var i = 0; i < buckets.length && out.length < limit; i++) {
+            if (buckets[i].length > round) { out.push(buckets[i][round]); added = true; }
+          }
+          round++;
+        }
+        return out;
+      },
+
+      /**
+       * トークンから文法エントリを逆に引く（品詞分解ポップアップの
+       * 「文法：『ぬ』（完了）の解説へ」のリンク先を決めるのに使う）。
+       *
+       * @param token 素のトークン（s/b/p/…）でも C.normalizeToken の戻りでもよい
+       * @returns { entry, category, ident } | null
+       *          entry … 助動詞・助詞・敬語のエントリ（無ければ null）
+       *          ident … その字面を扱う識別ページ（無ければ null）
+       */
+      grammarOfToken: function (token) {
+        var t = rawToken(token);
+        if (!t) return null;
+        var entry = null, category = '';
+        var order = ['aux', 'particle', 'keigo'];
+        for (var i = 0; i < order.length && !entry; i++) {
+          var list = grammarLists[order[i]];
+          for (var j = 0; j < list.length; j++) {
+            if (matchAny(list[j].match, t)) { entry = list[j]; category = order[i]; break; }
+          }
+        }
+        var ident = null;
+        for (var k = 0; k < grammarLists.ident.length; k++) {
+          if (matchAny(grammarLists.ident[k].match, t)) { ident = grammarLists.ident[k]; break; }
+        }
+        if (!entry && !ident) return null;
+        return { entry: entry, category: category, ident: ident };
+      },
+
+      /** 識別エントリの 1 ケースぶんの用例（cases[].match を使う） */
+      grammarCaseExamples: function (identCase, limit) {
+        if (!identCase || !identCase.match) return [];
+        return this.grammarExamples(null, { match: identCase.match, limit: limit == null ? 6 : limit });
+      },
+
+      /**
+       * コーパスに出ている「品詞 → 基本形 → 用法ラベル」の集計。
+       * grammar.js の match が取りこぼしていないかを確かめるために使う
+       * （tools/validate-grammar.mjs が同じものを読む）。
+       * @returns Array<{ p, b, label, m, count }>（件数の多い順）
+       */
+      grammarTokenStats: function (posList2) {
+        var want = posList2 || ['助動詞', '格助詞', '係助詞', '副助詞', '接続助詞', '終助詞', '間投助詞'];
+        var acc = new Map();
+        tokensByPassage.forEach(function (paras) {
+          paras.forEach(function (list) {
+            if (!Array.isArray(list)) return;
+            list.forEach(function (t) {
+              if (!t || want.indexOf(t.p) < 0) return;
+              var key = t.p + '' + (t.b || t.s || '') + '' + (t.m || '');
+              var e = acc.get(key);
+              if (e) { e.count++; return; }
+              acc.set(key, {
+                p: t.p, b: t.b || t.s || '', m: t.m || '',
+                label: meaningLabel(t.m), count: 1, token: t
+              });
+            });
+          });
+        });
+        return Array.from(acc.values()).sort(function (a, b) { return b.count - a.count; });
+      },
+
+      /** 規則とトークンの照合を外から使いたいとき（ドリルの出題で使う） */
+      grammarMatches: function (match, token) { return matchAny(match, rawToken(token)); },
+      /** m（'（完了）〜た'）の「（　）」の中身 */
+      grammarMeaningLabel: meaningLabel,
+
       /** 五十音順に並んだ全単語（前後ナビ用） */
       sortedByKana: words.slice().sort(function (a, b) { return a.kanaOrder - b.kanaOrder; })
     };

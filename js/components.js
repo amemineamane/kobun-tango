@@ -10,6 +10,7 @@
  *   C.statusBadge(id)      学習状態のバッジ
  *   C.statusButtons(id)    「未学習／苦手／覚えた」の切り替えボタン
  *   C.tokenPopup(token)    品詞分解のポップアップを出す
+ *                          （助動詞・助詞・敬語なら文法ページへのリンクも添える）
  *   C.usageFor(wordId)     その語の用例（品詞分解のある段落）を 1 つ返す
  *   C.filterBar(spec)      一覧・学習・クイズで共通のフィルタ UI
  *   C.applyFilters(words, query)  フィルタ条件で単語を絞る（共通ロジック）
@@ -211,6 +212,36 @@
   window.addEventListener('hashchange', closePopup);
 
   /**
+   * そのトークンに対応する文法ページへのリンク（0〜2 本）。
+   * 助動詞・助詞・敬語なら「文法：『ぬ』（完了）の解説へ →」、
+   * 識別の対象になる字面なら「識別：『ぬ／ね』— 完了か打消か →」を足す。
+   * data/grammar.js が無い環境では何も返さない（ポップアップは今までどおり）。
+   */
+  function grammarLinks(token) {
+    if (!K.index || !K.index.grammarOfToken) return [];
+    var hit = K.index.grammarOfToken(token);
+    if (!hit) return [];
+    var out = [];
+    if (hit.entry) {
+      var name = hit.entry.name || hit.entry.word || hit.entry.id;
+      var label = K.index.grammarMeaningLabel(token.meaning || token.m);
+      out.push(el('a', {
+        class: 'popup-link popup-link-grammar',
+        href: '#/grammar/' + hit.category + '/' + encodeURIComponent(hit.entry.id),
+        onClick: closePopup
+      }, ['文法：「' + name + '」' + (label ? '（' + label + '）' : '') + 'の解説へ →']));
+    }
+    if (hit.ident) {
+      out.push(el('a', {
+        class: 'popup-link popup-link-grammar',
+        href: '#/grammar/ident/' + encodeURIComponent(hit.ident.id),
+        onClick: closePopup
+      }, ['識別：' + hit.ident.title + ' →']));
+    }
+    return out;
+  }
+
+  /**
    * トークンの品詞分解をポップアップで出す。
    * anchor の直下に絶対配置する。画面外にはみ出さないよう左右を調整。
    */
@@ -238,7 +269,7 @@
       word ? el('a', { class: 'popup-link', href: '#/word/' + word.id, onClick: closePopup }, [
         '重要語「' + word.kana + '」の詳細へ →'
       ]) : null
-    ]);
+    ].concat(grammarLinks(token)));
 
     document.body.appendChild(popupEl);
     var r = anchor.getBoundingClientRect();

@@ -59,6 +59,11 @@
      学年バッジの藍とも混ざらないように、藤色を 1 色だけ足す。 */
   --exam:       #5b4b8a;   /* 文字・罫（対 --bg 6.9:1／対 --exam-bg 6.1:1） */
   --exam-bg:    #ece7f5;   /* バッジ・セクションの地 */
+
+  /* 古典文法（#/grammar）。重要度の赤橙青緑・学年の藍・入試の藤とも
+     意味が違うので、松葉色を 1 色だけ足して文法画面だけで共有する。 */
+  --grammar:    #1c6157;   /* 文字・罫（対 --bg 6.4:1／対 --grammar-bg 5.6:1） */
+  --grammar-bg: #e0efeb;   /* バッジ・用例の地 */
   --on-solid:   #ffffff;   /* 塗りボタン・塗りバッジの文字色 */
 
   /* --- 余白（4px 刻み） --------------------------------------------- */
@@ -142,6 +147,9 @@
 
     --exam:       #b9a8e0;   /* 藤色 対 --bg 8.1:1／対 --exam-bg 6.1:1 */
     --exam-bg:    #332c47;
+
+    --grammar:    #79c9bb;   /* 松葉色 対 --bg 8.7:1／対 --grammar-bg 6.0:1 */
+    --grammar-bg: #1f332f;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
     --shadow-md: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
@@ -308,6 +316,14 @@ p { margin: 0 0 .8em; }
      （このファイルで !important を使うのはこの種の上書きだけ。.hidden と同じ扱い）。 */
   #app { padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + var(--sp-4)) !important; }
   .site-footer { padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + var(--sp-4)) !important; }
+}
+
+/* 下タブは 5 個（単語／教科書／文法／学習／クイズ）。
+   iPhone SE 幅（375px）でも「教科書」の 3 文字が折り返さないよう、
+   狭い画面ではラベルだけ 1 段小さくする（アイコンとタップ領域は変えない）。 */
+@media (max-width: 420px) {
+  .site-nav a { font-size: var(--fs-sm); letter-spacing: 0; }
+  .site-nav a .nav-label { white-space: nowrap; }
 }
 
 /* ============================================================ 5. レイアウト */
@@ -1737,6 +1753,194 @@ kbd.key {
 @media (max-width: 640px) {
   /* 下タブバーに重ならない位置へ */
   #update-bar { bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + var(--sp-2)); }
+}
+
+/* ======================================================== 16-e. 古典文法 */
+/* #/grammar。色は --grammar（松葉色）を 1 色だけ足して、この画面の中で共有する。
+   表は必ず .table-scroll で包むので、幅 390px でも本文は横スクロールしない。 */
+
+.view-grammar .view-lead { max-width: 44em; }
+
+/* --- 用法ラベル（（完了）（断定）…）のバッジ --- */
+.badge.grammar-label {
+  border-color: var(--grammar);
+  background: var(--grammar-bg);
+  color: var(--grammar);
+  font-weight: 700;
+}
+
+/* --- 敬語の種類。色だけに頼らず、必ず「尊敬」「謙譲」「丁寧」の語を出す --- */
+.badge.keigo { font-weight: 700; }
+.badge.keigo-尊敬 { border-color: var(--grammar); background: var(--grammar-bg); color: var(--grammar); }
+.badge.keigo-謙譲 { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+.badge.keigo-丁寧 { border-color: var(--line-strong); background: var(--bg-sub); color: var(--fg-muted); }
+
+/* --- 一覧の 1 行（助動詞・助詞・敬語・識別で共通） --- */
+.grammar-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+@media (min-width: 700px) { .grammar-list { grid-template-columns: 1fr 1fr; } }
+
+.grammar-item {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .2rem .6rem;
+  min-height: var(--tap);
+  padding: .45rem .7rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--grammar);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  color: inherit;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.grammar-item:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-bg); }
+.grammar-item-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  letter-spacing: .03em;
+}
+.grammar-item-kind { font-size: var(--fs-sm); color: var(--fg); }
+.grammar-item-attach { font-size: var(--fs-xs); margin-left: auto; text-align: right; }
+
+/* --- 詳細の見出し --- */
+.grammar-head { margin-bottom: var(--sp-3); }
+.grammar-title { font-family: var(--font-serif); letter-spacing: .04em; }
+.grammar-facts dt { white-space: nowrap; }
+
+/* --- 活用表 ---
+   .token-table の min-width（34rem）は 6 列の活用表には広すぎるので、
+   .conj-table で上書きする。それでも狭い画面では .table-scroll が横に流す。 */
+.conj-table { min-width: 30rem; text-align: center; }
+.conj-table td { text-align: center; white-space: nowrap; font-family: var(--font-serif); font-size: var(--fs-md); }
+.conj-table th { text-align: center; }
+.conj-row-head {
+  text-align: left !important;
+  background: var(--bg-sub);
+  white-space: nowrap;
+  position: sticky;
+  left: 0;
+}
+.conj-row-name { font-family: var(--font-serif); font-weight: 700; }
+.conj-row-sub { display: block; font-size: var(--fs-xs); font-family: var(--font-ja); font-weight: normal; }
+.conj-cell.is-none { color: var(--fg-faint); font-family: var(--font-ja); }
+
+.kakari-table { min-width: 28rem; }
+.kakari-table td { font-size: var(--fs-md); }
+.keigo-table { min-width: 30rem; }
+.grammar-keigo-link { font-family: var(--font-serif); font-weight: 700; }
+
+/* --- 意味ごとの見分け方 --- */
+.grammar-meanings dt {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .4rem;
+  white-space: normal;
+}
+.grammar-gloss { font-family: var(--font-serif); font-size: var(--fs-md); }
+
+.grammar-tips { margin: .3rem 0 .6rem; }
+.grammar-note {
+  font-size: var(--fs-sm);
+  border-left: 3px dashed currentColor;
+  padding-left: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+/* --- 識別のケース --- */
+.grammar-case .card-title { display: flex; align-items: baseline; gap: .5rem; }
+.grammar-case-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: var(--r-pill);
+  background: var(--grammar);
+  color: var(--on-solid);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  flex: none;
+}
+.grammar-case-example {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-classic);
+  background: var(--bg-inset);
+  border-radius: var(--r-sm);
+  padding: .4rem .7rem;
+  margin: .4rem 0;
+}
+
+/* --- 用例（コーパスから自動抽出） --- */
+.grammar-examples { margin-top: var(--sp-2); }
+
+.grammar-ex {
+  display: block;
+  padding: .5rem .7rem;
+  margin-bottom: var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-inset);
+  color: inherit;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.grammar-ex:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-bg); }
+
+.grammar-ex-text {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-classic);
+  letter-spacing: .02em;
+  margin: 0;
+}
+.grammar-ex-hit {
+  font-style: normal;
+  font-weight: 700;
+  background: var(--hl);
+  border-bottom: 2px solid var(--grammar);
+  padding: 0 .1em;
+  border-radius: 2px;
+}
+.grammar-ex-meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .2rem .5rem;
+  margin: .25rem 0 0;
+  font-size: var(--fs-xs);
+}
+.grammar-ex-form { color: var(--fg); }
+.grammar-ex-src { margin-left: auto; text-align: right; }
+.grammar-ex-para { margin-left: .4em; }
+.grammar-ex-more { margin-top: var(--sp-2); }
+.grammar-ex-more .grammar-ex { margin-top: var(--sp-2); }
+
+/* --- ドリル（クイズの CSS をそのまま流用し、差分だけここに書く） --- */
+.drill-sentence {
+  background: var(--bg-inset);
+  border-radius: var(--r-sm);
+  padding: .5rem .7rem;
+  margin: 0 0 .3rem;
+  text-align: left;
+}
+.drill-source { margin: 0 0 var(--sp-3); text-align: left; }
+.drill-prompt { font-family: var(--font-ja); font-size: var(--fs-lg); font-weight: 700; }
+.grammar-recent { margin: .4rem 0 0; font-variant-numeric: tabular-nums; }
+.grammar-drill-card .tile-list { margin-top: var(--sp-3); }
+.grammar-drill-card .tile { max-width: 22rem; }
+
+@media (max-width: 640px) {
+  .grammar-item-attach { margin-left: 0; text-align: left; flex-basis: 100%; }
+  .grammar-ex-src { margin-left: 0; text-align: left; flex-basis: 100%; }
+  .grammar-ex-text { font-size: var(--fs-base); }
+  .conj-table { min-width: 26rem; }
 }
 
 /* ============================================================ 17. フッタ */

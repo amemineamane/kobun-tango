@@ -10,7 +10,7 @@
  *   3. おすすめ           … 苦手が溜まっていれば復習を先頭に固定。そのうえで、
  *                          未学習が残る文章・作品・重要度/品詞（無ければ五十音行）から
  *                          日付シードの擬似乱数で毎日 2〜3 件を選んで添える
- *   4. 入口カード         … 重要度・品詞・教科書の文章・入試の出典作品への
+ *   4. 入口カード         … 重要度・品詞・教科書の文章・入試の出典作品・古典文法への
  *                          ショートカット（作品への入口は「教科書」#/textbook に一本化した）
  *   5. フッターのリンク   … 使い方 / データについて
  *
@@ -286,8 +286,32 @@
     );
   }
 
+  /* 文法ドリル。単語の進捗とは別の軸なので、
+     「まだ一度もやっていない」または「直近の正答率が 80% 未満」のときだけ候補にする。
+     文法のデータが読み込まれていない環境では候補にならない（null を返す）。 */
+  function grammarRecoItem() {
+    if (!K.index.grammar) return null;
+    var log = (K.store.getGrammarLog && K.store.getGrammarLog()) || [];
+    var recent = log.slice(0, 5);
+    var total = 0, correct = 0;
+    recent.forEach(function (r) { total += r.total || 0; correct += r.correct || 0; });
+    var pct = total ? Math.round(correct / total * 100) : null;
+    if (pct != null && pct >= 80) return null;
+
+    var lead = pct == null
+      ? ['助動詞や助詞の', el('b', { text: '文法ドリル' }),
+         ' はいかがですか。教材の原文から 4 択問題を自動で作ります（1 セット 10 問）。']
+      : ['文法ドリルの直近の正答率は ', el('b', { text: pct + '%' }),
+         ' です。もう 1 セット解くと、まだ迷う項目が見つかります。'];
+
+    return recoItem(lead, [
+      el('a', { class: 'btn btn-primary', href: '#/grammar/drill', text: '文法ドリル 10 問' }),
+      el('a', { class: 'btn', href: '#/grammar', text: '文法の解説を見る' })
+    ]);
+  }
+
   /**
-   * 候補の種類（文章／作品／重要度・品詞）から、日替わりの擬似乱数で
+   * 候補の種類（文章／作品／重要度・品詞／文法ドリル）から、日替わりの擬似乱数で
    * 種類ごとに 1 件ずつ選び、種類の順番もシャッフルして need 件返す。
    * 種類が足りないときだけ五十音行で埋める。候補が 1 つも無ければ空配列。
    */
@@ -301,6 +325,8 @@
     if (wc.length) buckets.push(workRecoItem(pickOne(wc, rng)));
     var lc = levelPosCandidates();
     if (lc.length) buckets.push(levelPosRecoItem(pickOne(lc, rng)));
+    var gr = grammarRecoItem();
+    if (gr) buckets.push(gr);
 
     buckets = shuffled(buckets, rng);
     var items = buckets.slice(0, need);
@@ -439,6 +465,50 @@
     return card;
   }
 
+  /* 古典文法への入口。助動詞・助詞・敬語・活用・識別の項目数と、
+     文法ドリルの直近の正答率（履歴があれば）を添える。
+     data/grammar.js が無い環境では null を返し、カードごと出さない。 */
+  function grammarCard() {
+    var g = K.index.grammar;
+    if (!g) return null;
+    var cats = K.index.grammarCategories;
+    var total = cats.reduce(function (n, c) { return n + c.count; }, 0);
+
+    var card = el('div', { class: 'card' }, [
+      el('h2', { class: 'card-title' }, [
+        '古典文法',
+        el('span', { class: 'muted small', text: '（' + total + ' 項目）' })
+      ]),
+      el('p', { class: 'muted small', text: '助動詞の接続と活用、助詞の用法、敬語、識別。用例は教科書の文章の品詞分解から自動で集めているので、実際の原文で確かめられます。' })
+    ]);
+
+    var tiles = el('div', { class: 'tile-list' });
+    cats.forEach(function (c) {
+      tiles.appendChild(el('a', { class: 'tile', href: '#/grammar/' + c.key }, [
+        el('span', { class: 'tile-title', text: c.label }),
+        el('span', { class: 'tile-sub muted', text: c.count + ' 項目' })
+      ]));
+    });
+    card.appendChild(tiles);
+
+    var log = (K.store.getGrammarLog && K.store.getGrammarLog()) || [];
+    var recent = log.slice(0, 5);
+    var t = 0, c2 = 0;
+    recent.forEach(function (r) { t += r.total || 0; c2 += r.correct || 0; });
+    if (t) {
+      card.appendChild(el('p', { class: 'grammar-recent muted small' }, [
+        '文法ドリルの最近の正答率　',
+        el('b', { text: Math.round(c2 / t * 100) + '%' }),
+        '（直近 ' + recent.length + ' セット）'
+      ]));
+    }
+    card.appendChild(el('div', { class: 'deck-links' }, [
+      el('a', { class: 'btn btn-primary', href: '#/grammar/drill', text: '文法ドリル 10 問' }),
+      el('a', { class: 'btn', href: '#/grammar', text: '文法の解説を読む' })
+    ]));
+    return card;
+  }
+
   /* 入試（共通テスト・センター試験）の出典作品への入口。
      教科書ページの後半のセクション（#/textbook?grade=入試）に直行する。
      並びは K.index.examWorks（出題年の新しい順）をそのまま使う。 */
@@ -491,7 +561,8 @@
       el('div', { class: 'home-actions' }, [
         el('a', { class: 'btn btn-primary btn-lg', href: '#/study', text: '単語を学習する' }),
         el('a', { class: 'btn btn-lg', href: '#/textbook', text: '教科書の文章を読む' }),
-        el('a', { class: 'btn btn-lg', href: '#/quiz', text: 'クイズ' })
+        el('a', { class: 'btn btn-lg', href: '#/quiz', text: 'クイズ' }),
+        K.index.grammar ? el('a', { class: 'btn btn-lg', href: '#/grammar', text: '文法を調べる' }) : null
       ]),
       el('p', { class: 'home-hero-sub muted' }, [
         el('a', { href: '#/words', text: '単語一覧から探す' }),
@@ -508,6 +579,8 @@
     section.appendChild(levelCard());
     section.appendChild(posCard());
     section.appendChild(passageCard());
+    var gc = grammarCard();
+    if (gc) section.appendChild(gc);
     var ec = examCard();
     if (ec) section.appendChild(ec);
 

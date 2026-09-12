@@ -5,6 +5,11 @@
  *   kobun.v1.progress … { "<学習キー>": { status, seen, correct, wrong, updatedAt } }
  *   kobun.v1.prefs    … 画面の設定（フィルタの記憶など）
  *   kobun.v1.quizlog  … クイズの結果履歴（最新 50 件）
+ *   kobun.v1.grammar  … 文法ドリルの結果履歴（最新 50 件）
+ *                       { at, total, correct, kind, cat, entry }
+ *                       単語の学習履歴（progress）とは別にしてある。文法ドリルは
+ *                       「語」ではなく「文法項目」を答えるので、progress の
+ *                       キー（wordId / p:…）に載せられない。
  *   kobun.v1.recent   … 最後に開いた場所（ホームの「続きから」）
  *                       { passage: {...}, deck: {...} }
  *
@@ -37,6 +42,7 @@
   var K_PROGRESS = PREFIX + 'progress';
   var K_PREFS = PREFIX + 'prefs';
   var K_QUIZLOG = PREFIX + 'quizlog';
+  var K_GRAMMAR = PREFIX + 'grammar';
   var K_RECENT = PREFIX + 'recent';
 
   var available = (function () {
@@ -172,17 +178,22 @@
 
     clearRecent: function () { writeRaw(K_RECENT, {}); },
 
-    /** 学習履歴をすべて消す（進捗・クイズ履歴・「続きから」）。
+    /** 学習履歴をすべて消す（進捗・クイズ履歴・文法ドリル履歴・「続きから」）。
      *  画面の表示設定（prefs）は履歴ではないので残す。 */
     resetAll: function () {
       Store.resetProgress();
       writeRaw(K_QUIZLOG, []);
+      writeRaw(K_GRAMMAR, []);
       Store.clearRecent();
     },
 
     /** バックアップ用（将来 UI を付ける） */
     exportJSON: function () {
-      return JSON.stringify({ version: 1, progress: progress, quizlog: readRaw(K_QUIZLOG, []) }, null, 2);
+      return JSON.stringify({
+        version: 1, progress: progress,
+        quizlog: readRaw(K_QUIZLOG, []),
+        grammar: readRaw(K_GRAMMAR, [])
+      }, null, 2);
     },
 
     /* --- 画面設定 --------------------------------------------------- */
@@ -200,7 +211,18 @@
       log.unshift(Object.assign({ at: Date.now() }, result));
       writeRaw(K_QUIZLOG, log.slice(0, 50));
     },
-    getQuizLog: function () { return readRaw(K_QUIZLOG, []); }
+    getQuizLog: function () { return readRaw(K_QUIZLOG, []); },
+
+    /* --- 文法ドリルの履歴 ------------------------------------------ *
+     * クイズ履歴と同じ形（最新 50 件・先頭が最新）。
+     * 文法の一覧（#/grammar）が「最近の正答率」をここから出す。
+     * ------------------------------------------------------------- */
+    pushGrammarResult: function (result) {
+      var log = readRaw(K_GRAMMAR, []);
+      log.unshift(Object.assign({ at: Date.now() }, result));
+      writeRaw(K_GRAMMAR, log.slice(0, 50));
+    },
+    getGrammarLog: function () { return readRaw(K_GRAMMAR, []); }
   };
 
   window.KOBUN = window.KOBUN || {};

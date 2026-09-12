@@ -14,6 +14,10 @@
  *   #/passage/:id      文章詳細（:id は passages.js の id）
  *   #/study            フラッシュカード（?level= &pos= &work= &passage= &status= を取る）
  *   #/quiz             4択クイズ（同上）
+ *   #/grammar                      古典文法の一覧
+ *   #/grammar/drill                文法ドリル（?kind= &cat= &aux= &count=）
+ *   #/grammar/:category            助動詞／助詞／敬語／活用／識別
+ *   #/grammar/:category/:id        文法項目の詳細
  *   #/terms            利用規約・プライバシーポリシー（?to=privacy で節までスクロール）
  *                      ナビには入れない（フッタ・使い方・ホーム末尾からのリンク）
  *
@@ -56,6 +60,12 @@
     { pattern: '/passage/:id', view: 'passage' },
     { pattern: '/study', view: 'study' },
     { pattern: '/quiz', view: 'quiz' },
+    /* 文法は 1 つの view が 4 画面を描き分ける（category が 'drill' ならドリル）。
+       :category より前に置く必要はない（正規表現は前方から順に試すが、
+       '/grammar' と '/grammar/:category' は文字数が違うので衝突しない）。 */
+    { pattern: '/grammar', view: 'grammar' },
+    { pattern: '/grammar/:category', view: 'grammar' },
+    { pattern: '/grammar/:category/:id', view: 'grammar' },
     { pattern: '/terms', view: 'terms' }
   ];
 
@@ -195,6 +205,16 @@
         case 'textbook': return 'p/index.html';
         case 'work':
           return idx.getWork(route.params.workId) ? 'k/' + route.params.workId + '.html' : '';
+        case 'grammar': {
+          var cat = route.params.category;
+          if (!cat) return 'g/index.html';
+          if (cat === 'drill') return 'g/index.html';
+          if (!idx.grammarCategory || !idx.grammarCategory(cat)) return '';
+          var dir = (cat === 'aux') ? 'jodoshi' : cat; // 静的ページの aux は Windows 予約名回避で jodoshi
+          if (!route.params.id) return 'g/' + dir + '/index.html';
+          var ge = idx.getGrammar(route.params.id);
+          return (ge && ge.category === cat) ? 'g/' + dir + '/' + route.params.id + '.html' : '';
+        }
         default: return '';
       }
     },
@@ -221,7 +241,8 @@
         home: 'home', help: 'help',
         words: 'words', word: 'words',
         textbook: 'textbook', work: 'textbook', passage: 'textbook',
-        study: 'study', quiz: 'quiz'
+        study: 'study', quiz: 'quiz',
+        grammar: 'grammar'
       };
       var active = map[route.view] || '';
       Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function (a) {

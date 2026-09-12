@@ -40,6 +40,10 @@ erDiagram
     TOKENS ||--|{ PTOKEN      : "段落ごとの配列"
     PARAGRAPH ||--|{ PTOKEN   : "s を連結すると text"
     WORD ||--o{ PTOKEN        : "w（任意）"
+    GRAMMAR ||--|{ GMATCH     : "match（規則。1 つ or 配列）"
+    GMATCH ||..o{ PTOKEN      : "規則に当たるトークン＝用例（id では結ばない）"
+    WORD ||--o| GRAMMAR       : "keigo の wordId（任意）"
+    GRAMMAR ||--o{ GRAMMAR    : "related（識別 ⇔ 助動詞・助詞）"
 
     WORD {
         number id PK "1..330 固定"
@@ -122,6 +126,30 @@ erDiagram
         number w FK "330 語にあれば wordId"
         string n "注記（音便・係り結び・要確認 など）"
     }
+    GRAMMAR {
+        string id PK "nu / nari-dantei / id-nu-ne など。URL になる"
+        string category "aux / particle / keigo / conj / ident"
+        string name "見出し（ぬ・なり・ば）"
+        string kind "分類（完了・打消・格助詞・尊敬 …）"
+        string attach "接続（連用形・終止形（ラ変は連体形）…）"
+        string conj "活用の型（ナ変型・形容詞型 …）"
+        array  table "活用表。**必ず 6 要素**（未然〜命令。無い形は ○）"
+        array  meanings "[{ label, gloss, how, alias }]"
+        array  cases "識別だけ。[{ label, how, example, match }]"
+        string tips "識別・用法の要点"
+        string note "諸説がある箇所"
+        array  related "関連する項目の id"
+        number wordId FK "敬語だけ。330 語にあれば"
+    }
+    GMATCH {
+        string s "表層形（完全一致。配列可）"
+        string sEnd "表層形の末尾一致"
+        string b "基本形"
+        string p "品詞"
+        string c "活用の種類"
+        string f "活用形"
+        string m "用法ラベルの**前方一致**（完了 → （完了）〜た）"
+    }
     PROGRESS {
         string status "new/weak/known"
         number seen
@@ -146,6 +174,7 @@ erDiagram
 | `data/workWords.js` | 作品タグ 26 件 | 新規 |
 | `data/passages.js` | 教材 27 編（定番 20・入試の出典 7） | 新規 |
 | `data/tokens/<文章id>.js` | 教材の全文品詞分解（1 文章 = 1 ファイル） | 新規。仕様は `docs/tokens-guide.md` |
+| `data/grammar.js` | 古典文法（助動詞 29・助詞 56・敬語 38・活用 13・識別 13） | 新規。**用例は持たない**（5.6 参照） |
 
 `words.js` を素材そのままに保つことで、**素材が更新されたら再生成して差し替えるだけ**で済む。
 アプリ独自の情報は必ず別ファイルに置き、`id` で紐づける。
@@ -225,6 +254,42 @@ erDiagram
 裏取りの方針（複数ソース一致・原文のみ・設問と注は載せない）は
 [`docs/exam-sources.md`](docs/exam-sources.md) にまとめてある。
 
+**3-e. 文法は「用例」を持たず、規則でコーパスと結ぶ**
+
+`data/grammar.js` は助動詞・助詞・敬語・活用・識別の**解説だけ**を持ち、
+用例（例文）を 1 つも書かない。代わりに各エントリが
+**`match` 規則**（「どういうトークンがこの文法項目か」）を持ち、
+`js/data-index.js` の `grammarExamples(entry)` が
+`KOBUN.tokens`（教材の全文品詞分解）を走査して用例を集める。
+
+```
+data/grammar.js（規則）        data/tokens/*.js（コーパス）
+  { b:'ぬ', p:'助動詞' }  ──照合──▶  { s:'に', b:'ぬ', p:'助動詞', f:'連用形', m:'（完了）…' }
+                                          ↓
+                        「該当トークンを含む 1 文」＝用例（最大 20 件・文章ごとに分散）
+```
+
+こうした理由は 3 つ。
+
+1. **教材を足せば用例が増える。** 文法側を触らなくてよい。
+2. **原文の裏取りが二重にならない。** 用例を手で書くと、
+   `passages.js` と文法データの両方で本文の正しさを保証しなければならない。
+3. **ドリルの答えがデータに一致する。** 「意味当て」の正解はトークンの `m`、
+   「活用形当て」は `f`、「識別」はケースの `match`、「敬語の種類」は
+   エントリの `kind`。**画面に出る品詞分解と問題の正解が同じ 1 つの出どころ**になる。
+
+規則の書式は `{ s, sEnd, b, p, c, f, m }` で、書いたキーだけを見る。
+`m`（用法ラベル）だけは**前方一致**（`'完了'` が `'（完了）〜た'` に当たる）。
+品詞分解側が別の言い方をしている用法（強意＝確述、順接確定条件＝順接確定・原因）は
+`meanings[].alias` に並べる。
+
+**代償**は「用例が 0 件の項目が出る」こと（`しむ` `たし` `すら` など、
+教材にまだ出ていない語）。これはデータの誤りではないので、
+`tools/validate-grammar.mjs` は**警告**として出し、画面では
+「教材の中にはこの用法の例がまだありません」と書く。
+逆に **コーパスにあるのに規則が拾えない組み合わせ**（取りこぼし）は
+同じ検証器が一覧で出すので、`match` の書き漏らしは見つかる。
+
 **4. 検索キーは素材の正規化ルールに乗る**
 
 `searchKeys` は「濁点を清音化・小書き仮名を大書きに・記号を除去・ゐゑを→いえお」で
@@ -249,6 +314,10 @@ flowchart LR
     P["#/passage/:id<br/>文章詳細"]
     S["#/study<br/>フラッシュカード"]
     Q["#/quiz<br/>4択クイズ"]
+    G["#/grammar<br/>古典文法"]
+    GC["#/grammar/:category<br/>助動詞/助詞/敬語/活用/識別"]
+    GD["#/grammar/:category/:id<br/>文法項目の詳細"]
+    GR["#/grammar/drill<br/>文法ドリル"]
     OLD["#/works ・ #/passages<br/>（旧 URL）"]
     T["#/terms<br/>利用規約・<br/>プライバシーポリシー"]
 
@@ -256,6 +325,7 @@ flowchart LR
     H -->|"主要導線"| S
     H -->|"主要導線"| TB
     H -->|"主要導線"| Q
+    H -->|"入口カード／おすすめ"| G
     H -->|"続きから／おすすめ<br/>（条件つき）"| W
     H -->|"おすすめ（作品）"| K
     H -->|"入口カード（文章）"| P
@@ -288,6 +358,17 @@ flowchart LR
     S -->|一周したら| Q
     Q -->|間違えた語| D
     Q -->|苦手を一覧で| W
+    G -->|カテゴリのカード| GC
+    G -->|助動詞・識別の行| GD
+    G -->|ドリル| GR
+    GC -->|行をタップ| GD
+    GD -->|"用例をタップ"| P
+    GD -->|"関連する識別／助動詞"| GD
+    GD -->|"この語だけでドリル<br/>（?aux=）"| GR
+    GD -->|"敬語 → 330 語"| D
+    GR -->|"間違えた問題"| GD
+    GR -->|"用例の出どころ"| P
+    P -->|"原文の語をタップ<br/>→ 文法リンク"| GD
 ```
 
 ### ルート一覧
@@ -303,6 +384,10 @@ flowchart LR
 | `#/passage/:id` | `view-passages`（詳細） | — |
 | `#/study` | `view-study` | 単語一覧と同じ（`sort` 以外） |
 | `#/quiz` | `view-quiz` | 同上 |
+| `#/grammar` | `view-grammar`（一覧） | — |
+| `#/grammar/drill` | `view-grammar`（ドリル） | `?kind= &cat= &aux= &count=` |
+| `#/grammar/:category` | `view-grammar`（カテゴリ） | `category` は aux / particle / keigo / conj / ident |
+| `#/grammar/:category/:id` | `view-grammar`（詳細） | — |
 | `#/terms` | `view-terms` | `?to=` 節へスクロール（terms / privacy） |
 
 **旧 URL**（`js/router.js` の `REDIRECTS`。クエリはそのまま引き継ぐ）:
@@ -324,11 +409,23 @@ flowchart LR
 
 ホームと使い方はナビの扱いが他と違う。
 **ホームはヘッダ左のタイトル**から、**使い方はヘッダ右の小さなリンク**から開く。
-スマホの下タブ（`position: fixed`）は 4 個（単語／教科書／学習／クイズ）で、この 2 つを足さない。
+スマホの下タブ（`position: fixed`）は 5 個（単語／教科書／文法／学習／クイズ）で、この 2 つを足さない。
 どちらも全幅で常に見える。
+
+**下タブは 5 個が上限**。幅 375px（iPhone SE）で 1 個 74px、
+「教科書」の 3 文字が折り返さないことを確認した上限なので、
+6 個目を足したくなったらタブではなく別の入口（ヘッダのリンク・ホームの入口カード）にする。
+`@media (max-width: 420px)` でラベルだけ `--fs-sm` に落としてある。
 
 タブの現在地判定（`Router.updateNav`）では、**`#/textbook` `#/work/*` `#/passage/*` のすべてで
 「教科書」タブを点灯**させる。入口が 1 本なので、深い階層にいても自分がどのタブの中かが分かる。
+文法も同じで、`#/grammar` 配下（カテゴリ・詳細・ドリル）はすべて「文法」タブが点く。
+
+**`#/grammar` は 1 つの view が 4 画面を描き分ける。** ルートのパターンは 3 本
+（`/grammar` `/grammar/:category` `/grammar/:category/:id`）で、
+`category` が `'drill'` のときだけドリルを描く。
+カテゴリ・項目を増やしても `data/grammar.js` に足すだけで URL が増えるので、
+ルーターは触らない。
 
 ### フィルタ条件は URL に持つ
 
@@ -357,6 +454,8 @@ flowchart LR
 | **文章詳細** | 入試の出典から採った文章はタイトルのそばに出題バッジと「〜年度〜の出典作品です」の 1 行。原文と現代語訳を段落ごとに対応表示（上下／横並びの切替、訳の表示・非表示）。**原文のどの語をタップしても品詞・活用・語義が出る**。段落ごとに「品詞分解を表で見る」。この文章の単語一覧（330 語は詳細へリンク、文章固有語はその場で語義）。「この文章の単語で学習／クイズ」 |
 | **学習** | フィルタしたデッキをカードで。表＝見出し語 → めくると語義＋用例（その語が出てくる段落）。「覚えた／まだ」を記録。Space でめくる、←→ で回答、**裏面は右／左スワイプでも回答**。**めくる前は回答できない**（ボタンは disabled、キーもスワイプも効かず「先にめくって答えを確認」と出る）。一周後に「まだの語だけで復習」 |
 | **クイズ** | 4択。誤答は **同じ品詞の別語** から取る（SCHEMA.md の推奨）。語→意味／意味→語 の 2 形式。1〜4 の数字キーで回答。結果を localStorage に記録し、間違えた語だけ再出題できる |
+| **文法** | 助動詞（接続別にグループ化）・助詞（格/接続/係/副/終＋係り結びの表）・敬語（尊敬/謙譲/丁寧の表。330 語へリンク）・活用（動詞 9 種＋形容詞＋形容動詞の活用表）・識別（13 項目）。詳細は接続・活用の型・活用表・意味ごとの見分け方・**教材の原文から自動抽出した用例**（意味ラベルと活用形つき。タップで文章ページへ）・識別の要点・関連項目 |
+| **文法ドリル** | 品詞分解データから自動生成する 4 択。意味当て／活用形当て／識別／敬語の種類の 4 種類を混ぜて 10 問。誤答は同じ語の他の意味・他の活用形から。`?kind=` `?cat=` `?aux=` で絞れる。結果は共有でき、履歴（`kobun.v1.grammar`）から「最近の正答率」を出す |
 | **利用規約・プライバシーポリシー** | 前半＝利用規約（適用／サービス内容／知的財産／禁止事項／免責／未成年／変更／準拠法・管轄／問い合わせ）、後半＝プライバシーポリシー（学習履歴は localStorage のみ／アクセス解析／Cookie／外部リンク／PWA のキャッシュ／改定／問い合わせ）。アプリ名・URL・制作者名・X・**GA4 の有無**は `data/site.js` から動的に埋める。`?to=privacy` で後半へ |
 
 ---
@@ -367,6 +466,7 @@ flowchart LR
 index.html          <script> を順番に並べるだけ。順序に意味がある
 css/style.css       CSS 変数で配色を一括管理。ダークモードは prefers-color-scheme
 data/site.js        アプリ名・公開 URL・制作者情報（共有と OGP はここを見る）
+data/grammar.js     古典文法（助動詞・助詞・敬語・活用・識別）。用例は持たない（3-e）
 data/*.js           データ（人が編集する）
 js/util.js          DOM の小道具・文字列正規化・検索スコア
 js/store.js         localStorage（学習履歴・設定・クイズ履歴）
@@ -384,14 +484,18 @@ js/view-works.js    作品ページ（#/work/:workId）
 js/view-passages.js 教科書（#/textbook）＋文章詳細（#/passage/:id）
 js/view-study.js    フラッシュカード
 js/view-quiz.js     クイズ
+js/view-grammar.js  古典文法（#/grammar。一覧・カテゴリ・詳細・ドリルの 4 画面）
 js/app.js           起動＋Service Worker の登録・更新バー
 manifest.webmanifest    ホーム画面に追加（PWA）の設定
 sw.js               Service Worker（network-first。オフラインと「アプリとして追加」用）
 assets/             アイコン（icon*.svg / *.png・favicon.svg）と OGP 画像（ogp.svg / ogp.png）
-w/ p/ k/            SEO 用の静的ページ（tools/build-seo.mjs の生成物。手で編集しない。4-e）
+w/ p/ k/ g/         SEO 用の静的ページ（tools/build-seo.mjs の生成物。手で編集しない。4-e）
 sitemap.xml         同上（生成物）
 robots.txt          同上（生成物）
-tools/validate.mjs      データ整合性チェック（Node）
+tools/validate.mjs      データ整合性チェック（Node。validate-tokens / validate-grammar も呼ぶ）
+tools/validate-grammar.mjs  data/grammar.js の検査。match がコーパスに当たるか・
+                        取りこぼしの一覧・用法ラベルの集計まで出す（js/data-index.js を
+                        Node 上でそのまま読むので、画面と同じ経路で照合する）
 tools/build-seo.mjs     data/*.js から SEO 用の静的ページ・sitemap・robots を生成（4-e）
 tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION、
                         生成ページの ?v=... を更新（公開前に実行）
@@ -413,6 +517,8 @@ tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION、
 | **重要度 S/A/B の色は全画面で同じ** | 一覧の左端の色帯・バッジ・関連語カードで `--level-S/A/B` を共有する。色の意味を画面ごとに変えない |
 | **重要度は記号だけで出さない** | `S` の 1 文字では初見で意味が分からない。バッジは必ず **「S 最重要」** の形（`C.levelBadge`）。色は S＝赤・A＝橙・B＝青緑で「重要なほど強い色」に並べ、明度も変えて色覚に依らず区別できるようにする。文章固有語は「P 文章の語」 |
 | **重要度の意味は 3 か所に書く** | 単語一覧の上・ホームの入口カード・使い方ページに同じ凡例（`C.levelLegend`）を出す。説明文と語数は `KOBUN.index.levels` の 1 か所から取るので、言い方がぶれない |
+| **文法も専用の 1 色で** | 文法は重要度（S/A/B）でも学年でも入試でもない別の軸なので、`--grammar`（松葉色）を 1 色だけ足して文法画面の中だけで共有する。用法ラベル（（完了）（断定））のバッジ・一覧の行頭の色帯・用例の該当語の下線がこの色。敬語の 3 種類は色に頼らず**必ず「尊敬」「謙譲」「丁寧」の語を出す**（`--grammar` / `--accent` / 無彩色の 3 段） |
+| **用例は原文のまま 1 文だけ** | 文法の用例は段落ごと出すと長すぎるので「該当語を含む 1 文」（前後の「。」で切る）に限り、該当語だけ `--hl` のマーカー＋下線で示す。文全体が文章ページへのリンクなので、前後と現代語訳はそちらで読める |
 | **入試の出題は専用の 1 色で** | 出題バッジ（`2025 共通テスト`）は重要度の赤橙青緑とも学年バッジの藍とも意味が違うので、`--exam`（藤色）を 1 色だけ足して教科書の出典セクション・作品ページ・文章ページで共有する。**年だけ・試験名だけでは伝わらない**ので、バッジは必ず「年＋試験名」。本試験以外（第1日程など）のときだけ 3 語目を足し、出題箇所は `title` に回す |
 | **ホームは「次の一手」だけ** | トップは入口。数字を並べるより「続きから」「苦手 N 語を復習」のようにボタン 1 つで始められる形にする。履歴ゼロのときは進捗を出さず「まず S ランクから」に置き換える |
 | **語義は薄くしない** | 一覧で本当に読みたいのは語義なので `--fg` で置く。薄い色（`--fg-muted`）は補助情報だけ、`--fg-faint` は区切り記号など装飾だけ |
@@ -440,6 +546,7 @@ tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION、
 | **状態** | `--ok`（覚えた・正解）`--danger`（苦手・不正解）`--warn`（要確認）`--on-solid`（塗りの上の文字色） |
 | **重要度** | `--level-S` `--level-A` `--level-B` `--level-P`（文章固有語）`--on-level` |
 | **入試の出題** | `--exam`（藤色。バッジの文字・セクションの帯）`--exam-bg`（その地） |
+| **文法** | `--grammar`（松葉色。用法ラベル・一覧の色帯・用例の該当語）`--grammar-bg`（その地） |
 | **余白** | `--sp-1`(.25rem) `--sp-2`(.5) `--sp-3`(.75) `--sp-4`(1) `--sp-5`(1.5) `--sp-6`(2) |
 | **角丸** | `--r-sm`(6px) `--r-md`(10) `--r-lg`(14) `--r-pill`(999)／旧名 `--radius` |
 | **影** | `--shadow-sm` / `--shadow-md` / `--shadow-lg`（旧名 `--shadow`） |
@@ -581,6 +688,8 @@ data/site.js（設定）
 | `word_view` | `word_id` `level` | `js/view-word.js` |
 | `passage_view` | `passage_id` `work_id` | `js/view-passages.js`（文章詳細） |
 | `token_tap` | `passage_id` | `js/components.js` の `passageLine` / `passageTokenLine` |
+| `grammar_view` | `category`（index/aux/particle/keigo/conj/ident）`id` | `js/view-grammar.js`（一覧・カテゴリ・詳細） |
+| `grammar_drill_complete` | `kind`（meaning/form/ident/keigo/mixed）`count` `correct` `score_pct` | `js/view-grammar.js` のドリル結果画面 |
 | `install_prompt` | `outcome`（accepted/dismissed） | `js/components.js` の `C.installBlock` |
 | `app_installed` | — | `appinstalled` イベント |
 | `history_reset` | — | `js/view-help.js` の 2 段階リセット |
@@ -655,6 +764,16 @@ JavaScript を実行しないと現れず、実行されても URL が 1 つな�
 | **生成ページを `sw.js` の precache に入れない** | 365 枚もあり、インストール時に全部取りに行くのは重い。network-first の通常の fetch で十分（オフラインでも一度開いたページは読める） |
 | **共有ボタンの URL はハッシュのまま** | 下記 |
 
+**`g/` は 1 段深い。** 文法ページだけ `g/<分野>/<id>.html` の 2 階層なので、
+`renderPage()` に `up`（アプリのルートまでの相対パス。既定 `'../'`）を渡せるようにし、
+CSS・アイコン・ナビ・「アプリで開く」のリンクをすべてそこから組み立てる。
+生成ディレクトリの掃除（`cleanDir`）も子ディレクトリをたどるようにしてある。
+
+**文法ページの用例は `js/data-index.js` をそのまま読んで作る。**
+`match` 規則の照合コードをビルド側に書き写すと、
+アプリの画面と静的ページで用例がずれる。`data-index.js` は DOM を触らないので
+Node 上でも動き、`grammarExamples()` をそのまま呼べる。
+
 ### 生成物
 
 ```
@@ -672,6 +791,12 @@ p/index.html               教材の一覧（作品ごと）
 k/<作品id>.html     27 枚  作者・時代・ジャンル・概要・収録教材・収録語・
                            入試の出典なら「入試での出題」（年・試験・本試験/第1日程・出題箇所）
 k/index.html               作品の一覧
+g/<分野>/<項目id>.html    接続・活用表・意味ごとの見分け方・
+                           **教材の原文から取った用例**（該当語を <strong>・文章ページへリンク）・
+                           識別の要点・関連項目
+g/<分野>/index.html   5 枚  分野の一覧（助動詞は接続別＋活用表のまとめ／
+                           助詞は係り結びの表／敬語は 3 種類の表／活用は全活用表）
+g/index.html               古典文法のトップ（分野のカード＋助動詞・助詞・識別の全項目）
 sitemap.xml                上のすべて＋トップ（lastmod は生成日）
 robots.txt                 Sitemap: 行つき
 ```
@@ -686,6 +811,7 @@ robots.txt                 Sitemap: 行つき
 | 単語 | `DefinedTerm`（`inDefinedTermSet` で「古文単語 330 語」の単語帳を指す）＋ `BreadcrumbList` |
 | 文章 | `Article`（`isPartOf` に作品の `Book`、`about` に収録語。入試の出典なら `about` の先頭に出題、`description` にも 1 文）＋ `BreadcrumbList` |
 | 作品 | `Book`（`hasPart` に収録教材。入試の出典なら `about` と `description` に出題歴）＋ `BreadcrumbList` |
+| 文法項目 | `Article`（`articleSection` に分野、`about` に意味の一覧、`isPartOf` に分野の `CollectionPage`）＋ `BreadcrumbList` |
 | 一覧 | `CollectionPage` ＋ `BreadcrumbList` |
 
 **内部リンクを密に**してある。単語 ⇄ 関連語 ⇄ 文章 ⇄ 作品が相互に張られ、
@@ -700,7 +826,9 @@ robots.txt                 Sitemap: 行つき
   ホームと未知の画面は `index.html` に書いてある既定の `<title>` に戻す。
 - `<link rel="canonical">` … `Router.staticPath(route)` が返す静的ページ
   （`#/word/39` → `w/39.html`、`#/words` → `w/index.html`、`#/textbook` → `p/index.html`、
-  `#/work/:id` → `k/:id.html`、`#/passage/:id` → `p/:id.html`）。
+  `#/work/:id` → `k/:id.html`、`#/passage/:id` → `p/:id.html`、
+  `#/grammar` → `g/index.html`、`#/grammar/aux` → `g/jodoshi/index.html`（`aux` は Windows の予約名なので静的ページのフォルダは `jodoshi`）、
+  `#/grammar/aux/nu` → `g/jodoshi/nu.html`。ドリルは静的ページを持たないので `g/index.html`）。
   対応するページが無い画面（学習・クイズ・使い方・規約）と存在しない id はトップを指す。
   土台は **必ず `KOBUN.site.url`**（`C.absUrl` と違って「いま開いている URL」は使わない。
   `file://` や `localhost` を canonical に出さないため）。
@@ -930,11 +1058,16 @@ Search Console の所有権確認タグの枠は `index.html` の `<head>` に�
 
 ### 5.5 学習履歴の形を変えるには
 
-保存キーは 4 つ。`kobun.v1.progress`（学習状態）／`kobun.v1.prefs`（画面設定）／
-`kobun.v1.quizlog`（クイズ履歴 50 件）／`kobun.v1.recent`（ホームの「続きから」。
+保存キーは 5 つ。`kobun.v1.progress`（学習状態）／`kobun.v1.prefs`（画面設定）／
+`kobun.v1.quizlog`（クイズ履歴 50 件）／`kobun.v1.grammar`（文法ドリル履歴 50 件）／
+`kobun.v1.recent`（ホームの「続きから」。
 最後に学習したデッキの条件と、最後に開いた文章）。
+
+**文法ドリルの履歴を `progress` に載せないのは**、進捗のキーが
+「単語の id」または「`p:<文章id>:<添字>`」の 2 種類だと決めてあり（下の表）、
+文法項目はそのどちらでもないため。クイズ履歴と同じ形の別ログにしてある。
 `recent` は `view-study.js` と `view-passages.js` が画面を開いたときに書き、ホームだけが読む。
-使い方ページの「履歴をリセット」（`store.resetAll()`）は prefs 以外の 3 つを消す。
+使い方ページの「履歴をリセット」（`store.resetAll()`）は prefs 以外の 4 つを消す。
 
 `js/store.js` の `PREFIX = 'kobun.v1.'` を `v2` に上げ、
 起動時に v1 を読んで v2 に変換する移行処理を書く。
@@ -959,6 +1092,59 @@ Search Console の所有権確認タグの枠は `index.html` の `<head>` に�
 
 ---
 
+### 5.6 文法の項目を足すには
+
+`data/grammar.js` の該当する配列に 1 件足すだけ。**画面のコードは触らない**
+（`js/data-index.js` が id で索引を作り、`js/view-grammar.js` はカテゴリで描き分ける）。
+
+| 足す先 | カテゴリ | URL |
+|---|---|---|
+| `auxiliaries` | `aux` | `#/grammar/aux/<id>` |
+| `particles` | `particle` | `#/grammar/particle/<id>` |
+| `keigo.words` | `keigo` | `#/grammar/keigo/<id>` |
+| `conjugation.groups[].rows` | `conj` | `#/grammar/conj/<id>` |
+| `identification` | `ident` | `#/grammar/ident/<id>` |
+
+1. `id` を決める。**URL になるので後から変えない**。
+   カテゴリをまたいで重複させない（索引が 1 つの Map なので検証器がエラーにする）。
+2. 中身を書く。助動詞・助詞なら `name` `kind` `attach` `conj`
+   `table`（**必ず 6 要素**。無い形は `'○'`、2 形あるなら `'ず／ざら'`）
+   `meanings`（`{ label, gloss, how }`）`tips` `match`。
+3. **`match` を書く**（3-e）。これが用例とドリルの出どころ。
+
+   ```js
+   match: { b: 'ぬ', p: '助動詞' }
+   match: { b: 'なり', p: '助動詞', m: '断定' }        // m は前方一致
+   match: [{ b: 'らし' }, { b: 'けらし' }]            // 書き方が複数あるときは配列
+   match: { p: '形容動詞', c: 'ナリ活用', sEnd: 'に' } // 活用語尾だけを問題にするとき
+   ```
+4. 品詞分解側が別の言い方をしている用法は `meanings[].alias` に並べる
+   （強意＝確述、順接確定条件＝順接確定・原因、伝聞推定＝伝聞）。
+   ドリルの「意味当て」がラベルで正解を決めるため。
+5. 識別は `cases: [{ label, how, example, match }]` を 2 件以上書く。
+   **ケースごとに `match` を持たせる**ので、「その場合の用例」だけを引ける。
+   エントリ側の `match` は**字面**（`[{ s: 'ぬ' }, { s: 'ね' }]`）にする。
+   これは「原文でこの字面をタップしたら、この識別ページを案内する」ための規則。
+6. `node tools/validate-grammar.mjs` を実行する。
+   - **エラー 0** にする（`table` の要素数・`id` の重複・`related` の不在・`wordId` の不在）。
+   - 「用例が 0 件」の警告は、教材にまだその用法が出ていないだけのこともある。
+     内容を読んで `match` の書き間違いでないことを確かめる。
+   - 「**取りこぼし**」に出た組み合わせは、その用法を扱うエントリが無いということ。
+     `match` を広げるか、エントリを足す。
+7. `node tools/build-seo.mjs` を実行する（`g/<分野>/<id>.html` が作られる）。
+
+**やらないこと**
+
+- **用例（例文）を書かない。** コーパス（教材の品詞分解）から自動で集まる（3-e）。
+- **活用の対応表を data 側に書かない。** 活用（`conj`）の用例だけは
+  品詞分解の `c`（「ハ行四段」など行つきの値）との対応が必要で、
+  その表は `js/view-grammar.js` の `CONJ_MATCH` にある。
+  行の増減はここを直す（データ側の `table` とは別物）。
+- **`data/tokens/` を直さない。** 文法の説明とコーパスは独立していて、
+  合わないときは `match` 側を直す（原文の品詞分解が誤っていると思ったら報告する）。
+
+---
+
 ## 6. 今後の候補
 
 | 候補 | どこに足すか | メモ |
@@ -967,8 +1153,10 @@ Search Console の所有権確認タグの枠は `index.html` の `<head>` に�
 | **音声読み上げ** | `SpeechSynthesisUtterance` で段落の読みを読む | `romaji` は字面なので読み上げには使えない（SCHEMA.md の注意）。`passages.js` の paragraph に `reading` を足すのが素直 |
 | **音読・朗読** | `passages.js` の paragraph に `reading` を足す | 読み上げ拡張の材料になる。トークンの `s` と対応づければ 1 語ずつ読ませることもできる |
 | **CSV インポート／エクスポート** | `tools/` に `csv2js.mjs` を追加 | 品詞分解・関連語を表計算で編集したい人向け。素材の CSV と同じく UTF-8 BOM 付きで出す |
-| **活用練習** | 品詞分解の `c`（活用の種類）と `f`（活用形）をそのまま問題に | 「この『たる』の活用形は？」。20 編・2500 トークンぶんのデータはもう揃っている |
-| **助動詞・敬語の体系ページ** | `data/grammar.js` を新設 | 敬語 27 語は本動詞／補助動詞、尊敬／謙譲／丁寧で整理したい |
+| ~~**活用練習**~~ | ✅ 実装した（`#/grammar/drill?kind=form`。品詞分解の `f` をそのまま正解にしている） | — |
+| ~~**助動詞・敬語の体系ページ**~~ | ✅ 実装した（`data/grammar.js` ＋ `#/grammar`。3-e / 5.6） | 用例をデータに書かず `match` 規則でコーパスから集める形にした |
+| **文法項目 ⇔ 単語の相互リンクを増やす** | `data/grammar.js` の `keigo[].wordId` は入れた。動詞・形容詞の 330 語からも「この語の活用」へ張りたい | `js/view-word.js` に 1 ブロック足すだけ。活用の種類は品詞分解の `c` から引ける |
+| **文法ドリルの SRS 化** | `kobun.v1.grammar` を項目ごとの正誤に持ち替える | いまは 1 セット単位の集計だけ。項目別にすると「苦手な助動詞」を出せる |
 | **書き取りモード** | `view-quiz.js` に mode を追加 | 意味 → 仮名を入力。`searchKeys` の正規化を答え合わせに流用できる |
 | **タグ（自由タグ）** | `data/tags.js` ＋ `data/wordTags.js` | `workWords.js` と同じ形 |
 | **PWA 化 / オフライン** | `manifest.json` ＋ Service Worker | ただし Service Worker は `file://` では動かない。`start.ps1` 経由 or ホスティング前提になる |
@@ -982,6 +1170,10 @@ Search Console の所有権確認タグの枠は `index.html` の `<head>` に�
   「公開アプリに載せる前に、手元の辞書で最終確認することを勧める」とある。
 - `works.js` / `relations.js` / `workWords.js` / `passages.js` / `tokens/*.js` は
   **このプロトタイプ用に書き起こしたサンプル**で、各ファイル冒頭に「サンプル・要校閲」と明記した。
+- `grammar.js` は高校古典文法（学校文法）の標準的な整理に拠って書いたもので、
+  **要校閲**。注釈書・教科書によって扱いが分かれる箇所（連体形＋「に」を格助詞とみるか
+  接続助詞とみるか、「らし」「むず」の活用の型、「べし」の意味の数え方など）は
+  各エントリの `note` に書いてある。画面では `--warn` 色＋破線で目立つ。
 - 解釈が分かれる箇所は `note` に「要確認」と書いてある。
   画面上では色（`--warn`）と破線の下線で目立つようにしてある。
 - 原文は流布本・一般的な教科書本文に拠ったが、底本によって異同がある。
