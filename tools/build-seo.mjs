@@ -148,6 +148,11 @@ const jsonld = (obj) =>
   '\n</script>';
 
 function writeFile(rel, body) {
+  // Windows 予約名回避: 文法ページ内の相対リンク aux/ → jodoshi/（絶対 URL の g/aux/ も）
+  if (rel.startsWith('g/')) {
+    body = String(body).replace(/href="(\.\.\/)?aux\//g, 'href="$1jodoshi/').replace(/\/g\/aux\//g, '/g/jodoshi/');
+  }
+
   const p = path.join(ROOT, rel);
   fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, body, 'utf8');
