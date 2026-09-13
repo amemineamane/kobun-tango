@@ -358,7 +358,7 @@
       // 助動詞の活用表を 1 枚にまとめたもの（一覧で見比べられるように）
       section.appendChild(el('div', { class: 'card' }, [
         el('h2', { class: 'card-title', text: '助動詞の活用表（まとめ）' }),
-        el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べています。' }),
+        el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べ、（　）内は「ば」に続くときなどにしか使わない稀な形です。' }),
         conjTable({
           headLabel: '助動詞',
           rows: idx.grammarList('aux').map(function (a) {
@@ -644,7 +644,7 @@
         headLabel: '語',
         rows: [{ name: entry.name, sub: entry.conj, table: entry.table }]
       }));
-      factCard.appendChild(el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。' }));
+      factCard.appendChild(el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。（　）内は「ば」に続くときなどにしか使わない稀な形です。' }));
     }
     section.appendChild(factCard);
 
