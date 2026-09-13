@@ -86,7 +86,7 @@
         return el('td', {
           class: 'conj-cell' + (v === '○' ? ' is-none' : ''),
           text: v,
-          'aria-label': FORM_HEAD[i] + '：' + (v === '○' ? 'なし' : v)
+          'aria-label': FORM_HEAD[i] + '：' + (v === '○' ? 'なし' : String(v).replace(/○/g, 'なし'))
         });
       }))));
     });
@@ -358,7 +358,7 @@
       // 助動詞の活用表を 1 枚にまとめたもの（一覧で見比べられるように）
       section.appendChild(el('div', { class: 'card' }, [
         el('h2', { class: 'card-title', text: '助動詞の活用表（まとめ）' }),
-        el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べ、（　）内は「ば」に続くときなどにしか使わない稀な形です。' }),
+        el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べ（形容詞型と「ず」は、左が本活用・右が補助活用〈カリ活用・ザリ活用〉）、（　）内は「〜ば」「〜は」に続くときなどにしか使わない、用例の少ない形です。' }),
         conjTable({
           headLabel: '助動詞',
           rows: idx.grammarList('aux').map(function (a) {
@@ -521,7 +521,8 @@
           rows: (g.rows || []).map(function (r) {
             return { name: r.name, sub: r.example, table: r.table };
           })
-        })
+        }),
+        el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。形容詞・形容動詞で 2 つ形があるものは「／」で並べ、左が本活用・右が補助活用（カリ活用）です。（　）内は「〜は」に続くときなどにしか使わない、用例の少ない形です。' })
       ]);
       var dl = el('dl', { class: 'help-dl' });
       (g.rows || []).forEach(function (r) {
@@ -644,7 +645,7 @@
         headLabel: '語',
         rows: [{ name: entry.name, sub: entry.conj, table: entry.table }]
       }));
-      factCard.appendChild(el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。（　）内は「ば」に続くときなどにしか使わない稀な形です。' }));
+      factCard.appendChild(el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べ（形容詞型と「ず」は、左が本活用・右が補助活用〈カリ活用・ザリ活用〉）、（　）内は「〜ば」「〜は」に続くときなどにしか使わない、用例の少ない形です。' }));
     }
     section.appendChild(factCard);
 
@@ -752,6 +753,7 @@
     section.appendChild(el('div', { class: 'card' }, [
       el('h2', { class: 'card-title', text: '活用表' }),
       conjTable({ headLabel: '種類', rows: [{ name: entry.name, sub: entry.example, table: entry.table }] }),
+      el('p', { class: 'muted small', text: '「○」はその活用形が無いことを表します。2 つ形があるものは「／」で並べ、左が本活用・右が補助活用（カリ活用）です。（　）内は用例の少ない形です。' }),
       el('p', { class: 'grammar-tips' }, [richText(entry.how || '')])
     ]));
     section.appendChild(el('div', { class: 'card' }, [
