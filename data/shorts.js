@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'q8VURyR7sCA', title: '【古文解説】一目惚れした瞬間、着ていた服を破ってラブレターを書いた男がいた！？ #shorts #古文 #あるある  #vtuber' },
   { id: '3g3gwBnhInE', title: '古典系Vtuberによる古典解説：混乱する古典単語「すさまじ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'tZxKYV4zhOg', title: '古典系Vtuberによる古典解説：混乱する古典単語「あはれ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'kTVyeJr-xIc', title: '【伊勢物語：芥川】「ねえ、あれ何？」この一言に答えなかった男が、このあと後悔します #shorts #古文 #あるある  #vtuber #芥川 #歴史' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'owqQENhAoWg', title: '古典系Vtuberによるゆるっと作品紹介「玉水物語」 #shorts #古文 #vtuber #作品紹介 #解説 #百合' },
   { id: 'JC3c_fADsLA', title: '古典の授業あるある：その方法を教えてくれ「文脈判断」 #shorts #古文 #あるある  #vtuber' },
   { id: 'x8YKWHXLc5Q', title: '古典系Vtuberあるある：地獄のネタ探し #shorts #古文 #あるある  #vtuber' },
-  { id: 'yjmupNkxRP8', title: '古典系Vtuberあるある：この漢字の読み方④ #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
