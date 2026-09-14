@@ -284,6 +284,8 @@
         url: C.absUrl('#/quiz' + U.buildQuery(shareQuery)),
         contentType: 'quiz', itemId: K.analytics ? K.analytics.deck(state).deck_id : ''
       }));
+      var ytLine = C.youtubeLinkLine({ placement: 'quiz' });
+      if (ytLine) resultCard.appendChild(ytLine);
       stage.appendChild(resultCard);
 
       if (wrongs.length) {

@@ -849,7 +849,15 @@
     booth: '<path d="M4.4 8.5h15.2l-1.1 11H5.5z"/><path d="M8.8 8.5V7a3.2 3.2 0 0 1 6.4 0v1.5"/>',
     // ホーム画面に追加：受け皿に下向きの矢印
     install: '<path d="M12 3.5v10"/><path d="M8 10.2 12 14.2 16 10.2"/>' +
-             '<path d="M4.5 16v2.5A2 2 0 0 0 6.5 20.5h11a2 2 0 0 0 2-2V16"/>'
+             '<path d="M4.5 16v2.5A2 2 0 0 0 6.5 20.5h11a2 2 0 0 0 2-2V16"/>',
+    // シャッフル（「古典ショート」の並べ替え）：交差する 2 本の矢印。
+    // 既存アイコンセットの複製ではなく、線を交差させただけの独自の作図
+    shuffle: '<path d="M3.5 8h3.2c2 0 3.1 1 4.6 3.2"/>' +
+             '<path d="M3.5 16h3.2c2 0 3.1 -1 4.6 -3.2"/>' +
+             '<path d="M13.7 8.6C15 6.6 16.1 6 18 6"/>' +
+             '<path d="M13.7 15.4c1.3 2 2.4 2.6 4.3 2.6"/>' +
+             '<path d="M16 3.6 19 6l-3 2.4"/>' +
+             '<path d="M16 20.4 19 18l-3 -2.4"/>'
   };
 
   function icon(name) {
@@ -1162,35 +1170,55 @@
   function isUsableUrl(u) {
     return typeof u === 'string' && /^https?:\/\//i.test(u) && !/PLACEHOLDER/i.test(u);
   }
+  /** index.html のヘッダ（静的 HTML）から出し分けを判定するために公開する */
+  C.isUsableUrl = isUsableUrl;
+
+  /**
+   * YouTube への外部リンクをクリックしたときの計測（KOBUN.analytics が無効なら no-op）。
+   * @param placement 'home' | 'quiz' | 'study' | 'footer' | 'help' | 'header'
+   */
+  function trackYoutubeClick(placement) {
+    if (K.analytics) K.analytics.event('outbound_click', { destination: 'youtube', placement: placement || 'home' });
+  }
 
   /**
    * 制作者の外部リンク（配列）。
-   * @param opts { services: ['x','youtube','booth'], labels: true でラベル併記 }
+   * @param opts {
+   *   services: ['x','youtube','booth'], labels: true でラベル併記,
+   *   emphasize: ['youtube'] のように指定すると、その項目だけラベルを強制的に出し
+   *              専用の色（.author-link-emphasize）で目立たせる,
+   *   placement: YouTube リンクの計測用（省略時 'footer'）
+   * }
    */
   C.authorLinks = function (opts) {
     opts = opts || {};
     var a = (K.site && K.site.author) || {};
     var only = opts.services || ['x', 'youtube', 'booth'];
     var withLabel = opts.labels !== false;
+    var emphasize = opts.emphasize || [];
+    var placement = opts.placement || 'footer';
     var out = [];
     AUTHOR_SERVICES.forEach(function (s) {
       if (only.indexOf(s.key) < 0) return;
       if (!isUsableUrl(a[s.key])) return;
+      var isEmph = emphasize.indexOf(s.key) >= 0;
+      var showLabel = withLabel || isEmph;
       out.push(el('a', {
-        class: 'author-link author-link-' + s.key,
+        class: 'author-link author-link-' + s.key + (isEmph ? ' author-link-emphasize' : ''),
         href: a[s.key],
         target: '_blank',
         rel: 'noopener noreferrer',
         title: (a.name || '') + ' の ' + s.label,
-        'aria-label': (a.name || '') + ' の ' + s.label
-      }, [icon(s.icon), withLabel ? el('span', { class: 'author-link-label', text: s.label }) : null]));
+        'aria-label': (a.name || '') + ' の ' + s.label,
+        onClick: s.key === 'youtube' ? function () { trackYoutubeClick(placement); } : null
+      }, [icon(s.icon), showLabel ? el('span', { class: 'author-link-label', text: s.label }) : null]));
     });
     return out;
   };
 
   /**
    * 「制作：雨峰あまね ＋ アイコンリンク」の 1 行（ホーム末尾・共通フッタ用）。
-   * @param opts { services, labels, legal: true で「利用規約・プライバシーポリシー」を添える }
+   * @param opts { services, labels, emphasize, placement, legal: true で「利用規約・プライバシーポリシー」を添える }
    */
   C.authorLine = function (opts) {
     opts = opts || {};
@@ -1198,7 +1226,9 @@
     if (!a.name) return null;
     var links = C.authorLinks({
       services: opts.services || ['x', 'youtube'],
-      labels: opts.labels === true
+      labels: opts.labels === true,
+      emphasize: opts.emphasize || [],
+      placement: opts.placement || 'footer'
     });
     return el('p', { class: 'author-line' }, [
       el('span', { class: 'author-line-name', text: '制作：' + a.name })
@@ -1208,15 +1238,352 @@
       ] : []));
   };
 
-  /** 使い方ページの「制作」節の中身（名前＋ラベル付きリンク＋一言） */
+  /**
+   * YouTube チャンネルへの赤いボタン（主ボタン）。
+   * ホームの制作者カード・使い方ページの「制作」節で使う。
+   * `author.youtube` が空／PLACEHOLDER なら null を返す（呼び出し側は出さない）。
+   */
+  C.youtubeButton = function (opts) {
+    opts = opts || {};
+    var a = (K.site && K.site.author) || {};
+    if (!isUsableUrl(a.youtube)) return null;
+    var placement = opts.placement || 'home';
+    return el('a', {
+      class: 'btn btn-yt' + (opts.large ? ' btn-lg' : ''),
+      href: a.youtube,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      onClick: function () { trackYoutubeClick(placement); }
+    }, [icon('youtube'), el('span', { text: opts.label || 'YouTube を見る' })]);
+  };
+
+  /**
+   * 制作者アイコン（<picture> で同名 .webp を先に試し、失敗したら avatar のまま）。
+   * `author.avatar` が未設定なら null を返す（呼び出し側は代わりのアイコンを出す）。
+   * @param size px（正方形。円形や角丸に切るのは呼び出し側の CSS）
+   */
+  function authorAvatar(size, extraClass) {
+    var a = (K.site && K.site.author) || {};
+    if (!a.avatar) return null;
+    var webp = String(a.avatar).replace(/\.[a-z0-9]+$/i, '.webp');
+    return el('picture', { class: 'author-avatar' + (extraClass ? ' ' + extraClass : '') }, [
+      el('source', { srcset: webp, type: 'image/webp' }),
+      el('img', {
+        src: a.avatar,
+        alt: a.name || '',
+        width: size,
+        height: size,
+        loading: 'lazy',
+        decoding: 'async'
+      })
+    ]);
+  }
+
+  /**
+   * ホーム用の制作者カード。YouTube チャンネルへの導線を目立たせるための専用カード。
+   * 左にアイコン（制作者アイコンがあればそれ、無ければ YouTube の線画アイコン）、
+   * 中央に名前と一言、右に赤の主ボタン＋小さく X・BOOTH のリンク。
+   * `author.youtube` が空／PLACEHOLDER のときはカードごと出さない。
+   */
+  C.youtubeCard = function (opts) {
+    opts = opts || {};
+    var a = (K.site && K.site.author) || {};
+    var placement = opts.placement || 'home';
+    var btn = C.youtubeButton({ placement: placement });
+    if (!btn) return null;
+    var otherLinks = C.authorLinks({ services: ['x', 'booth'], labels: false, placement: placement });
+    var avatar = authorAvatar(112, 'author-yt-avatar');
+    return el('div', { class: 'card author-yt-card' }, [
+      avatar || el('div', { class: 'author-yt-icon', 'aria-hidden': 'true' }, [icon('youtube')]),
+      el('div', { class: 'author-yt-body' }, [
+        el('p', { class: 'author-yt-name' }, [
+          '制作：', el('b', { text: a.name || '' }),
+          a.role ? el('span', { class: 'badge author-yt-role', text: a.role }) : null
+        ]),
+        a.tagline ? el('p', { class: 'author-yt-lead muted small', text: a.tagline }) : null,
+        otherLinks.length ? el('div', { class: 'author-links author-yt-others' }, otherLinks) : null
+      ]),
+      el('div', { class: 'author-yt-cta' }, [btn])
+    ]);
+  };
+
+  /**
+   * クイズ結果・学習の完走画面に添える、YouTube への小さなテキストリンク行。
+   * 共有ボタンより控えめに（ボタンではなくリンク＋アイコン）見せる。
+   */
+  C.youtubeLinkLine = function (opts) {
+    opts = opts || {};
+    var a = (K.site && K.site.author) || {};
+    if (!isUsableUrl(a.youtube)) return null;
+    var placement = opts.placement || 'quiz';
+    return el('p', { class: 'author-yt-line small' }, [
+      '解説動画は YouTube で → ',
+      el('a', {
+        class: 'author-yt-line-link',
+        href: a.youtube,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        onClick: function () { trackYoutubeClick(placement); }
+      }, [icon('youtube'), el('span', { text: 'チャンネルを見る' })])
+    ]);
+  };
+
+  /** 制作者カードの立ち絵などのイラストレーター表記。`author.illustrator` が無ければ null */
+  function illustratorLine() {
+    var ill = (K.site && K.site.author && K.site.author.illustrator) || null;
+    if (!ill || !ill.name) return null;
+    var body = isUsableUrl(ill.x)
+      ? ['キャラクターイラスト：', el('a', { href: ill.x, target: '_blank', rel: 'noopener noreferrer', text: ill.name })]
+      : ['キャラクターイラスト：' + ill.name];
+    return el('p', { class: 'muted small author-illustrator' }, body);
+  }
+
+  /**
+   * 使い方ページの「制作」節の中身。
+   * 制作者アイコンがあれば文字の左に丸く小さく添え（無ければ画像なしの従来レイアウト）、
+   * YouTube を先頭のボタンにし、X・BOOTH はラベル付きリンクで添える。
+   * イラストレーターのクレジット（`author.illustrator`）があれば 1 行添える。
+   */
   C.authorBlock = function () {
     var a = (K.site && K.site.author) || {};
-    var links = C.authorLinks({ services: ['x', 'youtube', 'booth'], labels: true });
-    return el('div', { class: 'author-block' }, [
+    var ytBtn = C.youtubeButton({ placement: 'help' });
+    var links = C.authorLinks({ services: ['x', 'booth'], labels: true, placement: 'help' });
+    var avatar = authorAvatar(72, 'author-block-avatar');
+    var text = el('div', { class: 'author-block-text' }, [
       el('p', { class: 'author-block-name' }, ['制作：', el('b', { text: a.name || '' })]),
+      ytBtn ? el('div', { class: 'author-block-yt' }, [ytBtn]) : null,
       links.length ? el('div', { class: 'author-links author-links-lg' }, links) : null,
+      illustratorLine(),
       el('p', { class: 'muted small', text: '感想・要望は X までお寄せください。' })
     ]);
+    return el('div', { class: 'author-block' }, [avatar, text].filter(Boolean));
+  };
+
+  /* ---------------------------------------------------------------
+   * ホーム末尾の YouTube 動画カード（クリックして読み込む）
+   * ---------------------------------------------------------------
+   * 既定は `author.youtubeShorts`（tools/fetch-shorts.mjs が作る { id, title }
+   * の配列）を使った「古典ショート」のグリッド表示。空のときは
+   * `author.youtubePlaylist` の単体埋め込みにフォールバックし、
+   * それも決まらなければ null（呼び出し側はカードごと出さない）。
+   * どちらの形でも、プライバシー配慮で初期表示は自作の SVG 再生アイコンの
+   * プレースホルダだけを出し、クリックしたときだけ youtube-nocookie.com の
+   * iframe を挿入する（挿入するまで YouTube には一切通信しない。
+   * サムネイルは自サイトの assets/yt/ に置いてあるので、ここも通信ゼロ）。
+   * file:// で開いたときは iframe が動かないことがあるので、案内文言だけにする。
+   * ------------------------------------------------------------- */
+
+  /** 再生アイコン（プレースホルダ用。18px の icon() とは別に大きく描く） */
+  function playIconSvg(size) {
+    return el('span', {
+      class: 'yt-embed-play-svg',
+      'aria-hidden': 'true',
+      html: '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" ' +
+        'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="12" cy="12" r="10"/><path d="M10 8.2 16.4 12 10 15.8Z" fill="currentColor" stroke="none"/></svg>'
+    });
+  }
+
+  /** 埋め込む再生リストの id を決める（明示指定が無ければアップロード動画の再生リストを使う） */
+  function resolveYoutubePlaylistId() {
+    var a = (K.site && K.site.author) || {};
+    var pl = String(a.youtubePlaylist || '').trim();
+    if (pl) return pl;
+    var ch = String(a.youtubeChannelId || '').trim();
+    if (/^UC/.test(ch)) return 'UU' + ch.slice(2);
+    return '';
+  }
+
+  /** file:// で開いているか（iframe も外部 assets への navigate も動かない環境） */
+  function isFileProtocol() {
+    return (location.protocol || '').toLowerCase() === 'file:';
+  }
+
+  /** 1 本ぶんのショートのタイル。クリックすると自分だけ iframe に差し替わる */
+  function shortsTile(s, placement) {
+    var isFile = isFileProtocol();
+    var btn = el('button', {
+      type: 'button',
+      class: 'yt-shorts-btn',
+      'aria-label': 'クリックで再生（YouTube を読み込みます）：' + s.title,
+      onClick: function () {
+        if (isFile) {
+          U.clear(btn);
+          btn.appendChild(el('p', { class: 'yt-embed-file muted small', text: '公開サイトで再生できます。' }));
+          return;
+        }
+        var iframe = el('iframe', {
+          src: 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(s.id) + '?rel=0&autoplay=1',
+          title: s.title,
+          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+          allowfullscreen: true,
+          loading: 'lazy'
+        });
+        U.clear(btn);
+        btn.appendChild(iframe);
+        btn.classList.add('is-loaded');
+        if (K.analytics) K.analytics.event('video_load', { placement: placement, video_id: s.id });
+      }
+    }, [
+      el('img', {
+        class: 'yt-shorts-thumb',
+        src: 'assets/yt/' + s.id + '.webp',
+        alt: '',
+        loading: 'lazy',
+        decoding: 'async'
+      }),
+      playIconSvg(36),
+      el('span', { class: 'yt-shorts-title', text: s.title })
+    ]);
+    return el('div', { class: 'yt-shorts-tile' }, [btn]);
+  }
+
+  /** shorts から重複無しで n 本ランダムに選ぶ（Fisher–Yates） */
+  function pickRandomShorts(list, n) {
+    var arr = list.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr.slice(0, n);
+  }
+
+  /**
+   * 古典ショートのグリッドカード（author.youtubeShorts が 1 件以上あるとき）。
+   * 初期表示は再生リストの先頭（＝最新）6 本を固定で出す。見出し右の
+   * 「別の動画を見る」を押すと、そのときだけ全件からランダムに 6 本を引き直す
+   * （押すたびに再抽選）。シャッフルしたあとは「最新に戻す」が出る。
+   */
+  function youtubeShortsCard(shorts, placement) {
+    var a = (K.site && K.site.author) || {};
+    var N = Math.min(6, shorts.length);
+    var latest = shorts.slice(0, N);
+
+    var grid = el('div', { class: 'yt-shorts-grid' });
+    function renderTiles(list) {
+      U.clear(grid);
+      list.forEach(function (s) { grid.appendChild(shortsTile(s, placement)); });
+    }
+    renderTiles(latest);
+
+    var resetBtn = el('button', {
+      type: 'button',
+      class: 'yt-shorts-reset',
+      hidden: true,
+      onClick: function () {
+        renderTiles(latest);
+        resetBtn.hidden = true;
+      }
+    }, ['最新に戻す']);
+
+    var shuffleBtn = el('button', {
+      type: 'button',
+      class: 'btn btn-ghost yt-shorts-shuffle',
+      'aria-label': '別の動画を見る（ランダムに入れ替える）',
+      onClick: function () {
+        renderTiles(pickRandomShorts(shorts, N));
+        resetBtn.hidden = false;
+        if (K.analytics) K.analytics.event('shorts_shuffle', {});
+      }
+    }, [icon('shuffle'), el('span', { text: '別の動画を見る' })]);
+
+    var card = el('div', { class: 'card card-video-yt' }, [
+      el('div', { class: 'yt-shorts-controls' }, [shuffleBtn, resetBtn]),
+      el('h2', { class: 'card-title', text: '古典ショート' }),
+      el('p', { class: 'muted small', text: (a.name || '制作者') + 'が古文をテーマに投稿しているショート動画です。' }),
+      grid
+    ]);
+
+    var links = [];
+    if (a.youtubeShortsPlaylist) {
+      links.push(el('a', {
+        href: 'https://www.youtube.com/playlist?list=' + encodeURIComponent(a.youtubeShortsPlaylist),
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        onClick: function () { trackYoutubeClick('home-shorts'); }
+      }, ['ショートをもっと見る →']));
+    }
+    if (isUsableUrl(a.youtube)) {
+      links.push(el('a', {
+        href: a.youtube,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        onClick: function () { trackYoutubeClick('home-video'); }
+      }, ['チャンネルを見る →']));
+    }
+    if (links.length) card.appendChild(el('p', { class: 'yt-embed-more' }, links));
+
+    return card;
+  }
+
+  /** 単体の再生リスト埋め込みカード（youtubeShorts が空のときのフォールバック） */
+  function youtubePlaylistEmbedCard(playlistId, placement) {
+    var a = (K.site && K.site.author) || {};
+    var card = el('div', { class: 'card card-video-yt' }, [
+      el('h2', { class: 'card-title', text: (a.name || '制作者') + 'の動画' }),
+      el('p', { class: 'muted small', text: '古文の解説動画などを YouTube で公開しています。' })
+    ]);
+
+    var box = el('div', { class: 'yt-embed-box' });
+
+    if (isFileProtocol()) {
+      box.appendChild(el('p', { class: 'yt-embed-file muted small', text: '公開サイトで再生できます。' }));
+    } else {
+      box.appendChild(el('button', {
+        type: 'button',
+        class: 'yt-embed-placeholder',
+        'aria-label': 'クリックで再生（YouTube を読み込みます）',
+        onClick: function () {
+          var iframe = el('iframe', {
+            src: 'https://www.youtube-nocookie.com/embed/videoseries?list=' + encodeURIComponent(playlistId) + '&rel=0',
+            title: (a.name || '') + ' の YouTube 動画',
+            allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+            allowfullscreen: true,
+            loading: 'lazy'
+          });
+          U.clear(box);
+          box.appendChild(iframe);
+          if (K.analytics) K.analytics.event('video_load', { placement: placement });
+        }
+      }, [
+        playIconSvg(52),
+        el('span', { class: 'yt-embed-hint', text: 'クリックで再生（YouTube を読み込みます）' })
+      ]));
+    }
+
+    card.appendChild(el('div', { class: 'yt-embed' }, [box]));
+
+    if (isUsableUrl(a.youtube)) {
+      card.appendChild(el('p', { class: 'yt-embed-more' }, [
+        el('a', {
+          href: a.youtube,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          onClick: function () { trackYoutubeClick('home-video'); }
+        }, ['チャンネルで他の動画を見る →'])
+      ]));
+    }
+
+    return card;
+  }
+
+  /**
+   * ホーム末尾の動画カード。`author.youtubeShorts` があればそのグリッド、
+   * 無ければ `author.youtubePlaylist` の単体埋め込み、どちらも無ければ null。
+   * @param opts { placement: 計測用（既定 'home'） }
+   */
+  C.youtubeVideoCard = function (opts) {
+    opts = opts || {};
+    var placement = opts.placement || 'home';
+    var a = (K.site && K.site.author) || {};
+    var shorts = (Array.isArray(a.youtubeShorts) ? a.youtubeShorts : [])
+      .filter(function (s) { return s && s.id; });
+
+    if (shorts.length) return youtubeShortsCard(shorts, placement);
+
+    var playlistId = resolveYoutubePlaylistId();
+    if (!playlistId) return null;
+    return youtubePlaylistEmbedCard(playlistId, placement);
   };
 
   /** 学習状態バッジをその場で更新する（一覧を再描画せずに済ませる） */

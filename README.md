@@ -460,6 +460,10 @@ D:\kobun_app\
   tools/sync-tokens.mjs     data/tokens/ の中身から index.html と sw.js の読み込みを作り直す
   tools/build-seo.mjs       data/*.js から検索エンジン向けの静的ページ・sitemap・robots を生成
   tools/bump-version.mjs    公開前のキャッシュバスター更新（sw.js と生成ページの版も一緒に上げる）
+  tools/fetch-shorts.mjs    ホーム末尾「古典ショート」の一覧・サムネイルを YouTube から取り直す
+                            （動画を更新するときは node tools\fetch-shorts.mjs を実行する）
+                            ※ GitHub Actions（.github/workflows/update-shorts.yml）が毎日 06:30 JST に
+                               自動実行し、変化があればコミット・push する。手動実行は Actions タブから
   docs/tokens-guide.md      品詞分解データの仕様書（担当割り表つき）
   docs/verification.md      原文・語義の裏取り記録
   docs/legacy/examples.js   旧「例文」データ（読み込んでいない。経緯は DESIGN.md 5.2）

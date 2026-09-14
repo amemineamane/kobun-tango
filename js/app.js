@@ -41,7 +41,7 @@
        legal: true で「利用規約・プライバシーポリシー」（#/terms）も同じ行に出す。
        ナビには入れない画面なので、全画面から届く導線はここが本命。 */
     if (stat && stat.parentNode && K.components && K.components.authorLine) {
-      var line = K.components.authorLine({ legal: true });
+      var line = K.components.authorLine({ legal: true, emphasize: ['youtube'], placement: 'footer' });
       if (line) stat.parentNode.appendChild(line);
     }
 
@@ -49,6 +49,23 @@
     if (!K.store.available) {
       var warn = document.getElementById('storage-warning');
       if (warn) warn.hidden = false;
+    }
+
+    // ヘッダの YouTube ボタン（アイコンのみの丸ボタン）。
+    // data/site.js の author.youtube が未設定／PLACEHOLDER なら出さないままにする。
+    var ytLink = document.getElementById('site-yt-link');
+    if (ytLink) {
+      var ytUrl = (K.site && K.site.author && K.site.author.youtube) || '';
+      var ytUsable = (K.components && K.components.isUsableUrl)
+        ? K.components.isUsableUrl(ytUrl)
+        : /^https?:\/\//i.test(ytUrl);
+      if (ytUsable) {
+        ytLink.href = ytUrl;
+        ytLink.hidden = false;
+        ytLink.addEventListener('click', function () {
+          if (K.analytics) K.analytics.event('outbound_click', { destination: 'youtube', placement: 'header' });
+        });
+      }
     }
 
     K.router.start();

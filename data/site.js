@@ -27,9 +27,27 @@ window.KOBUN.site = {
   hashtags: ['古文単語帳'],           // 共有時のハッシュタグ（# なし）
   author: {
     name: '雨峰あまね',
+    role: 'ほんのり古典系 VTuber',   // 制作者カードの肩書き（空なら非表示）
+    tagline: '古文単語のショートや作品解説の動画＆配信もやっています！',   // 制作者カードの一言（空なら非表示）
     x: 'https://x.com/AmemineAmane',
     youtube: 'https://www.youtube.com/@AmemineAmane',
-    booth: 'https://amemineamane.booth.pm/'
+    booth: 'https://amemineamane.booth.pm/',
+    // トップページ末尾の動画カード用。youtubeShorts が空のときの
+    // フォールバック（youtubePlaylist が空なら「UU」+ youtubeChannelId の
+    // "UC" 以降＝アップロード動画の再生リストを使う）。
+    youtubeChannelId: 'UCtAwhpfbWqRkYzyfw7X2uEg',
+    youtubePlaylist: 'PLYVYtIKxovfo',   // 「古典解説配信」（9 本）
+    // ホーム最下部のグリッドに出す「古典ショート」の再生リスト。
+    // 一覧の実体（youtubeShorts）は件数が多く長くなるため data/shorts.js に分けてあり、
+    // このファイルの直後に読み込んで author.youtubeShorts を後から埋める。
+    // 更新するときは `node tools/fetch-shorts.mjs` を実行する（README 参照）。
+    youtubeShortsPlaylist: 'PLFtbG_8r1xCwtagaclMGfnyHMHUjOxpsK',   // 「古典ショートまとめ」
+    youtubeShorts: [],   // data/shorts.js が読み込まれるまでの既定値（空なら再生リスト埋め込みにフォールバック）
+    // 制作者カード・使い方ページの丸アイコン。立ち絵のバストアップ切り抜き（透過 PNG）。
+    // <picture> で同名 .webp を先に試し、失敗したらこの拡張子（png）のまま使う。
+    avatar: 'assets/author-icon.png',
+    // 立ち絵のイラストレーター。空文字にするとクレジット行を出さない。
+    illustrator: { name: '冥甘', x: 'https://x.com/nekopenshiru' }
   },
 
   /* アクセス解析（js/analytics.js が読む）。

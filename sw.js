@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260913b';
+const CACHE_VERSION = '20260915a';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
@@ -44,6 +44,7 @@ const PRECACHE = [
   './manifest.webmanifest',
   './css/style.css',
   './data/site.js',
+  './data/shorts.js',
   './data/words.js',
   './data/works.js',
   './data/relations.js',
@@ -119,7 +120,12 @@ const PRECACHE = [
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/icon-maskable-512.png',
-  './assets/apple-touch-icon.png'
+  './assets/apple-touch-icon.png',
+  './assets/author-icon.png',
+  './assets/author-icon.webp'
+  /* 「古典ショート」のサムネイル（assets/yt/*.webp）は 6 枚で計 200KB を超えるため、
+     precache には入れない（ホーム初回表示で毎回取りに行かせない代わりに、
+     オフライン時は素の灰色のタイルになる）。 */
 ];
 
 self.addEventListener('install', function (event) {

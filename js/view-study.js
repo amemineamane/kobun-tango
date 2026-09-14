@@ -246,6 +246,8 @@
           url: C.absUrl('#/study' + U.buildQuery(shareQuery)),
           contentType: 'study', itemId: K.analytics ? K.analytics.deck(state).deck_id : ''
         }));
+        var ytLine = C.youtubeLinkLine({ placement: 'study' });
+        if (ytLine) doneCard.appendChild(ytLine);
         stage.appendChild(doneCard);
         return;
       }

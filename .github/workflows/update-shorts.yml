@@ -1,0 +1,59 @@
+name: ショート動画一覧の自動更新
+
+# 毎日 06:30 JST（= 前日 21:30 UTC）に再生リスト「古典ショートまとめ」を取り直し、
+# 変化があれば data/shorts.js と assets/yt/ を更新してコミット・push する。
+# push されると GitHub Pages が自動で再配信される。手動実行も可（Actions タブ → Run workflow）。
+on:
+  schedule:
+    - cron: '30 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-shorts
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Pillow を入れる（サムネイル縮小用）
+        run: python3 -m pip install --quiet pillow
+
+      - name: 再生リストを取得してサムネイルを更新
+        run: node tools/fetch-shorts.mjs
+
+      - name: 変化があるか確認
+        id: diff
+        run: |
+          git add -A data/shorts.js assets/yt
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "変化なし"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --cached --stat | tail -5
+          fi
+
+      - name: 版を上げてコミット・push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          node tools/bump-version.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "ショート動画一覧を自動更新（$(date -u +%Y-%m-%d) 06:30 JST）"
+          git push

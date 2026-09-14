@@ -532,6 +532,8 @@ tools/bump-version.mjs  index.html の ?v=... と sw.js の CACHE_VERSION、
 | **コントラストは AA（4.5:1）** | `--fg-muted` は対 `--bg` 5.6:1、重要度バッジの白抜きは 5.8〜7.0:1。ダークも同様に確認済み |
 | **動きは控えめ・止められる** | めくり／正誤のアニメーションは 0.2〜0.3 秒。`prefers-reduced-motion: reduce` で全部止まる |
 | **外部依存ゼロは維持** | Web フォント・CDN・アイコンフォントは使わない（`file://` とオフラインで動くこと） |
+| **YouTube 導線は 6 か所に集約** | ホームの制作者カード（ヒーロー直下）・クイズ結果とフラッシュカード完走画面のテキストリンク・共通フッタの強調ピル・使い方の「制作」節のボタン・ヘッダ右の丸ボタンの計 6 か所。色は専用トークン `--yt` / `--yt-bg`（YouTube らしい赤。ライト／ダークとも AA 確認済み） |
+| **YouTube 導線は `author.youtube` が空なら出さない** | `data/site.js` の `author.youtube` が未設定／`PLACEHOLDER` を含むときは、カード・ボタン・リンク・ヘッダのアイコンをすべて出さない（`js/components.js` の `isUsableUrl` 1 か所で判定） |
 
 ### デザイントークン（`css/style.css` の `:root`）
 
@@ -695,6 +697,7 @@ data/site.js（設定）
 | `install_prompt` | `outcome`（accepted/dismissed） | `js/components.js` の `C.installBlock` |
 | `app_installed` | — | `appinstalled` イベント |
 | `history_reset` | — | `js/view-help.js` の 2 段階リセット |
+| `outbound_click` | `destination`（現状は youtube のみ）`placement`（home/quiz/study/footer/help/header） | `js/components.js` の `C.youtubeButton` / `C.youtubeLinkLine` / `C.authorLinks`、`js/app.js`（ヘッダの丸ボタン） |
 
 **送らないと決めたもの**
 

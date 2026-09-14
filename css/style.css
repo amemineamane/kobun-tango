@@ -66,6 +66,11 @@
   --grammar-bg: #e0efeb;   /* バッジ・用例の地 */
   --on-solid:   #ffffff;   /* 塗りボタン・塗りバッジの文字色 */
 
+  /* YouTube 導線専用の 1 色（制作者カード・ヘッダの丸ボタン・共通フッタのピルで共有）。
+     重要度・入試・文法のどの軸とも混ざらない「YouTube らしい赤」。 */
+  --yt:         #cc0000;   /* 文字・アイコン・主ボタンの地（白文字 5.9:1） */
+  --yt-bg:      #fbe4e4;   /* バッジ・ホバー時の地 */
+
   /* --- 余白（4px 刻み） --------------------------------------------- */
   --sp-1: .25rem;
   --sp-2: .5rem;
@@ -150,6 +155,9 @@
 
     --grammar:    #79c9bb;   /* 松葉色 対 --bg 8.7:1／対 --grammar-bg 6.0:1 */
     --grammar-bg: #1f332f;
+
+    --yt:         #ff6b6b;   /* 対 --bg 6.3:1／濃色文字との組でも 6.3:1 */
+    --yt-bg:      #3a1f1f;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
     --shadow-md: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
@@ -247,6 +255,24 @@ p { margin: 0 0 .8em; }
 .site-help-link:hover { text-decoration: none; background: var(--bg-sub); color: var(--fg); }
 .site-help-link.active { background: var(--accent); color: var(--accent-fg); border-color: transparent; font-weight: 700; }
 
+/* ヘッダ右側、「使い方」の左に置く YouTube の丸ボタン。スマホでも常に見える位置
+   （下タブには入れない。5 個の上限は保つ）。author.youtube が無ければ hidden のまま。 */
+.site-header-actions { display: flex; align-items: center; gap: var(--sp-2); }
+.site-yt-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  color: var(--yt);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.site-yt-link:hover { background: var(--yt-bg); border-color: var(--yt); text-decoration: none; }
+.site-yt-link[hidden] { display: none; }
+
 .site-nav { display: flex; gap: var(--sp-1); flex-wrap: wrap; margin-left: auto; }
 
 .site-nav a {
@@ -272,7 +298,7 @@ p { margin: 0 0 .8em; }
 @media (max-width: 640px) {
   .site-header-inner { padding: var(--sp-2) var(--sp-3); }
   /* .site-nav は下に固定されて流れから外れるので、右寄せはこちらが担う */
-  .site-help-link { margin-left: auto; }
+  .site-header-actions { margin-left: auto; }
 
   .site-nav {
     position: fixed;
@@ -645,6 +671,10 @@ p { margin: 0 0 .8em; }
 .btn-lg { font-size: var(--fs-lg); padding: .7rem 1.8rem; min-height: 3rem; }
 .btn-known { background: var(--ok); color: var(--on-solid); border-color: transparent; }
 .btn-weak  { background: var(--danger); color: var(--on-solid); border-color: transparent; }
+/* YouTube チャンネルへの主ボタン（制作者カード・使い方の「制作」節）。--yt は
+   16-d の共有・制作者トークンではなく 1. トークンで定義（--on-solid と組んで AA を確保）。 */
+.btn-yt { background: var(--yt); color: var(--on-solid); border-color: transparent; }
+.btn-yt:hover { background: var(--yt); border-color: transparent; filter: brightness(1.08); }
 /* 塗りボタンは hover でも自分の色を保つ（.btn:hover の地色に負けると
    白文字が読めなくなる）。地色を明示してから明るさだけ変える。 */
 .btn-known:hover { background: var(--ok); }
@@ -1679,6 +1709,14 @@ kbd.key {
   text-decoration: none;
 }
 .author-link:hover { background: var(--accent-bg); color: var(--accent); text-decoration: none; }
+/* 共通フッタで YouTube だけ目立たせるピル（X はこれまでどおりアイコンのみ） */
+.author-link-emphasize {
+  border: 1px solid var(--yt);
+  color: var(--yt);
+  font-weight: 700;
+  padding: .15rem .6rem;
+}
+.author-link-emphasize:hover { background: var(--yt-bg); color: var(--yt); }
 .author-links-lg .author-link {
   min-height: var(--tap);
   padding: .35rem .8rem;
@@ -1688,12 +1726,239 @@ kbd.key {
   font-size: var(--fs-sm);
 }
 .author-links-lg .author-link:hover { background: var(--bg-sub); color: var(--fg); }
-.author-block { margin-top: var(--sp-2); }
+/* 制作者アイコン（<picture>。背景が透過の立ち絵切り抜きなので、カードの地より
+   少し濃い --bg-inset を丸枠の地に敷き、object-fit は contain で頭を切らない。
+   円形に切る枠のサイズは使う場所ごとの class で指定する。 */
+.author-avatar {
+  display: block;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  flex: 0 0 auto;
+  background: var(--bg-inset);
+}
+.author-avatar img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+
+.author-block {
+  margin-top: var(--sp-2);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+.author-block-avatar { width: 72px; height: 72px; }
+.author-block-text { flex: 1 1 auto; min-width: 0; }
 .author-block-name { margin-bottom: var(--sp-2); }
-.author-block .author-links { margin-bottom: var(--sp-2); }
+.author-block-text .author-links { margin-bottom: var(--sp-2); }
+.author-block-yt { margin: 0 0 var(--sp-3); }
+@media (max-width: 420px) {
+  .author-block { flex-direction: column; align-items: flex-start; }
+  .author-block-avatar { width: 64px; height: 64px; }
+}
 
 .home-author { margin-top: var(--sp-4); }
 .site-footer .author-line { margin-top: var(--sp-2); }
+
+/* ホームの制作者カード（YouTube 導線）。左にアイコン、中央に名前と一言＋
+   小さな X・BOOTH、右に赤の主ボタン。狭い画面では縦に積む。 */
+.author-yt-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
+}
+.author-yt-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-lg);
+  background: var(--yt-bg);
+  color: var(--yt);
+}
+.author-yt-icon .share-icon-svg { width: 28px; height: 28px; }
+/* 制作者アイコンがあるときは、上の四角いアイコンの代わりにこちらを出す */
+.author-yt-avatar { width: 112px; height: 112px; border: 2px solid var(--yt-bg); }
+.author-yt-body { flex: 1 1 14rem; min-width: 0; }
+/* 制作者カードの肩書きバッジ（data/site.js の author.role） */
+.author-yt-role { margin-left: var(--sp-2); font-weight: 500; vertical-align: middle; background: var(--yt-bg); color: var(--yt); }
+.author-yt-name { margin: 0 0 .2em; font-size: var(--fs-md); }
+.author-yt-lead { margin: 0 0 .4em; }
+.author-yt-others { gap: var(--sp-2); }
+.author-yt-others .author-link { min-height: 28px; padding: .1rem .4rem; }
+.author-yt-cta { flex: 0 0 auto; margin-left: auto; }
+@media (max-width: 480px) {
+  .author-yt-card { flex-direction: column; align-items: flex-start; }
+  .author-yt-cta { margin-left: 0; width: 100%; }
+  .author-yt-cta .btn { width: 100%; }
+  .author-yt-avatar { width: 80px; height: 80px; }
+}
+
+/* ホーム末尾の YouTube 動画カード（クリックして読み込む埋め込み） */
+.card-video-yt { position: relative; }
+.card-video-yt .card-title { margin-bottom: var(--sp-1); padding-right: 9rem; }
+
+/* 見出し右上の「別の動画を見る」（シャッフル）＋「最新に戻す」 */
+.yt-shorts-controls {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .3rem;
+  z-index: 1;
+}
+.yt-shorts-shuffle {
+  padding: .3rem .7rem;
+  font-size: var(--fs-sm);
+  min-height: 2rem;
+}
+.yt-shorts-shuffle .share-icon-svg { width: 16px; height: 16px; }
+.yt-shorts-reset {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.yt-shorts-reset:hover { color: var(--accent-dim); }
+.yt-shorts-reset[hidden] { display: none; }
+@media (max-width: 480px) {
+  .card-video-yt .card-title { padding-right: 0; }
+  .yt-shorts-controls { position: static; align-items: flex-start; margin: 0 0 var(--sp-2); }
+}
+.yt-embed { margin: var(--sp-2) 0 var(--sp-3); }
+.yt-embed-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--bg-sub);
+  border: 1px solid var(--line);
+}
+.yt-embed-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.yt-embed-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 0;
+  background: linear-gradient(180deg, var(--yt-bg), var(--bg-sub));
+  color: var(--yt);
+  cursor: pointer;
+  font: inherit;
+  transition: filter var(--dur) var(--ease);
+}
+.yt-embed-placeholder:hover { filter: brightness(1.06); }
+.yt-embed-play-svg { display: inline-flex; }
+.yt-embed-play-svg svg { display: block; }
+.yt-embed-hint { font-size: var(--fs-sm); color: var(--fg-muted); text-align: center; }
+.yt-embed-file {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-3);
+  margin: 0;
+}
+.yt-embed-more { margin: 0; font-size: var(--fs-sm); }
+.yt-embed-more a + a { margin-left: var(--sp-3); }
+
+/* 「古典ショート」のグリッド（9:16 のタイルをクリックで個別に読み込む） */
+.yt-shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0 var(--sp-3);
+}
+@media (min-width: 641px) {
+  .yt-shorts-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.yt-shorts-tile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--bg-sub);
+  border: 1px solid var(--line);
+}
+.yt-shorts-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: var(--bg-sub);
+  font: inherit;
+  color: var(--fg);
+}
+.yt-shorts-btn.is-loaded { cursor: default; }
+.yt-shorts-btn iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.yt-shorts-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.yt-shorts-btn .yt-embed-play-svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .6));
+}
+.yt-shorts-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--sp-4) var(--sp-2) var(--sp-2);
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .78));
+  color: #fff;
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.yt-shorts-btn.is-loaded .yt-shorts-thumb,
+.yt-shorts-btn.is-loaded .yt-embed-play-svg,
+.yt-shorts-btn.is-loaded .yt-shorts-title { display: none; }
+.yt-shorts-btn .yt-embed-file { padding: var(--sp-2); font-size: var(--fs-sm); }
+
+/* クイズ結果・学習の完走画面に添える、控えめな YouTube のテキストリンク行 */
+.author-yt-line { margin: var(--sp-2) 0 0; color: var(--fg-muted); }
+.author-yt-line-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .3em;
+  color: var(--yt);
+  font-weight: 700;
+}
+.author-yt-line-link:hover { text-decoration: underline; }
+.author-yt-line .share-icon-svg { width: 16px; height: 16px; }
 
 /* 制作者行に添える「利用規約・プライバシーポリシー」（#/terms への全画面共通の導線） */
 .author-line-legal {

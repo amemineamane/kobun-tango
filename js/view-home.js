@@ -574,6 +574,10 @@
     hero.appendChild(C.installBlock());
     section.appendChild(hero);
 
+    // 制作者の YouTube チャンネルへの導線。author.youtube が未設定なら出ない。
+    var ytCard = C.youtubeCard({ placement: 'home' });
+    if (ytCard) section.appendChild(ytCard);
+
     section.appendChild(statusCard());
     section.appendChild(recommendCard());
     section.appendChild(levelCard());
@@ -596,6 +600,10 @@
       el('a', { href: '#/help?to=history', text: '学習履歴について' }),
       el('a', { href: '#/terms', text: '利用規約・プライバシーポリシー' })
     ]));
+
+    // 末尾（制作者行の上）に YouTube の動画カード。再生リストが決まらない環境では出ない。
+    var videoCard = C.youtubeVideoCard({ placement: 'home' });
+    if (videoCard) section.appendChild(videoCard);
 
     // 末尾に制作者（フッター相当の小さな行）
     var author = C.authorLine();
