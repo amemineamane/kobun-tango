@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260915d';
+const CACHE_VERSION = '20260915e';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
@@ -60,16 +60,23 @@ const PRECACHE = [
   './data/tokens/heike-gion.js',
   './data/tokens/heike-kiso.js',
   './data/tokens/heike-ogi.js',
+  './data/tokens/hojoki-angen.js',
   './data/tokens/hojoki-yukukawa.js',
+  './data/tokens/hosomichi-hiraizumi.js',
+  './data/tokens/hosomichi-ryushakuji.js',
   './data/tokens/hosomichi-tabidachi.js',
   './data/tokens/ise-akutagawa.js',
   './data/tokens/ise-azuma.js',
   './data/tokens/ise-tsukiya.js',
   './data/tokens/ise-tsutsuizutsu.js',
   './data/tokens/ise-uikoburi.js',
+  './data/tokens/izayoi-kadode.js',
+  './data/tokens/izumi-kadode.js',
   './data/tokens/jikkinsho-oeyama.js',
   './data/tokens/kagero-utsurohi.js',
+  './data/tokens/kaidoki-jo.js',
   './data/tokens/kokin-kanajo.js',
+  './data/tokens/kokin-sen.js',
   './data/tokens/konjaku-kannon.js',
   './data/tokens/konjaku-oni.js',
   './data/tokens/makura-chunagon.js',
@@ -78,19 +85,25 @@ const PRECACHE = [
   './data/tokens/makura-kisaragi.js',
   './data/tokens/makura-utsukushiki.js',
   './data/tokens/makura-yuki.js',
+  './data/tokens/manyo-sen.js',
   './data/tokens/masukagami-jo.js',
   './data/tokens/masukagami-saigu.js',
+  './data/tokens/murasakinikki-mizutori.js',
   './data/tokens/okagami-kazan.js',
   './data/tokens/okagami-yumi.js',
   './data/tokens/sarashina-genji.js',
   './data/tokens/sarashina-kadode.js',
+  './data/tokens/shinkokin-sen.js',
+  './data/tokens/taiheiki-toshimoto.js',
   './data/tokens/taketori-fuji.js',
   './data/tokens/taketori-oitachi.js',
   './data/tokens/taketori-shoten.js',
+  './data/tokens/tokan-jo.js',
   './data/tokens/tosa-kadode.js',
   './data/tokens/tosa-kikyo.js',
   './data/tokens/towazu-kuretake.js',
   './data/tokens/towazu-saigu.js',
+  './data/tokens/tsurezure-hana.js',
   './data/tokens/tsurezure-jo.js',
   './data/tokens/tsurezure-kannazuki.js',
   './data/tokens/tsurezure-koumyo.js',
@@ -98,6 +111,7 @@ const PRECACHE = [
   './data/tokens/tsurezure-ninnaji.js',
   './data/tokens/tsurezure-yumi.js',
   './data/tokens/ujishui-chigo.js',
+  './data/tokens/ujishui-inaka.js',
   /* tokens:end */
   './js/util.js',
   './js/store.js',
