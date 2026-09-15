@@ -146,9 +146,14 @@
       var meta = [work.author, work.era, work.genre].filter(Boolean).join('　/　');
 
       var head = el('div', { class: 'textbook-work-head' }, [
+        // 「作品ページ →」をリンクの外に置くと、矢印つきで押せそうに見えるのに
+        // 押しても何も起きない飾りになってしまう。作品名と同じ 1 本のリンクに
+        // 入れておけば、どちらを押しても作品ページへ行ける（タップ領域も広がる）。
         el('h2', { class: 'card-title textbook-work-title' }, [
-          el('a', { class: 'textbook-work-link', href: '#/work/' + work.id, text: work.title }),
-          el('span', { class: 'textbook-work-go muted small', text: '作品ページ →' })
+          el('a', { class: 'textbook-work-link', href: '#/work/' + work.id }, [
+            el('span', { class: 'textbook-work-name', text: work.title }),
+            el('span', { class: 'textbook-work-go muted small', text: '作品ページ →' })
+          ])
         ]),
         opts.exam ? examBadgeRow(work) : null,
         meta ? el('p', { class: 'textbook-work-meta muted small', text: meta }) : null,
@@ -389,9 +394,12 @@
           drawControls(); drawBody();
         }
       }));
+      // 横並びは 860px 以上でしか組めないので、狭い画面ではこのボタンを
+      // CSS（.passage-layout-btn）ごと隠す。押しても何も変わらないボタンを
+      // 見せないため（押せるのに効かないほうが分かりにくい）。
       controls.appendChild(el('button', {
         type: 'button',
-        class: 'btn btn-ghost',
+        class: 'btn btn-ghost passage-layout-btn',
         text: layout === 'side' ? '上下に並べる' : '横に並べる',
         onClick: function () {
           layout = layout === 'side' ? 'stack' : 'side';

@@ -91,6 +91,10 @@
   --shadow-md: 0 1px 2px rgba(43, 39, 35, .05), 0 4px 14px rgba(43, 39, 35, .05);
   --shadow-lg: 0 8px 30px rgba(43, 39, 35, .16);
   --shadow: var(--shadow-md);     /* 旧名 */
+  /* 横スクロールできる表（.table-scroll）の端に出す影 */
+  --scroll-shadow: rgba(43, 39, 35, .38);
+  /* 画面下に貼り付く帯（学習の判定ボタン・クイズの「次の問題」）の影 */
+  --sticky-shadow: rgba(43, 39, 35, .1);
 
   /* --- 文字 ---------------------------------------------------------- */
   --fs-xs:  .75rem;
@@ -162,6 +166,8 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
     --shadow-md: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, .55);
+    --scroll-shadow: rgba(0, 0, 0, .6);
+    --sticky-shadow: rgba(0, 0, 0, .45);
   }
 }
 
@@ -186,6 +192,27 @@ body {
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* 指で触る画面では :hover が当てにならない（押しても反応が見えず、離しても
+   色が残ることがある）。リンクになっているカード・行・チップは、押した瞬間の
+   反応を :active でそろえて出す。色は hover と同じ --accent-bg なので
+   新しい配色は増やさない。 */
+.word-row:active,
+.rel-card:active,
+.chip:active,
+.work-chip:active,
+.pn:active,
+.passage-card:active,
+.entry-card:active,
+.tile:active,
+.grammar-item:active,
+.grammar-ex:active,
+.level-legend-item.is-link:active {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+/* 原文の語（いちばん多く押される要素）も、押した瞬間にマーカーが付く */
+.pv:active, .tok:active { background: var(--hl); }
 
 /* キーボード操作の現在地を必ず見せる（マウス操作では出ない） */
 :focus-visible {
@@ -244,6 +271,8 @@ p { margin: 0 0 .8em; }
 /* 使い方はメニューに入れず、ヘッダ右の小さなリンクにする。
    スマホでもここは上部に残るので、下タブが 6 個に増えない。 */
 .site-help-link {
+  display: inline-flex;
+  align-items: center;
   font-size: var(--fs-sm);
   color: var(--fg-muted);
   border: 1px solid var(--line-strong);
@@ -299,6 +328,12 @@ p { margin: 0 0 .8em; }
   .site-header-inner { padding: var(--sp-2) var(--sp-3); }
   /* .site-nav は下に固定されて流れから外れるので、右寄せはこちらが担う */
   .site-header-actions { margin-left: auto; }
+  /* 指で触る画面では、ヘッダの 2 つのボタンも最小タップ領域まで広げる。
+     隣り合っているので、当たり判定が小さいと取り違えやすい。 */
+  .site-help-link { min-height: var(--tap); }
+  .site-yt-link { width: var(--tap); height: var(--tap); }
+  /* タイトルがホームへの唯一の導線なので、ここも同じ扱いにする */
+  .site-title a { display: inline-flex; align-items: center; min-height: var(--tap); }
 
   .site-nav {
     position: fixed;
@@ -383,7 +418,12 @@ p { margin: 0 0 .8em; }
   gap: .3rem;
   flex-wrap: wrap;
 }
-.crumbs a { padding: .15rem 0; }
+/* パンくずは各画面の「戻る」導線。指で触る画面では当たり判定を広げる
+   （字の位置は変えず、上下の padding だけ伸ばす）。 */
+.crumbs a { display: inline-flex; align-items: center; padding: .15rem 0; }
+@media (max-width: 640px) {
+  .crumbs a { min-height: var(--tap); }
+}
 
 .card {
   background: var(--bg-card);
@@ -499,7 +539,14 @@ p { margin: 0 0 .8em; }
 
 @media (max-width: 640px) {
   .level-legend { gap: var(--sp-1); }
-  .level-legend-item { flex-basis: 100%; font-size: var(--fs-xs); }
+  /* 3 行が縦に並ぶので、行どうしの取り違えを防ぐために高さを最小タップ領域まで。
+     説明文は --fs-xs では小さすぎるので --fs-sm に留める。 */
+  .level-legend-item {
+    flex-basis: 100%;
+    font-size: var(--fs-sm);
+    min-height: var(--tap);
+    padding: .5rem .6rem;
+  }
 }
 
 /* 学習状態 */
@@ -824,7 +871,12 @@ p { margin: 0 0 .8em; }
   display: flex; gap: var(--sp-2); align-items: baseline;
   font-size: var(--fs-sm); margin-bottom: var(--sp-2);
 }
+/* 出典（文章ページへのリンク）。文字の位置は動かさず、上下の padding だけで
+   当たり判定を広げる（.example-head は baseline 揃えなので字は動かない）。 */
 .example-work { font-weight: 700; }
+@media (max-width: 640px) {
+  .example-work { padding: .55rem 0; }
+}
 .example-section { color: var(--fg-muted); }
 
 /* 古文の原文は明朝で、行間を広めに */
@@ -864,11 +916,40 @@ p { margin: 0 0 .8em; }
 .example-note { font-size: var(--fs-sm); color: var(--fg-muted); }
 .example-hint { font-size: var(--fs-xs); margin: .3rem 0 .4rem; color: var(--fg-muted); }
 
+/* 「品詞分解を表で見る」。原文の次に押される導線なので最小タップ領域を確保する */
+/* 「品詞分解を表で見る」。原文の次に押される導線なので最小タップ領域を確保する
+   （display は変えない。summary は list-item でないと ▶ が消える）。 */
 .token-details summary {
   cursor: pointer; font-size: var(--fs-md); color: var(--accent);
-  padding: .25rem 0; min-height: 2rem;
+  padding: .55rem 0; min-height: var(--tap);
 }
-.table-scroll { overflow-x: auto; margin-top: var(--sp-2); border-radius: var(--r-sm); }
+/* 表は横に溢れることが前提（品詞分解は 34rem、活用表は 26〜30rem の min-width）。
+   溢れていることが分からないと「意味の列が無い」と読まれてしまうので、
+   左右の端に影を出す。影は容器の background に描き、スクロール量に応じて
+   覆いのグラデーション（background-attachment: local）が影を隠す仕組みなので、
+   JS もサイズの決め打ちも要らない。 */
+.table-scroll {
+  overflow-x: auto;
+  margin-top: var(--sp-2);
+  border-radius: var(--r-sm);
+  background:
+    linear-gradient(to right,  var(--bg-card), rgba(255, 255, 255, 0)) left   center,
+    linear-gradient(to left,   var(--bg-card), rgba(255, 255, 255, 0)) right  center,
+    radial-gradient(farthest-side at 0    50%, var(--scroll-shadow), rgba(255, 255, 255, 0)) left  center,
+    radial-gradient(farthest-side at 100% 50%, var(--scroll-shadow), rgba(255, 255, 255, 0)) right center;
+  background-repeat: no-repeat;
+  background-size: var(--sp-6) 100%, var(--sp-6) 100%, var(--sp-4) 100%, var(--sp-4) 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+/* 品詞分解の表は 4 列目（意味）が画面外に出るので、影だけでなく言葉でも言う。
+   開いているときだけ、summary の末尾に添える（新しい要素を足さずに済む）。 */
+@media (max-width: 640px) {
+  .token-details[open] > summary::after {
+    content: '　横にスクロールできます →';
+    font-size: var(--fs-xs);
+    color: var(--fg-muted);
+  }
+}
 
 .token-table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); min-width: 34rem; }
 .token-table th, .token-table td {
@@ -901,11 +982,13 @@ p { margin: 0 0 .8em; }
 }
 @keyframes popIn { from { opacity: 0; transform: translateY(-4px); } }
 
+/* ポップアップの × は指で閉じる最後の頼りなので、最小タップ領域を確保する
+   （文字の大きさは変えず、当たり判定だけ広げる）。 */
 .popup-close {
-  position: absolute; top: .1rem; right: .1rem;
+  position: absolute; top: 0; right: 0;
   border: none; background: none; color: var(--fg-muted);
   font-size: 1.3rem; line-height: 1; cursor: pointer;
-  width: 2.2rem; height: 2.2rem; border-radius: var(--r-pill);
+  width: var(--tap); height: var(--tap); border-radius: var(--r-pill);
 }
 .popup-close:hover { background: var(--bg-sub); color: var(--fg); }
 .popup-surface {
@@ -931,6 +1014,11 @@ p { margin: 0 0 .8em; }
   padding: .25rem .8rem; background: var(--bg-inset); color: inherit;
 }
 .chip:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-bg); }
+/* 収録語・識別の入口がチップで密に並ぶ画面なので、
+   指で触る画面では 1 つずつを最小タップ領域まで広げる */
+@media (max-width: 640px) {
+  .chip { min-height: var(--tap); align-items: center; }
+}
 .chip-kana { font-family: var(--font-serif); font-weight: 700; }
 .chip-kanji, .chip-extra { font-size: var(--fs-xs); color: var(--fg-muted); }
 .chip-meaning { font-size: var(--fs-sm); color: var(--fg-muted); }
@@ -980,12 +1068,22 @@ p { margin: 0 0 .8em; }
   border-bottom: 1px solid var(--line);
 }
 .textbook-work-title { margin: 0; padding: 0; border-bottom: 0; }
+/* 作品名と「作品ページ →」を 1 本のリンクにまとめてある（js/view-passages.js）。
+   中の「作品ページ →」は UI の文字なので、明朝と字間だけ本文用に戻す。 */
 .textbook-work-link {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .1rem .5rem;
   font-family: var(--font-serif);
   font-size: var(--fs-xl);
   letter-spacing: .04em;
 }
-.textbook-work-go { white-space: nowrap; }
+.textbook-work-go {
+  white-space: nowrap;
+  font-family: var(--font-ja);
+  letter-spacing: normal;
+}
 .textbook-work-meta { margin: .2rem 0 .4rem; }
 .textbook-work-stats { margin: 0; display: flex; gap: .35rem; flex-wrap: wrap; }
 .textbook-empty { font-size: var(--fs-sm); margin: 0; }
@@ -1026,6 +1124,12 @@ p { margin: 0 0 .8em; }
   font-family: var(--font-serif); font-weight: 700;
   font-size: var(--fs-lg); letter-spacing: .03em;
 }
+/* 見出しがリンクになっている 2 か所は、字の位置を動かさずに
+   上下の padding だけで当たり判定を広げる（親は baseline 揃え） */
+@media (max-width: 640px) {
+  .textbook-brief-title,
+  .textbook-work-link { padding: .35rem 0; }
+}
 .textbook-brief-meta { margin: .1rem 0 0; }
 .textbook-brief-summary {
   margin: .2rem 0 .3rem; font-size: var(--fs-sm);
@@ -1034,6 +1138,14 @@ p { margin: 0 0 .8em; }
 .textbook-brief-foot {
   margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .8rem;
   align-items: baseline; justify-content: space-between;
+}
+/* 「作品ページ →」はこの 1 行の中で唯一のリンク。畳んだ行が 12 件続くので、
+   指で触る画面では当たり判定を最小タップ領域まで広げる。 */
+@media (max-width: 640px) {
+  .textbook-brief-foot a {
+    display: inline-flex; align-items: center;
+    min-height: var(--tap); padding: 0 var(--sp-1);
+  }
 }
 
 /* 作品ページの「入試での出題」 */
@@ -1086,6 +1198,14 @@ p { margin: 0 0 .8em; }
   margin-bottom: var(--sp-3);
 }
 .passage-controls .btn { padding: .35rem .9rem; font-size: var(--fs-sm); min-height: 2.4rem; }
+/* 横並び（layout-side）は 860px 以上でしか組めない。狭い画面では押しても
+   見た目が変わらないので、切替ボタンそのものを出さない。 */
+.passage-layout-btn { display: none; }
+@media (min-width: 860px) { .passage-layout-btn { display: inline-flex; } }
+/* 指で触る画面では、この画面の主操作（訳の表示切替）も最小タップ領域まで */
+@media (max-width: 640px) {
+  .passage-controls .btn { min-height: var(--tap); }
+}
 
 /* 原文の下線の意味を説明する凡例（説明なしでは区別がつかないため） */
 .passage-legend {
@@ -1140,7 +1260,10 @@ p { margin: 0 0 .8em; }
   color: var(--fg-muted);
   line-height: var(--lh-read);
 }
-.passage-body.layout-stack .passage-trans {
+/* 訳は既定で「原文の下に敷いた面」として描く。layout-side を条件にしないのは、
+   横並びが 860px 以上でしか組めないため。条件にしてしまうと、prefs に side が
+   残っている状態でスマホを開いたときだけ訳の面が消えて、原文と訳の境目が無くなる。 */
+.passage-trans {
   border-left: 2px solid var(--line);
   background: var(--bg-inset);
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
@@ -1152,9 +1275,12 @@ p { margin: 0 0 .8em; }
   .passage-body.layout-side .passage-para {
     display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5);
   }
+  /* 横並びのときは左右に並ぶので、面ではなく 1 本の罫で仕切る */
   .passage-body.layout-side .passage-trans {
     border-left: 1px solid var(--line);
-    padding-left: var(--sp-4);
+    background: none;
+    border-radius: 0;
+    padding: 0 0 0 var(--sp-4);
     margin-top: 0;
   }
   .passage-body.layout-side .passage-trans p { margin-top: .15rem; }
@@ -1325,6 +1451,51 @@ p { margin: 0 0 .8em; }
   min-height: 1.4em;   /* 出たり消えたりでレイアウトが跳ねないように */
 }
 
+/* ボタンに添えたキーの名前（（←）（→）（Space））。キーボードのある画面だけの
+   案内なので、下タブに切り替わる幅（＝指で触る画面）では隠す。 */
+.key-hint { margin-left: .1em; font-weight: 400; }
+@media (max-width: 640px) {
+  .key-hint { display: none; }
+}
+
+/* 判定ボタンとヒントをまとめた帯。指で触る画面では下タブのすぐ上に貼り付ける。
+   用例のある語では裏面のカードが画面より高くなり、そのままだとボタンが
+   折り返しの外（スクロールしないと見えない位置）に出てしまうため。
+   表面でも同じ場所に「めくる」が来るので、指を動かさずに
+   「めくる → 覚えた／まだ」と続けられる。
+   本文の上に重なるので、地・上辺の罫・影を付けて読めるようにする。 */
+@media (max-width: 640px) {
+  /* 表面（カードが短い）でも帯が画面下に来るように、ステージを画面の高さまで
+     伸ばしてカードに余りを吸わせる。こうしないと sticky が効くのは裏面だけで、
+     めくった瞬間にボタンの位置が下へ飛んでしまう。
+     dvh が使えない環境では宣言ごと無視され、従来どおりの流し込みに戻る。 */
+  /* カードが出ているときだけ。完走画面・空状態では余計な空白になる
+     （:has() が無い環境ではこの規則ごと無視され、従来の流し込みに戻る）。 */
+  .study-stage:has(.flashcard) {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - var(--tab-h));
+  }
+  .study-stage .flashcard { flex: 1 1 auto; }
+  .study-controls { margin-top: auto; }
+  /* 表面の案内は既定ではカードの下端に置いてあるが、カードが画面の高さまで
+     伸びると帯の裏に入ってしまう。狭い画面では見出し語のすぐ下に置く。 */
+  .study-stage .flashcard-hint { margin: var(--sp-4) 0 0; }
+
+  .study-controls {
+    position: sticky;
+    bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    /* 左右は #app の padding のぶん外へ広げて、画面幅いっぱいの帯にする */
+    margin: var(--sp-3) calc(-1 * var(--sp-3)) 0;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -2px 10px var(--sticky-shadow);
+  }
+  .study-controls .study-actions { margin-top: 0; }
+}
+
 @media (max-width: 480px) {
   .study-actions { gap: var(--sp-1); }
   .study-actions .btn { font-size: var(--fs-sm); padding: .7rem .25rem; }
@@ -1409,9 +1580,37 @@ p { margin: 0 0 .8em; }
 .feedback-line.ng { color: var(--danger); }
 .feedback-word { display: flex; gap: .45rem; align-items: baseline; flex-wrap: wrap; }
 .feedback-kana { font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 700; letter-spacing: .04em; }
+/* 詳細ページへのリンク。字の位置は動かさず、上下の padding だけで当たり判定を広げる */
+@media (max-width: 640px) {
+  .feedback-kana { padding: .3rem 0; }
+}
 .feedback-meaning { margin: .3rem 0 .6rem; line-height: var(--lh-read); }
 .quiz-feedback .sentence,
 .quiz-feedback .passage-text { font-size: var(--fs-base); line-height: 1.95; }
+
+/* 「次の問題」は語義の直後（＝用例より前）に置いてある。狭い画面では
+   この帯を下タブのすぐ上に貼り付け、用例を読んでいる途中でも押せるようにする。
+   地はカードと同じ色なので、貼り付いていないときは帯に見えない。 */
+.quiz-next:empty,
+.quiz-example:empty { display: none; }
+/* 答え合わせでここへスクロールする。sticky なヘッダのぶんを空けておく */
+.quiz-card { scroll-margin-top: 4rem; }
+.quiz-next { margin-top: var(--sp-3); }
+@media (max-width: 640px) {
+  .quiz-next {
+    position: sticky;
+    bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    /* カードの内側の余白ぶん外に広げて、貼り付いたときに下の文字が透けないように */
+    margin: var(--sp-3) calc(-1 * var(--sp-4)) 0;
+    padding: var(--sp-2) var(--sp-4);
+    background: var(--bg-card);
+  }
+}
+
+/* 用例（該当語を含む 1 文＋出どころへのリンク） */
+.quiz-example { margin-top: var(--sp-4); }
+.quiz-example .example-head { margin: .2rem 0 0; }
 
 .quiz-result { text-align: center; }
 .quiz-result .deck-links { justify-content: center; }
@@ -1554,8 +1753,19 @@ p { margin: 0 0 .8em; }
   gap: var(--sp-2) var(--sp-4);
   justify-content: center;
   padding: var(--sp-4) 0 0;
+  /* 罫線のすぐ下に次のカードが来ると、このリンク列がそのカードの
+     見出しのように見えてしまうので、下に間を取る */
+  margin-bottom: var(--sp-4);
   border-top: 1px solid var(--line);
   font-size: var(--fs-sm);
+}
+/* 小さな文字のリンクが 4 本並ぶ列。字の大きさは変えずに、
+   1 本ずつが最小タップ領域を満たすようにする（取り違えを防ぐ）。 */
+.home-foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--sp-1);
 }
 
 /* ======================================================== 16-c. 使い方 */
@@ -1573,6 +1783,11 @@ p { margin: 0 0 .8em; }
   background: var(--bg-card);
 }
 .help-toc a:hover { text-decoration: none; background: var(--accent-bg); }
+/* 13 本の目次チップが縦に折り返して並ぶので、指で触る画面では
+   1 つずつが最小タップ領域を満たすようにする */
+@media (max-width: 640px) {
+  .help-toc a { display: inline-flex; align-items: center; min-height: var(--tap); }
+}
 
 .help-section { scroll-margin-top: 4rem; }
 /* ?to= で飛んできた節は、どこに着いたかが分かるように左に色を出す */
@@ -1831,6 +2046,9 @@ kbd.key {
 }
 .yt-shorts-reset:hover { color: var(--accent-dim); }
 .yt-shorts-reset[hidden] { display: none; }
+@media (max-width: 640px) {
+  .yt-shorts-shuffle { min-height: var(--tap); }
+}
 @media (max-width: 480px) {
   .card-video-yt .card-title { padding-right: 0; }
   .yt-shorts-controls { position: static; align-items: flex-start; margin: 0 0 var(--sp-2); }
@@ -1937,8 +2155,15 @@ kbd.key {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: var(--sp-4) var(--sp-2) var(--sp-2);
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .78));
+  /* 下の余白を padding ではなく透明な border で取る。overflow: hidden が
+     切るのは padding の外側なので、padding で余白を取ると 3 行目の頭が
+     その余白にはみ出して「途中で切れた行」に見えてしまう。border なら
+     2 行目の直後でぴったり切れる（背景は border まで描かれる）。 */
+  padding: var(--sp-4) var(--sp-2) 0;
+  border-bottom: var(--sp-2) solid transparent;
+  /* 下端まで透けていると、サムネイルに焼き込まれた文字が題名の裏から透けて
+     読みにくくなる。文字が乗る帯は不透明に近づける。 */
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .6) 40%, rgba(0, 0, 0, .92));
   color: #fff;
   font-size: var(--fs-sm);
   line-height: 1.35;
@@ -1986,6 +2211,17 @@ kbd.key {
 
 @media (max-width: 640px) {
   .share-btn { padding: .35rem .7rem; }
+  /* 制作者行・制作者カードの小さなアイコンリンクは、隣どうしが近いので
+     指で触る画面では最小タップ領域まで広げる（アイコンの大きさは変えない）。
+     .author-links-lg（使い方ページ）はすでに var(--tap) なのでそのまま。 */
+  .author-link,
+  .author-yt-others .author-link {
+    min-height: var(--tap);
+    min-width: var(--tap);          /* アイコンだけのリンクも正方形の当たり判定に */
+    justify-content: center;
+    padding: .15rem var(--sp-2);
+  }
+  .author-line-legal { min-height: var(--tap); padding: .15rem var(--sp-2); }
 }
 
 /* ホーム画面に追加（PWA）の導線。beforeinstallprompt が来ない環境では枠ごと隠れる */
@@ -2098,7 +2334,10 @@ kbd.key {
 }
 .conj-row-name { font-family: var(--font-serif); font-weight: 700; }
 .conj-row-sub { display: block; font-size: var(--fs-xs); font-family: var(--font-ja); font-weight: normal; }
-.conj-cell.is-none { color: var(--fg-faint); font-family: var(--font-ja); }
+/* 「〇」＝その活用形が無いこと。活用表を読むうえで意味のある文字なので、
+   --fg-faint（対 --bg-card 2.7:1）では AA に足りない。--fg-muted（5.4:1）で置く。
+   明朝で並ぶ活用形とはゴシック＋薄い色で十分に区別できる。 */
+.conj-cell.is-none { color: var(--fg-muted); font-family: var(--font-ja); }
 
 .kakari-table { min-width: 28rem; }
 .kakari-table td { font-size: var(--fs-md); }

@@ -1037,6 +1037,12 @@
     return parts.length ? parts.join('・') : '文法ぜんぶ';
   }
 
+  /* 範囲が絞られているか。絞っていないときの「出題範囲：文法ぜんぶ」は
+     すぐ上のチップと同じことを言っているだけなので出さない。 */
+  function drillNarrowed(state) {
+    return !!(state.aux || state.id || state.cat || state.kind);
+  }
+
   function renderDrill(query, container) {
     var state = Object.assign({}, query);
     var count = Number(state.count) || Number(K.store.getPref('grammarDrillCount', 10)) || 10;
@@ -1130,7 +1136,9 @@
       }
       stage.appendChild(el('div', { class: 'card quiz-start' }, [
         el('p', {}, [el('b', { text: String(test.length) }), ' 問出題します。']),
-        el('p', { class: 'muted small', text: '出題範囲：' + drillDeckLabel(state) }),
+        drillNarrowed(state)
+          ? el('p', { class: 'muted small', text: '出題範囲：' + drillDeckLabel(state) })
+          : null,
         el('button', { class: 'btn btn-primary btn-lg', type: 'button', text: 'はじめる', onClick: start })
       ]));
     }
@@ -1262,10 +1270,13 @@
         el('div', { class: 'progress score-bar' }, [
           el('div', { class: 'progress-fill', style: { width: pct + '%' } })
         ]),
-        el('p', { class: 'muted small', text: '出題範囲：' + drillDeckLabel(state) + '（内訳 ' + Object.keys(kinds).map(function (k) {
-          var kd = DRILL_KINDS.filter(function (x) { return x.key === k; })[0];
-          return (kd ? kd.label : k) + ' ' + kinds[k] + ' 問';
-        }).join('・') + '）' }),
+        el('p', { class: 'muted small', text:
+          (drillNarrowed(state) ? '出題範囲：' + drillDeckLabel(state) + '（内訳 ' : '内訳：')
+          + Object.keys(kinds).map(function (k) {
+            var kd = DRILL_KINDS.filter(function (x) { return x.key === k; })[0];
+            return (kd ? kd.label : k) + ' ' + kinds[k] + ' 問';
+          }).join('・')
+          + (drillNarrowed(state) ? '）' : '') }),
         el('div', { class: 'deck-links' }, [
           el('button', { class: 'btn btn-primary', type: 'button', text: 'もう一度', onClick: start }),
           el('a', { class: 'btn btn-ghost', href: '#/grammar', text: '文法の解説を読む' })

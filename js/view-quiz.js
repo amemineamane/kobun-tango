@@ -153,7 +153,17 @@
         : (w.kanji ? '〔' + w.kanji + '〕' : '');
 
       var choicesWrap = el('div', { class: 'quiz-choices' });
+      /* 答え合わせは 3 つの箱に分ける。
+         .quiz-feedback … 正誤・語・語義
+         .quiz-next     … 「次の問題」（語義の直後。スマホでは画面下に貼り付く）
+         .quiz-example  … 用例（該当語を含む 1 文）
+         .quiz-next を .quiz-feedback の中に入れてしまうと、position: sticky が
+         その短い箱の中に閉じ込められて下タブの裏に入ってしまうので、
+         3 つともカードの直下に並べる。 */
       var feedback = el('div', { class: 'quiz-feedback' });
+      var nextWrap = el('div', { class: 'quiz-next' });
+      var exampleWrap = el('div', { class: 'quiz-example' });
+      var card = el('div', { class: 'card quiz-card' });
 
       q.choices.forEach(function (c, n) {
         var label = mode === 'm2w' ? c.kana : c.primaryMeaning;
@@ -182,7 +192,7 @@
         });
         if (!correct) btn.classList.add('is-wrong');
 
-        U.clear(feedback);
+        U.clear(feedback); U.clear(nextWrap); U.clear(exampleWrap);
         feedback.appendChild(el('p', { class: 'feedback-line ' + (correct ? 'ok' : 'ng'), text: correct ? '正解' : '不正解' }));
         feedback.appendChild(el('div', { class: 'feedback-word' }, [
           el('a', { href: C.wordHref(w), class: 'feedback-kana', text: w.kana }),
@@ -197,18 +207,38 @@
             text: '本文の形：' + w.surface + '　（「' + w.passageTitle + '」の脚注語）'
           }));
         }
-        // 用例＝この語が出てくる段落（品詞分解の w が根拠）
-        var usage = C.usageFor(w.id);
-        if (usage) {
-          feedback.appendChild(usage.line);
-          feedback.appendChild(el('p', { class: 'example-translation', text: usage.translation }));
-        }
-        feedback.appendChild(el('button', {
+        /* 「次の問題」は語義のすぐ下。用例のあとに置くと、用例が長い語で
+           ボタンが画面外まで押し出されて、答え合わせのテンポが落ちる。 */
+        var nextBtn = el('button', {
           class: 'btn btn-primary', type: 'button',
           text: qi + 1 >= questions.length ? '結果を見る' : '次の問題 →',
           onClick: function () { qi++; locked = false; drawQuestion(); }
-        }));
-        feedback.querySelector('.btn').focus();
+        });
+        nextWrap.appendChild(nextBtn);
+
+        /* 用例＝この語を含む 1 文（品詞分解の w が根拠）。段落まるごとだと
+           スマホで 3〜4 画面ぶんになるので、文法ページと同じ「該当語を含む
+           1 文」に切る。前後と現代語訳は出典の文章ページで読める。 */
+        var usage = C.usageFor(w.id, { sentence: true });
+        if (usage) {
+          exampleWrap.appendChild(usage.line);
+          if (usage.translation) {
+            exampleWrap.appendChild(el('p', { class: 'example-translation', text: usage.translation }));
+          }
+          exampleWrap.appendChild(el('p', { class: 'example-head' }, [
+            el('a', {
+              class: 'example-work',
+              href: '#/passage/' + usage.passage.id,
+              text: usage.label + 'で読む →'
+            })
+          ]));
+        }
+        /* 答え合わせのあとは「選択肢の ○／× → 正誤 → 語義 → 次の問題」が
+           一度に見えるように、カードの頭までスクロールする。ボタンに
+           focus() させるだけだと、貼り付いたボタンは「すでに見えている」
+           扱いになってスクロールが起きず、正誤や語義が帯の裏に隠れる。 */
+        nextBtn.focus({ preventScroll: true });
+        card.scrollIntoView({ block: 'start' });
       }
 
       stage.appendChild(el('div', { class: 'quiz-progress' }, [
@@ -217,13 +247,16 @@
         ]),
         el('p', { class: 'progress-text muted', text: '第 ' + (qi + 1) + ' 問 / ' + questions.length })
       ]));
-      stage.appendChild(el('div', { class: 'card quiz-card' }, [
+      [
         el('p', { class: 'quiz-prompt-label muted', text: mode === 'm2w' ? 'この意味の語は？' : 'この語の意味は？' }),
         el('p', { class: 'quiz-prompt', text: promptText }),
         promptSub ? el('p', { class: 'quiz-prompt-sub muted', text: promptSub }) : null,
         choicesWrap,
-        feedback
-      ]));
+        feedback,
+        nextWrap,
+        exampleWrap
+      ].forEach(function (node) { if (node) card.appendChild(node); });
+      stage.appendChild(card);
     }
 
     function drawResult() {

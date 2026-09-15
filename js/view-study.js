@@ -328,13 +328,18 @@
       /* めくる前は「覚えた／まだ」を選べない（答えを見てから決めてもらう）。
          disabled にすると押しても何も起きず理由が分からないので、
          枠だけ押せる別ボタンにはせず、包むラッパでクリックを拾ってヒントを出す。 */
-      function judgeBtn(cls, label, status) {
+      /* ラベルのキー表示（（←）（→）（Space））はキーボードのある画面だけの案内。
+         スマホでは押せないキーの名前がボタンに混ざるだけなので、.key-hint に
+         包んで CSS（640px 以下）で隠す。 */
+      function keyHint(k) { return el('span', { class: 'key-hint', text: '（' + k + '）' }); }
+
+      function judgeBtn(cls, label, key, status) {
         var btn = el('button', {
-          class: 'btn ' + cls, type: 'button', text: label,
+          class: 'btn ' + cls, type: 'button',
           disabled: !flipped,
           'aria-disabled': flipped ? null : 'true',
           onClick: function () { answer(status); }
-        });
+        }, [label, keyHint(key)]);
         if (flipped) return btn;
         // disabled のボタンはクリックイベントを出さないので、覆いで拾う
         return el('span', {
@@ -344,20 +349,24 @@
       }
 
       var actions = el('div', { class: 'study-actions' + (flipped ? '' : ' is-front') }, [
-        judgeBtn('btn-weak', 'まだ（←）', 'weak'),
+        judgeBtn('btn-weak', 'まだ', '←', 'weak'),
         el('button', {
           class: 'btn btn-flip' + (flipped ? '' : ' btn-primary'), type: 'button',
-          text: flipped ? '表に戻す' : 'めくる（Space）', onClick: flip
-        }),
-        judgeBtn('btn-known', '覚えた（→）', 'known')
+          onClick: flip
+        }, flipped ? ['表に戻す'] : ['めくる', keyHint('Space')]),
+        judgeBtn('btn-known', '覚えた', '→', 'known')
       ]);
 
       hintEl = el('p', { class: 'study-hint muted small', role: 'status', 'aria-live': 'polite' });
 
+      /* 判定ボタンとヒントは 1 つの帯にまとめる。スマホではこの帯を
+         下タブのすぐ上に貼り付ける（CSS の .study-controls）ので、
+         ヒントを外に出すとボタンの下＝画面外に出てしまう。 */
+      var controls = el('div', { class: 'study-controls' }, [actions, hintEl]);
+
       stage.appendChild(bar);
       stage.appendChild(card);
-      stage.appendChild(actions);
-      stage.appendChild(hintEl);
+      stage.appendChild(controls);
       card.focus();
     }
 

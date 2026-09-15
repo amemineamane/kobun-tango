@@ -482,7 +482,11 @@
       if (hit) {
         if (tk.wordId == null && hit.word) tk.wordId = hit.word.id;
         if (!tk.meaning) tk.meaning = hit.meaning;
-        if (hit.note) tk.note = tk.note ? tk.note + '　' + hit.note : hit.note;
+        // 品詞分解の n と vocab の note は同じ出どころから書かれることが多く、
+        // そのまま繋ぐとポップアップに同じ一文が 2 回並ぶ。同一なら足さない。
+        if (hit.note && hit.note !== tk.note) {
+          tk.note = tk.note ? tk.note + '　' + hit.note : hit.note;
+        }
       }
 
       // 実線＝330 語（w があるか、vocab の 330 語にかかっている）
@@ -510,22 +514,57 @@
   };
 
   /**
+   * トークン列から「その語を含む 1 文」だけを切り出す（前後の「。」で切る）。
+   * 文法ページの用例（js/data-index.js の sentenceRange）と同じ切り方。
+   * 該当語が見つからなければ null で、呼び出し側は段落まるごとに落ちる。
+   */
+  function sentenceTokensOf(list, wordId) {
+    if (!Array.isArray(list)) return null;
+    var idx = -1, k;
+    for (k = 0; k < list.length; k++) {
+      if (list[k] && list[k].w === wordId) { idx = k; break; }
+    }
+    if (idx < 0) return null;
+    var from = 0, to = list.length - 1, i;
+    for (i = idx - 1; i >= 0; i--) {
+      if (/。/.test((list[i] && list[i].s) || '')) { from = i + 1; break; }
+    }
+    for (i = idx; i < list.length; i++) {
+      if (/。/.test((list[i] && list[i].s) || '')) { to = i; break; }
+    }
+    if (from > idx) from = idx;
+    return list.slice(from, to + 1);
+  }
+
+  /**
    * その語の「用例」を 1 つ返す（学習カードの裏・クイズの答え合わせで使う）。
    * 根拠は品詞分解（data/tokens/*.js）の w が付いた段落。まだ品詞分解の無い
    * 文章にしか出てこない語では null になり、呼び出し側は用例を出さない。
-   * @returns {{label: string, line: Element, translation: string}|null}
+   * @param opts  { sentence: true } なら段落ではなく「該当語を含む 1 文」だけを
+   *              返す（文法ページの用例と同じ切り方）。現代語訳は段落ぶんしか
+   *              無く 1 文と対応しないので、そのときは空文字にする。
+   * @returns {{label, line, translation, passage, sentence}|null}
    */
-  C.usageFor = function (wordId) {
+  C.usageFor = function (wordId, opts) {
+    opts = opts || {};
     var hits = K.index.paragraphsOfWord(wordId);
     if (hits.length) {
       var h = hits[0];
       var wk = K.index.getWork(h.passage.workId);
+      var toks = h.tokens;
+      var oneSentence = false;
+      if (opts.sentence) {
+        var cut = sentenceTokensOf(h.tokens, Number(wordId));
+        if (cut && cut.length) { toks = cut; oneSentence = true; }
+      }
       return {
         label: (wk ? wk.title : '') + '「' + h.passage.title + '」',
         line: C.passageTokenLine(
-          K.index.entriesOfPassage(h.passage.id), h.tokens,
+          K.index.entriesOfPassage(h.passage.id), toks,
           { highlightWordId: wordId, passageId: h.passage.id }),
-        translation: h.translation
+        translation: oneSentence ? '' : h.translation,
+        passage: h.passage,
+        sentence: oneSentence
       };
     }
     return null;
@@ -1487,10 +1526,15 @@
       }
     }, [icon('shuffle'), el('span', { text: '別の動画を見る' })]);
 
+    // 見出し → 説明 → 操作 → グリッド の順に置く。
+    // 広い幅では .yt-shorts-controls が position: absolute で見出しの右上に浮くので
+    // DOM の位置は効かないが、狭い幅（480px 以下）では static に戻って
+    // この場所にそのまま流れる。見出しより前に置くと、ボタンだけが
+    // カードの外側に浮いたように見えるため、説明文の直後に置いている。
     var card = el('div', { class: 'card card-video-yt' }, [
-      el('div', { class: 'yt-shorts-controls' }, [shuffleBtn, resetBtn]),
       el('h2', { class: 'card-title', text: '古典ショート' }),
       el('p', { class: 'muted small', text: (a.name || '制作者') + 'が古文をテーマに投稿しているショート動画です。' }),
+      el('div', { class: 'yt-shorts-controls' }, [shuffleBtn, resetBtn]),
       grid
     ]);
 

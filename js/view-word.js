@@ -169,7 +169,7 @@
       ])
     ]);
 
-    hits.forEach(function (h) {
+    hits.forEach(function (h, hi) {
       var wk = K.index.getWork(h.passage.workId);
       var entries = K.index.entriesOfPassage(h.passage.id);
       // その文章での語義（vocab に載っていれば meaningIndex の語義）
@@ -191,7 +191,10 @@
           class: 'example-note' + (/要確認/.test(e.note) ? ' needs-check' : ''),
           text: 'この文章では「' + e.surface + '／' + e.meaning + '」' + (e.note ? '　' + e.note : '')
         }) : null,
-        el('p', { class: 'example-hint muted', text: '原文の語をタップすると品詞分解が出ます。' })
+        // 操作の案内は 1 度あれば足りる（段落は 8 枚まで並ぶ）。1 枚目だけに出す
+        hi === 0
+          ? el('p', { class: 'example-hint muted', text: '原文の語をタップすると品詞分解が出ます。' })
+          : null
       ]));
     });
 
