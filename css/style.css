@@ -1787,11 +1787,16 @@ kbd.key {
 .author-yt-others { gap: var(--sp-2); }
 .author-yt-others .author-link { min-height: 28px; padding: .1rem .4rem; }
 .author-yt-cta { flex: 0 0 auto; margin-left: auto; }
-@media (max-width: 480px) {
-  .author-yt-card { flex-direction: column; align-items: flex-start; }
-  .author-yt-cta { margin-left: 0; width: 100%; }
+@media (max-width: 640px) {
+  /* スマホ: アイコンと文字を横並びにし、ボタンだけ下に全幅で置く。
+     column にすると .author-yt-body の flex-basis 14rem が高さに効いて大きな空白ができるので row のまま折り返す */
+  .author-yt-card { flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-3); }
+  .author-yt-avatar { width: 72px; height: 72px; flex: 0 0 auto; }
+  .author-yt-body { flex: 1 1 0; min-width: 0; }
+  .author-yt-name { font-size: var(--fs-base); }
+  .author-yt-role { display: inline-block; margin-left: 0; margin-top: .15em; }
+  .author-yt-cta { flex: 1 1 100%; margin-left: 0; }
   .author-yt-cta .btn { width: 100%; }
-  .author-yt-avatar { width: 80px; height: 80px; }
 }
 
 /* ホーム末尾の YouTube 動画カード（クリックして読み込む埋め込み） */
