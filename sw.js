@@ -32,7 +32,7 @@
 'use strict';
 
 /* tools/bump-version.mjs が書き換える行（形を変えないこと） */
-const CACHE_VERSION = '20260915f';
+const CACHE_VERSION = '20260916a';
 const CACHE_NAME = 'kobun-' + CACHE_VERSION;
 
 /* インストール時に取っておくファイル。
