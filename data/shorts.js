@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'AZZAAvwwwsk', title: '古典系Vtuberによる古典解説：混乱する古典単語「有り難し」 #shorts #古文 #あるある  #vtuber' },
+  { id: 'wGIsy0Ll4gU', title: '古典系Vtuberによる古典解説：混乱する古典単語「さうざうし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'ZaL9066jV8I', title: '【古文解説】枕草子で世間からひどく興ざめだと けなされた花は？ #shorts #古文 #あるある  #vtuber #百人一首' },
   { id: 'w_eBQIlXY48', title: '【古文解説】のちに怨霊として恐れられた人の詠んだ恋の歌が百人一首にあった！？ #shorts #古文 #あるある  #vtuber #百人一首' },
   { id: 'q8VURyR7sCA', title: '【古文解説】一目惚れした瞬間、着ていた服を破ってラブレターを書いた男がいた！？ #shorts #古文 #あるある  #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'HiH3WqMzgLc', title: '古典の授業あるある：混乱する古典単語「急ぎ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'qT8fI8o_gMo', title: '平安時代「不倫」はアリ？ナシ？ #shorts #古文 #vtuber #作品紹介 #解説' },
   { id: 's071CofuwFc', title: '古典系Vtuberによる文法解説「助動詞とは」#shorts #古文 #vtuber #作品紹介 #解説' },
-  { id: 'z5PiHBIg8dk', title: '古典の授業あるある：混乱する古典単語「行ふ」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'owqQENhAoWg', title: '古典系Vtuberによるゆるっと作品紹介「玉水物語」 #shorts #古文 #vtuber #作品紹介 #解説 #百合' },
   /* shorts:end */
 ];
