@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '-WRAIThEz4o', title: '古典系Vtuberによる古典解説：混乱する古典単語「やさし」 #shorts #古文 #あるある  #vtuber' },
+  { id: '0EHBhTy8Dvw', title: '【古文解説】藤原道長は「望月」が見えていなかった #shorts #古文 #あるある  #vtuber #和歌 #中秋の名月' },
   { id: 'OPSaFDKsWuY', title: '古典系Vtuberによる古典解説：混乱する古典単語「はづかし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'UYewN9wjTmM', title: '【古文解説】大江山〜の歌はレスバソングだった？！ #shorts #古文 #あるある  #vtuber #百人一首' },
   { id: 'AZZAAvwwwsk', title: '古典系Vtuberによる古典解説：混乱する古典単語「有り難し」 #shorts #古文 #あるある  #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'pKomFvfh6fs', title: '「む・むず」仮定・婉曲の見分け方 #shorts #古文 #vtuber #助動詞 #解説 #文法' },
   { id: '_wOBGt3-ipg', title: '「聞く」なのに「言う」って意味の古典単語があるってホント？？#shorts #古文 #vtuber #解説 #雑学' },
   { id: 'm8zzMZtPZUU', title: '古典系Vtuberによる文法解説「む・むず」#shorts #古文 #vtuber #助動詞 #解説 #文法' },
-  { id: 'Ia5715logjM', title: '古典系Vtuberによる単語解説「棚機🎋」#shorts #古文 #vtuber #七夕 #解説' },
-  { id: 'HiH3WqMzgLc', title: '古典の授業あるある：混乱する古典単語「急ぎ」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
