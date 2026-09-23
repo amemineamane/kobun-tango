@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '0nXiIWUPKao', title: '【古文解説】「あなたのためなら死んでもいい」から「長生きしたい」に一晩で変わった男の歌が百人一首にある！？ #shorts #古文 #あるある  #vtuber #和歌 #百人一首' },
   { id: 'F4vkQe5nJaU', title: '古典系Vtuberによる古典解説：混乱する古典単語「あさまし」 #shorts #古文 #あるある  #vtuber' },
   { id: '-WRAIThEz4o', title: '古典系Vtuberによる古典解説：混乱する古典単語「やさし」 #shorts #古文 #あるある  #vtuber' },
   { id: '0EHBhTy8Dvw', title: '【古文解説】藤原道長は「望月」が見えていなかった #shorts #古文 #あるある  #vtuber #和歌 #中秋の名月' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'vt0w7F8pfik', title: '「む・むず」意思の判別方法 #shorts #古文 #vtuber #助動詞 #解説 #文法' },
   { id: 'muRSr7EHiSA', title: '「にわか」の意味って知っていますか？ #shorts #古文 #vtuber #助動詞 #解説 #文法 #にわかファン #ワールドカップ #w杯' },
   { id: 'pKomFvfh6fs', title: '「む・むず」仮定・婉曲の見分け方 #shorts #古文 #vtuber #助動詞 #解説 #文法' },
-  { id: '_wOBGt3-ipg', title: '「聞く」なのに「言う」って意味の古典単語があるってホント？？#shorts #古文 #vtuber #解説 #雑学' },
   /* shorts:end */
 ];
