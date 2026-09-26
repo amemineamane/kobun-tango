@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'gjHLg75BIfw', title: '【百人一首57番：めぐりあひて】平安時代も友達との時間はあっという間！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'kpruprHlMfY', title: '古典系Vtuberによる古典解説：混乱する古典単語「ためらふ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'u-sF032Pa38', title: '中秋の名月(十五夜)だけど、満月じゃない！？ #shorts #古文 #あるある  #vtuber #中秋の名月 #十五夜' },
   { id: 'zFZvHzDrdZ4', title: '【古文解説】平安時代に月を見るのは縁起が悪かった!?#shorts #古文 #あるある  #vtuber #中秋の名月' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'yt0dZnUlO08', title: '古典系Vtuberあるある：作品紹介① #shorts #古文 #あるある  #vtuber' },
   { id: '0pHzdGL7Mvc', title: '古典系Vtuberあるある：この漢字の読み方⑤ #shorts #古文 #あるある  #vtuber' },
   { id: 'lDtHkPlL0EE', title: '古典の授業あるある：混乱する古典単語「難し」 #shorts #古文 #あるある  #vtuber' },
-  { id: '2Iwanqjgp5c', title: '古典系Vtuberによる古典単語「かなし」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
