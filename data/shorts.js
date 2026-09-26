@@ -15,6 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'kpruprHlMfY', title: '古典系Vtuberによる古典解説：混乱する古典単語「ためらふ」 #shorts #古文 #あるある  #vtuber' },
+  { id: 'u-sF032Pa38', title: '中秋の名月(十五夜)だけど、満月じゃない！？ #shorts #古文 #あるある  #vtuber #中秋の名月 #十五夜' },
+  { id: 'zFZvHzDrdZ4', title: '【古文解説】平安時代に月を見るのは縁起が悪かった!?#shorts #古文 #あるある  #vtuber #中秋の名月' },
   { id: '0nXiIWUPKao', title: '【古文解説】「あなたのためなら死んでもいい」から「長生きしたい」に一晩で変わった男の歌が百人一首にある！？ #shorts #古文 #あるある  #vtuber #和歌 #百人一首' },
   { id: 'F4vkQe5nJaU', title: '古典系Vtuberによる古典解説：混乱する古典単語「あさまし」 #shorts #古文 #あるある  #vtuber' },
   { id: '-WRAIThEz4o', title: '古典系Vtuberによる古典解説：混乱する古典単語「やさし」 #shorts #古文 #あるある  #vtuber' },
@@ -112,8 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '0pHzdGL7Mvc', title: '古典系Vtuberあるある：この漢字の読み方⑤ #shorts #古文 #あるある  #vtuber' },
   { id: 'lDtHkPlL0EE', title: '古典の授業あるある：混乱する古典単語「難し」 #shorts #古文 #あるある  #vtuber' },
   { id: '2Iwanqjgp5c', title: '古典系Vtuberによる古典単語「かなし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'fK75DeEGzgo', title: '古典の授業あるある：混乱する古典単語「懐かし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'NhBua2UOe_Q', title: '古典クイズ：貴族の位を貰ったのはどれでしょう？ #shorts #古文 #あるある  #vtuber #クイズ' },
-  { id: 'xMoqVr7B3V0', title: '古典の授業あるある：混乱する古典単語「悩む」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
