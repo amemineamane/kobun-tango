@@ -15,6 +15,11 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '479NwaTd0OU', title: '【古文解説】平安時代の恋の始まりは通報案件！？#shorts #古文 #あるある  #vtuber  #垣間見' },
+  { id: 'ZWK059oK9sQ', title: '【百人一首1番：秋の田の】百人一首は1番から怪しかった！？ #shorts #古文 #あるある  #vtuber' },
+  { id: 'qtTiVG51MB0', title: '古典系Vtuberによる古典解説：「さようなら(左様ならば)」#shorts #古文 #vtuber #単語' },
+  { id: 'Tz00Yxt4jys', title: '【百人一首97番：来ぬ人を】ちゃっかり自分の歌を百人一首に選んだ選者の話 #shorts #古文 #あるある  #vtuber' },
+  { id: '6t9gSY9WOnk', title: '古典系Vtuberによる古典解説：「たそがれ（誰そ彼）」 #shorts #古文 #あるある  #vtuber' },
   { id: 'gjHLg75BIfw', title: '【百人一首57番：めぐりあひて】平安時代も友達との時間はあっという間！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'kpruprHlMfY', title: '古典系Vtuberによる古典解説：混乱する古典単語「ためらふ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'u-sF032Pa38', title: '中秋の名月(十五夜)だけど、満月じゃない！？ #shorts #古文 #あるある  #vtuber #中秋の名月 #十五夜' },
@@ -110,10 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'voQu2jN1ee8', title: '古典単語解説「優し」 #shorts #古文 #単語 #vtuber' },
   { id: 'L2QuuP788Vk', title: '古典の授業あるある：混乱する古典単語「ふつつか」 #shorts #古文 #あるある  #vtuber' },
   { id: 'VcCHUbcdk54', title: '古典系Vtuberあるある：作品紹介② #shorts #古文 #あるある  #vtuber' },
-  { id: 'SLudmL790XU', title: '古典文法：敬意の方向 #shorts #古文 #vtuber #敬語 #解説 #文法' },
-  { id: 'A_2s9g0sBoc', title: '古典系Vtuberあるある：この漢字の読み方⑥ #shorts #古文 #あるある  #vtuber' },
-  { id: 'yt0dZnUlO08', title: '古典系Vtuberあるある：作品紹介① #shorts #古文 #あるある  #vtuber' },
-  { id: '0pHzdGL7Mvc', title: '古典系Vtuberあるある：この漢字の読み方⑤ #shorts #古文 #あるある  #vtuber' },
-  { id: 'lDtHkPlL0EE', title: '古典の授業あるある：混乱する古典単語「難し」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
