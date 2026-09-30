@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'UFL8LXWGTTE', title: '古典系Vtuberによる古典解説：混乱する古典単語「おぼつかなし」 #shorts #古文 #あるある  #vtuber' },
   { id: '479NwaTd0OU', title: '【古文解説】平安時代の恋の始まりは通報案件！？#shorts #古文 #あるある  #vtuber  #垣間見' },
   { id: 'ZWK059oK9sQ', title: '【百人一首1番：秋の田の】百人一首は1番から怪しかった！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'qtTiVG51MB0', title: '古典系Vtuberによる古典解説：「さようなら(左様ならば)」#shorts #古文 #vtuber #単語' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'QF4OfrvlLDc', title: '古典系Vtuberあるある：作品紹介③ #shorts #古文 #あるある  #vtuber' },
   { id: 'voQu2jN1ee8', title: '古典単語解説「優し」 #shorts #古文 #単語 #vtuber' },
   { id: 'L2QuuP788Vk', title: '古典の授業あるある：混乱する古典単語「ふつつか」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'VcCHUbcdk54', title: '古典系Vtuberあるある：作品紹介② #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
