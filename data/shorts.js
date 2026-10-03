@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'SrjjKgTRGU4', title: '古典系Vtuberによる古典解説：混乱する古典単語「うしろめたし」 #shorts #古文 #あるある  #vtuber' },
+  { id: 'bpkDJopU3Ec', title: '古典系Vtuberによる古典解説：「たまげる(魂消る)」#shorts #古文 #vtuber #単語' },
   { id: 'aUx_uwCkzLc', title: '古典系Vtuberによる古典解説：「衣替え（更衣）」#shorts #古文 #vtuber #単語' },
   { id: 'UFL8LXWGTTE', title: '古典系Vtuberによる古典解説：混乱する古典単語「おぼつかなし」 #shorts #古文 #あるある  #vtuber' },
   { id: '479NwaTd0OU', title: '【古文解説】平安時代の恋の始まりは通報案件！？#shorts #古文 #あるある  #vtuber  #垣間見' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'F_P0w25cwyg', title: '古典クイズ：この漢字の読みはなんでしょう？ #shorts #古文 #あるある  #vtuber #クイズ' },
   { id: 'P0kJJShEwsM', title: '混乱する古典単語解説「いみじ」 #shorts #古文 #単語 #vtuber #やばい' },
   { id: '-o-sCTp1L4w', title: '古典系Vtuberの古典解説：混乱する古典単語「大人し」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'QF4OfrvlLDc', title: '古典系Vtuberあるある：作品紹介③ #shorts #古文 #あるある  #vtuber' },
-  { id: 'voQu2jN1ee8', title: '古典単語解説「優し」 #shorts #古文 #単語 #vtuber' },
   /* shorts:end */
 ];
