@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'nUnwljwJkAc', title: '古典系Vtuberによる古典解説：混乱する古典単語「あきらむ」 #shorts #古文 #あるある  #vtuber' },
+  { id: 'vTBRPKlvhI4', title: '【百人一首20番：わびぬれば】恋が盲目なのは今も昔も同じ！？ #shorts #古文 #あるある  #vtuber' },
   { id: '5d5NtvBafDs', title: '古典系Vtuberによる古典解説：混乱する古典単語「あからさま」 #shorts #古文 #あるある  #vtuber' },
   { id: '3DSpraQZ5xg', title: '古典系Vtuberによる古典解説：「映え映えし」#shorts #古文 #vtuber #単語 #映え' },
   { id: 'SrjjKgTRGU4', title: '古典系Vtuberによる古典解説：混乱する古典単語「うしろめたし」 #shorts #古文 #あるある  #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'UhS56tKrjEI', title: '平安貴族も夢占いが好きだった！？ #shorts #古文 #占い #vtuber' },
   { id: 'e9jfULqu-24', title: '古典系Vtuberによる古典解説：混乱する古典単語「わざと」 #shorts #古文 #あるある  #vtuber' },
   { id: 'lkGKM-vVsgc', title: '古典系Vtuberによる古典解説：混乱する古典単語「遊び」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'GAwDCVkU8_c', title: '古典系Vtuberによる古典解説：混乱する古典単語「あたらし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'F_P0w25cwyg', title: '古典クイズ：この漢字の読みはなんでしょう？ #shorts #古文 #あるある  #vtuber #クイズ' },
   /* shorts:end */
 ];
