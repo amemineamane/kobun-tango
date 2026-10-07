@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '8tBfOzTISvo', title: '歌いすぎて喉崩壊！平安時代のカラオケ狂 #歴史 #雑学 #歌 #梁塵秘抄 #後白河法皇' },
   { id: 'CxY-opHME2s', title: '古典系Vtuberによる古典解説：混乱する古典単語「うるせし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'nUnwljwJkAc', title: '古典系Vtuberによる古典解説：混乱する古典単語「あきらむ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'vTBRPKlvhI4', title: '【百人一首20番：わびぬれば】恋が盲目なのは今も昔も同じ！？ #shorts #古文 #あるある  #vtuber' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'B03JrBQzauY', title: '恋愛のアプローチ方法(平安貴族ver) #shorts #古文 #占い #vtuber' },
   { id: 'Xg1KtYT3mQc', title: '古典系Vtuberによる古典解説：混乱する古典単語「背く」 #shorts #古文 #あるある  #vtuber' },
   { id: 'UhS56tKrjEI', title: '平安貴族も夢占いが好きだった！？ #shorts #古文 #占い #vtuber' },
-  { id: 'e9jfULqu-24', title: '古典系Vtuberによる古典解説：混乱する古典単語「わざと」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
