@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'VpdZlQ9PrP0', title: '物忌みは最強の欠席連絡！？ #歴史 #雑学 #古文 #vtuber  #占い' },
   { id: 'NjiKqj9U-xU', title: '古典系Vtuberによる古典解説：混乱する古典単語「めざまし」 #shorts #古文 #あるある  #vtuber' },
   { id: '3irOdl8NFKc', title: '平安貴族のダイエット、医者に匙を投げられた理由とは？ #歴史 #雑学 #古文 #vtuber  #ダイエット' },
   { id: '8tBfOzTISvo', title: '歌いすぎて喉崩壊！平安時代のカラオケ狂 #歴史 #雑学 #歌 #梁塵秘抄 #後白河法皇' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '01gNnl-x-xI', title: '古典助動詞「る・らる」の判別方法 #shorts #古典 #古文 #文法 文法 #解説' },
   { id: 'IuEKAz1Sxqg', title: '古典系Vtuberによる古典解説：混乱する古典文法「反語」 #shorts #古文 #あるある  #vtuber #反語 #夏休み' },
   { id: '37WDR2VULJU', title: '古典系Vtuverの源氏物語朗読①：光源氏の誕生まで #古典 #古文   #vtuber #shorts' },
-  { id: 'B03JrBQzauY', title: '恋愛のアプローチ方法(平安貴族ver) #shorts #古文 #占い #vtuber' },
   /* shorts:end */
 ];
