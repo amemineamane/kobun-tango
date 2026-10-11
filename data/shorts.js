@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'vXR6dHAZNx8', title: '古典系Vtuberによる古典解説：混乱する古典単語「ものがたり」 #shorts #古文 #あるある  #vtuber' },
   { id: 'Ho87lYlW0Fk', title: '千年前の推し活がレベチ！？源氏物語オタクがヤバすぎる！ #歴史 #雑学 #古文 #vtuber  #推し活' },
   { id: 'VpdZlQ9PrP0', title: '物忌みは最強の欠席連絡！？ #歴史 #雑学 #古文 #vtuber  #占い' },
   { id: 'NjiKqj9U-xU', title: '古典系Vtuberによる古典解説：混乱する古典単語「めざまし」 #shorts #古文 #あるある  #vtuber' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'shulic-NSxM', title: '古典系Vtuberによる古典解説：混乱する古典単語「空言」 #shorts #古文 #あるある  #vtuber' },
   { id: '_Xj7tMVUEX4', title: '古典系Vtuberによる古典解説：混乱する古典単語「憎し」 #shorts #古文 #あるある  #vtuber' },
   { id: '01gNnl-x-xI', title: '古典助動詞「る・らる」の判別方法 #shorts #古典 #古文 #文法 文法 #解説' },
-  { id: 'IuEKAz1Sxqg', title: '古典系Vtuberによる古典解説：混乱する古典文法「反語」 #shorts #古文 #あるある  #vtuber #反語 #夏休み' },
   /* shorts:end */
 ];
