@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'gTHbTHOZMFw', title: 'この動画はやがて終わります #古典 #Vtuber #shorts' },
+  { id: 'pjrEAH6SVKI', title: 'フレネミーの元祖は紫式部！？ #歴史 #雑学 #古文 #vtuber  #フレネミー' },
   { id: 'DvBXzJxn-58', title: '今とは真逆！？平安美人の基準３選 #歴史 #雑学 #古文 #vtuber  #美人' },
   { id: '47H7kgpo78w', title: 'ドパガキ、平安時代は地獄行きだった！？ #歴史 #雑学 #古文 #vtuber  #ドパガキ' },
   { id: 'n9_5ykQEqrM', title: '古典クイズ：お歯黒をしていたのは？ #歴史 #クイズ #日本史 #古文 #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '2r5Q7vIVtZU', title: '古典クイズ：和歌の中で最も多いテーマは何でしょう？ #shorts #古文 #あるある  #vtuber #クイズ' },
   { id: 'cWv97mghuw0', title: '古典系Vtuberによる古典解説：平安貴族は超早寝早起きだった？！ #shorts #古文 #あるある  #vtuber' },
   { id: 'fbnIG1vPFl8', title: '古典系Vtuberによる古典解説：混乱する古典単語「謀る」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'HCbUhMhQuL0', title: '古典系Vtuberによる古典解説：混乱する古典単語「まもる」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'o0diEUzv4Oo', title: '古典系Vtuberによる古典解説：混乱する古典単語「ことわる」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
