@@ -15,6 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'P-phxkCd6Sw', title: '古典系Vtuberによる古典解説：混乱する古典単語「なかなか」 #shorts #古文 #あるある  #vtuber' },
+  { id: 'z5Twc1UqBcg', title: '毛虫がメロすぎる平安のお姫様がいました！！#古典 #Vtuber #shorts #メロい' },
+  { id: '8jaUZFdFEYc', title: '陰陽師安倍晴明は実は公務員だった！？　#古典 #Vtuber #shorts #公務員 #占い' },
   { id: '_kGpAnAusFY', title: '古典系Vtuberによる古典解説：混乱する古典単語「つれなし」 #shorts #古文 #あるある  #vtuber' },
   { id: '4I3BYaDC6u8', title: '『世の中が辛い』は失恋の愚痴だった！？ #古典 #Vtuber #shorts' },
   { id: 'gTHbTHOZMFw', title: 'この動画はやがて終わります #古典 #Vtuber #shorts' },
@@ -112,8 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'LDfeyPsfrGU', title: '古典系Vtuberによる古典解説：混乱する古典単語「山際・山の端の違いって？」 #shorts #古文 #あるある  #vtuber #山の日' },
   { id: '7YOwDMzuBXs', title: '古典系Vtuberによる古典解説：混乱する古典単語「あらまし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'aP1SuQ5EEaY', title: '古典系Vtuberによる古典解説：混乱する古典単語「影」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'ARmmk6IEDgo', title: '古典系Vtuberによる古典解説：百人一首に浮気夫への愚痴があった！？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'ZFxDN34d0Cw', title: '古典系Vtuberによる古典解説：混乱する古典単語「疎し」 #shorts #古文 #あるある  #vtuber' },
-  { id: '2r5Q7vIVtZU', title: '古典クイズ：和歌の中で最も多いテーマは何でしょう？ #shorts #古文 #あるある  #vtuber #クイズ' },
   /* shorts:end */
 ];
