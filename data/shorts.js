@@ -15,6 +15,10 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '1yKXU2Lmt48', title: '古典系Vtuberによる古典解説：混乱する古典単語「せめて」 #shorts #古文 #あるある  #vtuber' },
+  { id: '5P6uYqZPg9M', title: '古典系Vtuberあるある：この漢字の読み方⑦「五十日」「後朝」 #shorts #古文 #あるある  #vtuber' },
+  { id: 'Kfg5vzqSQAk', title: '方角が悪い夜、光源氏は人妻の部屋にいました #古文 #源氏物語 #雑学 #vtuber #方違え' },
+  { id: '6Fv6HngYBv8', title: '平安時代の大地震は天皇の責任!? #歴史 #雑学 #古文 #vtuber #貞観地震' },
   { id: 'P-phxkCd6Sw', title: '古典系Vtuberによる古典解説：混乱する古典単語「なかなか」 #shorts #古文 #あるある  #vtuber' },
   { id: 'z5Twc1UqBcg', title: '毛虫がメロすぎる平安のお姫様がいました！！#古典 #Vtuber #shorts #メロい' },
   { id: '8jaUZFdFEYc', title: '陰陽師安倍晴明は実は公務員だった！？　#古典 #Vtuber #shorts #公務員 #占い' },
@@ -111,9 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'n0HlUY_MFJU', title: '古典系Vtuberによる古典解説：「お盆」 #shorts #古文 #あるある  #vtuber' },
   { id: 'DjPnfDNHvRA', title: '古典系Vtuberによる古典解説：助動詞の接続とは？？ #shorts #古文 #あるある  #vtuber' },
   { id: 'nofjYjRNBe0', title: '古典系Vtuberによる古典解説：混乱する古典単語「心憎し」 #shorts #古文 #あるある  #vtuber' },
-  { id: '3wB8dwHUO-U', title: '古典系Vtuberによる古典解説：混乱する古典単語「徒然」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'LDfeyPsfrGU', title: '古典系Vtuberによる古典解説：混乱する古典単語「山際・山の端の違いって？」 #shorts #古文 #あるある  #vtuber #山の日' },
-  { id: '7YOwDMzuBXs', title: '古典系Vtuberによる古典解説：混乱する古典単語「あらまし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'aP1SuQ5EEaY', title: '古典系Vtuberによる古典解説：混乱する古典単語「影」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
