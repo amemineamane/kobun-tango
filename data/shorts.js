@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'wEbwt0O0UXU', title: '古典系Vtuberによる古典解説：混乱する古典単語「なまめかし」 #shorts #古文 #あるある  #vtuber' },
   { id: '-HQIWn-mZoE', title: '古典系Vtuberによる古典解説：混乱する古典単語「さながら」 #shorts #古文 #あるある  #vtuber' },
   { id: 'NnZz32ovC4c', title: '古典系Vtuberあるある：この漢字の読み方⑧「妹」「妻」 #shorts #古文 #あるある  #vtuber' },
   { id: 'drC0zP_gUWk', title: '朝3時に起きて朝ごはんは10時!? 平安貴族の1日 #歴史 #雑学 #古文 #vtuber #平安時代' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'cAT9Ms-qKzE', title: '【古文単語】聞いて見て覚える古典単語 part1 #shorts #単語 #vtuber' },
   { id: 'y74bizGZx44', title: '古典系Vtuberによる古典解説：「後宮」 #shorts #古文 #あるある  #vtuber' },
   { id: 'aX80WNY00Xg', title: '古典系Vtuberによる古典解説：混乱する古典単語「いとほし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'lx4Opt-2Rzo', title: '古典系Vtuberによる古典解説：混乱する古典単語「珍し」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
