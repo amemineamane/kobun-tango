@@ -15,6 +15,7 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'V_lk6Aylqf8', title: '古典系Vtuberによる古典解説：混乱する古典単語「覚ゆ」 #shorts #古文 #あるある  #vtuber' },
   { id: '8DD6q2s3720', title: '古典系Vtuberによる古典解説：混乱する古典単語「ゆゆし」 #shorts #古文 #あるある  #vtuber' },
   { id: '8GVNDb4hKPs', title: '平安貴族の年収、今のお金に直すと3億円！？ #古典 #古文 #平安時代 #藤原道長 #vtuber' },
   { id: 'GdiWPmR9_v0', title: '古典系Vtuberあるある：この漢字の読み方⑨「祖父」「祖母」 #shorts #古文 #あるある  #vtuber' },
@@ -114,6 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'uHw6rPlCbnk', title: '古典系Vtuberによる古典解説：くしゃみは嘘の証拠？？ #shorts #古文 #あるある  #vtuber' },
   { id: 'EAa4qdWiYqc', title: '古典系Vtuberあるある：予測変換 #shorts #古文 #あるある  #vtuber' },
   { id: 'grdxIdGr8IY', title: '古典系Vtuberによる古典解説：混乱する古典単語「ゆかし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'hdjWKaKjJPo', title: '【古文単語】聞いて見て覚える古典単語 part2 #shorts #単語 #vtuber' },
   /* shorts:end */
 ];
