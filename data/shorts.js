@@ -15,6 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'pHwjxgEtX0M', title: '古典系Vtuberによる古典解説：混乱する古典単語「けしき」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'ExgBO7Acego', title: '古典系Vtuberによる古典解説：混乱する古典単語「おとなし」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'qFigB9cuvHw', title: '江戸時代のおやつは2時だった！？ #歴史 #雑学 #古文 #vtuber #おやつ #江戸時代' },
   { id: 'Qag5ivewSA8', title: '古典系Vtuberあるある：なぜか普通に読める④「やうやう」「さうらふ」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
   { id: 'Rglye-1GWHY', title: '古典系Vtuberあるある：この漢字の読み方⑩「牛車」「公達」 #shorts #古文 #あるある  #vtuber' },
   { id: 'O_q_S4coYvE', title: 'お月見、1回だけだと縁起が悪い！？ #歴史 #雑学 #古文 #vtuber #十三夜 #十五夜' },
@@ -112,8 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'N7WaPsLWQ1I', title: '古典系Vtuberによる古典解説：浮気男のクズメッセージ平安時代にもあった！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'FB6uZAbARLM', title: '古典系Vtuberによる古典解説：フラれた平安女子が元カレに送った歌こちらです！ #shorts #古文 #あるある  #vtuber' },
   { id: 'df3lAD2b4OI', title: '古典系Vtuberによる古典解説：混乱する古典単語「罵る」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'CcB5325Ug-4', title: '古典系Vtuberによる古典解説：平安女子の返事がメンヘラすぎる... #shorts #古文 #あるある  #vtuber' },
-  { id: 'W6LpM_HvpOw', title: '古典系Vtuberによる古典解説：混乱する古典単語「端なし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'REIg6qOb4Bo', title: '古典系Vtuberによる古典解説：日本初のゲーム禁止令！？ #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
