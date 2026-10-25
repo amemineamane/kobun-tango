@@ -15,6 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '_yt6XbuRGWg', title: '古典系Vtuberあるある：なぜか普通に読める⑤「あふひ」「ゆふがほ」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
+  { id: 'lEQNYiBej1E', title: '午前と午後の「午」は馬だった！？ #歴史 #雑学 #古文 #vtuber #正午 #十二支 #古典' },
+  { id: 'DzzjbwdNR4I', title: '古典系Vtuberあるある：この漢字の読み方⑪「本意」「案内」 #shorts #古文 #あるある #vtuber' },
   { id: 'pHwjxgEtX0M', title: '古典系Vtuberによる古典解説：混乱する古典単語「けしき」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'ExgBO7Acego', title: '古典系Vtuberによる古典解説：混乱する古典単語「おとなし」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'qFigB9cuvHw', title: '江戸時代のおやつは2時だった！？ #歴史 #雑学 #古文 #vtuber #おやつ #江戸時代' },
@@ -112,8 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'IQBwNhhjseg', title: '古典系Vtuberによる古典解説：混乱する古典単語「かたはらいたし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'hvRL-DANhLw', title: '古典系Vtuberによる古典解説：千年前の「滅多にないものリスト」が実はほとんど現代と同じ！ #shorts #古文 #あるある  #vtuber' },
   { id: 'Ibd-J1-R6B8', title: '古典系Vtuberによる古典解説：日本版シンデレラは超過激だった？！ #shorts #古文 #あるある  #vtuber' },
-  { id: 'N7WaPsLWQ1I', title: '古典系Vtuberによる古典解説：浮気男のクズメッセージ平安時代にもあった！？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'FB6uZAbARLM', title: '古典系Vtuberによる古典解説：フラれた平安女子が元カレに送った歌こちらです！ #shorts #古文 #あるある  #vtuber' },
-  { id: 'df3lAD2b4OI', title: '古典系Vtuberによる古典解説：混乱する古典単語「罵る」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
