@@ -15,7 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
-  { id: '_yt6XbuRGWg', title: '古典系Vtuberあるある：なぜか普通に読める⑤「あふひ」「ゆふがほ」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
+  { id: 'i2CdWJ478Vo', title: '古典系Vtuberによる古典解説：混乱する古典単語「あやし」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'k7craVskEZE', title: '平安時代の肝試し、証拠を持ち帰ったのは1人だけ！？ #歴史 #雑学 #古文 #vtuber #大鏡 #藤原道長 #肝試し' },
+  { id: '7CJBLf2GB8U', title: '古典系Vtuberあるある：なぜか普通に読める⑤「あふひ」「ゆふがほ」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
   { id: 'lEQNYiBej1E', title: '午前と午後の「午」は馬だった！？ #歴史 #雑学 #古文 #vtuber #正午 #十二支 #古典' },
   { id: 'DzzjbwdNR4I', title: '古典系Vtuberあるある：この漢字の読み方⑪「本意」「案内」 #shorts #古文 #あるある #vtuber' },
   { id: 'pHwjxgEtX0M', title: '古典系Vtuberによる古典解説：混乱する古典単語「けしき」 #shorts #古文 #古文単語 #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'jx92LqAM92I', title: '古典系Vtuberによる古典解説：混乱する古典単語「いたづら」 #shorts #古文 #あるある  #vtuber' },
   { id: '14pSIrcMuwE', title: '古典系Vtuberによる古典解説：平安時代にも蛙化現象があった？？ #shorts #古文 #あるある  #vtuber' },
   { id: 'IQBwNhhjseg', title: '古典系Vtuberによる古典解説：混乱する古典単語「かたはらいたし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'hvRL-DANhLw', title: '古典系Vtuberによる古典解説：千年前の「滅多にないものリスト」が実はほとんど現代と同じ！ #shorts #古文 #あるある  #vtuber' },
-  { id: 'Ibd-J1-R6B8', title: '古典系Vtuberによる古典解説：日本版シンデレラは超過激だった？！ #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
