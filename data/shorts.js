@@ -15,6 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'N6Bs-SditKs', title: '【時間別】平安貴族のリアル #古文 #雑学 #vtuber #平安時代 #歴史 #ルーティン' },
+  { id: 'MhNH3VF9AnU', title: '古典系Vtuberあるある：この漢字の読み方⑫「昨夜」「後見」 #shorts #古文 #あるある #vtuber' },
+  { id: '5s_IBfcyT5M', title: '清少納言のメンタル回復アイテム、まさかの「紙」！？ #古文 #雑学 #vtuber #枕草子 #清少納言 #定子' },
   { id: 'i2CdWJ478Vo', title: '古典系Vtuberによる古典解説：混乱する古典単語「あやし」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'k7craVskEZE', title: '平安時代の肝試し、証拠を持ち帰ったのは1人だけ！？ #歴史 #雑学 #古文 #vtuber #大鏡 #藤原道長 #肝試し' },
   { id: '7CJBLf2GB8U', title: '古典系Vtuberあるある：なぜか普通に読める⑤「あふひ」「ゆふがほ」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
@@ -112,8 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'KWMWczqZfWA', title: '【古文解説】 「とりかへばや物語」男女の入れ替わり物語、千年前からあった！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'yng1xdDXQLU', title: '古典系Vtuberによる古典解説：平安時代の神経衰弱、超ハードモード！？#shorts #古文 #あるある  #vtuber' },
   { id: 'q7zov5U1KS8', title: '【古文単語】聞いて見て覚える古典単語 part3 #shorts #単語 #vtuber' },
-  { id: 'jx92LqAM92I', title: '古典系Vtuberによる古典解説：混乱する古典単語「いたづら」 #shorts #古文 #あるある  #vtuber' },
-  { id: '14pSIrcMuwE', title: '古典系Vtuberによる古典解説：平安時代にも蛙化現象があった？？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'IQBwNhhjseg', title: '古典系Vtuberによる古典解説：混乱する古典単語「かたはらいたし」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
