@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'rLyNzDs1sMA', title: '古典系Vtuberによる古典解説：混乱する古典単語「いぎたなし」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'Ww62mSJ2Q1s', title: '古典系Vtuberあるある：この漢字の読み方⑬「局」「単」 #shorts #古文 #あるある #vtuber' },
   { id: '_kkj-FDQVwY', title: '古典系Vtuberによる古典解説：混乱する古典単語「こころざし」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'E9XyPm6oU48', title: '清少納言のメンタル回復アイテム、まさかの「紙」！？ #古文 #雑学 #vtuber #枕草子 #清少納言 #定子' },
   { id: 'IJeyKR3tz2c', title: '古典系Vtuberあるある：なぜか普通に読める⑥「にようばう」「にふだう」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '2NC9iqcn1eI', title: '【悲報】パワハラ上司、1000年前からいました #shorts #古文 #あるある  #vtuber' },
   { id: 'MPTWHYDLZuE', title: '【古文解説】 平安時代にもかき氷があったことを知っていますか？ #shorts #古文 #あるある  #vtuber' },
   { id: 'iYN2Uhw25lc', title: '【古文解説】 光源氏はクズ？誠実？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'VvPijg1ZU7E', title: '【古文解説】 スマホを見られて浮気がバレるみたいな話が平安時代にもあった？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'KWMWczqZfWA', title: '【古文解説】 「とりかへばや物語」男女の入れ替わり物語、千年前からあった！？ #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
