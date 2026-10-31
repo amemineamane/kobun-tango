@@ -15,6 +15,8 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'ObYZGw9N8VA', title: '古典のハロウィンパレード、全員本物だった！？ #古文 #雑学 #vtuber #宇治拾遺物語 #百鬼夜行 #ハロウィン' },
+  { id: 'Cp87T7YP9dg', title: '平安時代のウェディングケーキは、お餅でした！？ #古文 #雑学 #vtuber #平安時代 #歴史 #結婚' },
   { id: 'rLyNzDs1sMA', title: '古典系Vtuberによる古典解説：混乱する古典単語「いぎたなし」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'Ww62mSJ2Q1s', title: '古典系Vtuberあるある：この漢字の読み方⑬「局」「単」 #shorts #古文 #あるある #vtuber' },
   { id: '_kkj-FDQVwY', title: '古典系Vtuberによる古典解説：混乱する古典単語「こころざし」 #shorts #古文 #古文単語 #vtuber' },
@@ -113,7 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'by5A3QA-L1w', title: '古典系Vtuberによる古典解説：混乱する古典単語「見る」 #shorts #古文 #あるある  #vtuber' },
   { id: 'nHQkifTjFhE', title: '【古文解説】 古典系Vtuberによる古典解説：チーズが平安時代よりも前にあった？ #shorts #古文 #あるある  #vtuber #蘇' },
   { id: '2NC9iqcn1eI', title: '【悲報】パワハラ上司、1000年前からいました #shorts #古文 #あるある  #vtuber' },
-  { id: 'MPTWHYDLZuE', title: '【古文解説】 平安時代にもかき氷があったことを知っていますか？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'iYN2Uhw25lc', title: '【古文解説】 光源氏はクズ？誠実？ #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
