@@ -15,6 +15,11 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '5MC5LMCGOnM', title: '古典系Vtuberによる古典解説：混乱する古典単語「まばゆし」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'omBky2zceTs', title: '「一緒に出家しよう」と誘って、自分だけ逃げた男 #古文 #日本史 #vtuber #平安時代 #大鏡' },
+  { id: 'PITF6UVK_yM', title: '「山ぎは」と「山の端」違い、言えますか？ #古文 #古文単語 #vtuber #枕草子' },
+  { id: 'Au-h1xo27FQ', title: '「春はあけぼの」の続き、言えますか？ #古文 #雑学 #vtuber #枕草子 #清少納言' },
+  { id: '6gFLC2ckoVA', title: '【今で言うと】平安の結婚用語 #古文 #雑学 #vtuber #平安時代 #恋愛 #結婚' },
   { id: 'LZRdPAN6fFk', title: '古典系Vtuberによる古典解説：「ついたち（月立ち）」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'vOrSdneKHJs', title: '古典系Vtuberあるある：この漢字の読み方⑭「同胞」「上達部」 #shorts #古文 #あるある #vtuber' },
   { id: 'ObYZGw9N8VA', title: '古典のハロウィンパレード、全員本物だった！？ #古文 #雑学 #vtuber #宇治拾遺物語 #百鬼夜行 #ハロウィン' },
@@ -110,10 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'Cxhokxkj8B8', title: '【古文解説】 【古文解説】既婚者なのにナンパして痛い目にあったクズが平安時代にもいました... #shorts #古文 #あるある  #vtuber' },
   { id: '8Smm4sz4kPs', title: '古典系Vtuberによる古典解説：混乱する古典単語「驚く」 #shorts #古文 #あるある  #vtuber' },
   { id: 'vbopCgsvSX0', title: '【古文解説】 平安時代に風呂キャン推奨デーがあった！？ #shorts #古文 #あるある  #vtuber #ちはやふる' },
-  { id: '3AEQo-Rw8QM', title: '【古文解説】 ちはやぶるの歌の意味を知っていますか？ #shorts #古文 #あるある  #vtuber #ちはやふる' },
-  { id: '4azApB1dXqQ', title: '古典系Vtuberによる古典解説：混乱する古典単語「憧る」 #shorts #古文 #あるある  #vtuber' },
-  { id: '2KMLw8aTYC4', title: '古典系Vtuberによる古典解説：混乱する古典単語「つとめて」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'p2r55DJuUmY', title: '【古文解説】 9月9日は何の節句？ #shorts #古文 #あるある  #vtuber #節句' },
-  { id: 'by5A3QA-L1w', title: '古典系Vtuberによる古典解説：混乱する古典単語「見る」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
