@@ -15,6 +15,10 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'xel9oplMfE0', title: '古典系Vtuberあるある：この漢字の読み方⑮「十六夜」「望月」 #shorts #古文 #あるある #vtuber' },
+  { id: 'oasmL-CGXqc', title: '法皇に矢を放った貴族、理由がひどすぎる #古文 #日本史 #vtuber #平安時代 #枕草子' },
+  { id: 'uBOgZGPxo04', title: '「春はあけぼの」を今っぽく訳すと？ #古文 #雑学 #vtuber #枕草子 #清少納言' },
+  { id: 'ZYHA-Cnp9vU', title: '清少納言、最後の一言が「わろし」！？ #古文 #雑学 #vtuber #枕草子 #清少納言' },
   { id: '5MC5LMCGOnM', title: '古典系Vtuberによる古典解説：混乱する古典単語「まばゆし」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'omBky2zceTs', title: '「一緒に出家しよう」と誘って、自分だけ逃げた男 #古文 #日本史 #vtuber #平安時代 #大鏡' },
   { id: 'PITF6UVK_yM', title: '「山ぎは」と「山の端」違い、言えますか？ #古文 #古文単語 #vtuber #枕草子' },
@@ -111,9 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'zrugqMEQ1X0', title: '【古文解説】天皇に島流しにされた犬がいた！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'Mep4TTTjnrM', title: '古典系Vtuberによる古典解説：混乱する古典単語「こころもとなし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'jE0NydbFdYA', title: '【古文解説】 正妻と愛人が場所の奪い合い【源氏物語：車争い】 #shorts #古文 #あるある  #vtuber' },
-  { id: '9D46pnGnOpI', title: '古典系Vtuberによる古典解説：混乱する古典単語「時めく」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'Cxhokxkj8B8', title: '【古文解説】 【古文解説】既婚者なのにナンパして痛い目にあったクズが平安時代にもいました... #shorts #古文 #あるある  #vtuber' },
-  { id: '8Smm4sz4kPs', title: '古典系Vtuberによる古典解説：混乱する古典単語「驚く」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'vbopCgsvSX0', title: '【古文解説】 平安時代に風呂キャン推奨デーがあった！？ #shorts #古文 #あるある  #vtuber #ちはやふる' },
   /* shorts:end */
 ];
