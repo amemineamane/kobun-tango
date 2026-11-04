@@ -15,6 +15,12 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: '_ira7kgNFHo', title: '古典系Vtuberによる古典解説：混乱する古典単語「よろこび」 #shorts #古文 #古文単語 #vtuber' },
+  { id: '_9wh0XjHP_I', title: '平安時代の炎上は、家ごと消える #古文 #日本史 #vtuber #枕草子 #清少納言' },
+  { id: 'EGDCa4vlLlo', title: '清少納言の秋、カメラワークが神 #古文 #雑学 #vtuber #枕草子 #清少納言' },
+  { id: 'VrjSdgTV-Sw', title: '【今で言うと】平安の仕事用語 #古文 #雑学 #vtuber #平安時代 #仕事' },
+  { id: 'g4bcLuSRMBQ', title: '乙姫さまの正体、実は助けたあの亀だった #古文 #昔話 #vtuber #浦島太郎 #御伽草子' },
+  { id: 'rEVk0-zgj7A', title: '春はあけぼの、実は「いい」と言ってない！？ #古文 #古文単語 #vtuber #枕草子' },
   { id: 'xel9oplMfE0', title: '古典系Vtuberあるある：この漢字の読み方⑮「十六夜」「望月」 #shorts #古文 #あるある #vtuber' },
   { id: 'oasmL-CGXqc', title: '法皇に矢を放った貴族、理由がひどすぎる #古文 #日本史 #vtuber #平安時代 #枕草子' },
   { id: 'uBOgZGPxo04', title: '「春はあけぼの」を今っぽく訳すと？ #古文 #雑学 #vtuber #枕草子 #清少納言' },
@@ -109,11 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '3g3gwBnhInE', title: '古典系Vtuberによる古典解説：混乱する古典単語「すさまじ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'tZxKYV4zhOg', title: '古典系Vtuberによる古典解説：混乱する古典単語「あはれ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'kTVyeJr-xIc', title: '【伊勢物語：芥川】「ねえ、あれ何？」この一言に答えなかった男が、このあと後悔します #shorts #古文 #あるある  #vtuber #芥川 #歴史' },
-  { id: 'fhdO-40n0aY', title: '理想の古文単語帳の紹介！#shorts #古文 #vtuber #単語 #単語帳 #アプリ' },
-  { id: 'cCZVbA2Z6bw', title: '誰でも投稿できる歌のまとめサイトが奈良時代にもあった！？ #shorts #古文 #あるある  #vtuber #万葉集 #歴史' },
-  { id: '0xcWDAdYZ9s', title: '古典系Vtuberによる古典解説：混乱する古典単語「したたか」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'zrugqMEQ1X0', title: '【古文解説】天皇に島流しにされた犬がいた！？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'Mep4TTTjnrM', title: '古典系Vtuberによる古典解説：混乱する古典単語「こころもとなし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'jE0NydbFdYA', title: '【古文解説】 正妻と愛人が場所の奪い合い【源氏物語：車争い】 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
