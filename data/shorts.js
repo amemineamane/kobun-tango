@@ -15,6 +15,12 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'WdyVShjfKN0', title: '古典系Vtuberによる古典解説：混乱する古典単語「あながち」 #shorts #古文 #古文単語 #vtuber' },
+  { id: '3GIQoMevVGs', title: '「この世は俺のもの」と詠んだ道長、周りの反応は？ #古文 #日本史 #vtuber #和歌 #藤原道長' },
+  { id: 'ZG_ZqJw3LGQ', title: '清少納言、夏の夜にだけ甘すぎる #古文 #雑学 #vtuber #枕草子 #清少納言' },
+  { id: 'buS7uUT2PbA', title: '舌切り雀の原型、舌を切らない！？ #古文 #昔話 #vtuber #舌切り雀 #宇治拾遺物語' },
+  { id: 'Ayf9_9qeVzc', title: '古典系Vtuberあるある：この漢字の読み方⑯「宿世」「御簾」 #shorts #古文 #あるある #vtuber' },
+  { id: '1l5oFc0RDE4', title: '古文の「をかし」、今で言うと何？ #古文 #古文単語 #vtuber #枕草子' },
   { id: '_ira7kgNFHo', title: '古典系Vtuberによる古典解説：混乱する古典単語「よろこび」 #shorts #古文 #古文単語 #vtuber' },
   { id: '_9wh0XjHP_I', title: '平安時代の炎上は、家ごと消える #古文 #日本史 #vtuber #枕草子 #清少納言' },
   { id: 'EGDCa4vlLlo', title: '清少納言の秋、カメラワークが神 #古文 #雑学 #vtuber #枕草子 #清少納言' },
@@ -109,11 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'UYewN9wjTmM', title: '【古文解説】大江山〜の歌はレスバソングだった？！ #shorts #古文 #あるある  #vtuber #百人一首' },
   { id: 'AZZAAvwwwsk', title: '古典系Vtuberによる古典解説：混乱する古典単語「有り難し」 #shorts #古文 #あるある  #vtuber' },
   { id: 'wGIsy0Ll4gU', title: '古典系Vtuberによる古典解説：混乱する古典単語「さうざうし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'ZaL9066jV8I', title: '【古文解説】枕草子で世間からひどく興ざめだと けなされた花は？ #shorts #古文 #あるある  #vtuber #百人一首' },
-  { id: 'w_eBQIlXY48', title: '【古文解説】のちに怨霊として恐れられた人の詠んだ恋の歌が百人一首にあった！？ #shorts #古文 #あるある  #vtuber #百人一首' },
-  { id: 'q8VURyR7sCA', title: '【古文解説】一目惚れした瞬間、着ていた服を破ってラブレターを書いた男がいた！？ #shorts #古文 #あるある  #vtuber' },
-  { id: '3g3gwBnhInE', title: '古典系Vtuberによる古典解説：混乱する古典単語「すさまじ」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'tZxKYV4zhOg', title: '古典系Vtuberによる古典解説：混乱する古典単語「あはれ」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'kTVyeJr-xIc', title: '【伊勢物語：芥川】「ねえ、あれ何？」この一言に答えなかった男が、このあと後悔します #shorts #古文 #あるある  #vtuber #芥川 #歴史' },
   /* shorts:end */
 ];
