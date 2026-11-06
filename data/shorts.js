@@ -15,6 +15,11 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'iV_zHBeQ-0E', title: '古典系Vtuberによる古典解説：混乱する古典単語「心づくし」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'LNfalcLS2hk', title: '道長の「この世をば」、本人の日記には書いてない！？ #古文 #日本史 #vtuber #和歌 #藤原道長' },
+  { id: 'woC8WLMwbTQ', title: '一寸法師が家を出た、切ない理由 #古文 #昔話 #vtuber #一寸法師 #御伽草子' },
+  { id: 'AdTkjay0rNM', title: '古典の先生あるある：あなたの先生は何番目？ #shorts #古文 #あるある #vtuber' },
+  { id: 'WPzPL1X_B3w', title: '清少納言の冬、寒いほどいい！？ #古文 #雑学 #vtuber #枕草子 #清少納言' },
   { id: 'WdyVShjfKN0', title: '古典系Vtuberによる古典解説：混乱する古典単語「あながち」 #shorts #古文 #古文単語 #vtuber' },
   { id: '3GIQoMevVGs', title: '「この世は俺のもの」と詠んだ道長、周りの反応は？ #古文 #日本史 #vtuber #和歌 #藤原道長' },
   { id: 'ZG_ZqJw3LGQ', title: '清少納言、夏の夜にだけ甘すぎる #古文 #雑学 #vtuber #枕草子 #清少納言' },
@@ -110,10 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '0nXiIWUPKao', title: '【古文解説】「あなたのためなら死んでもいい」から「長生きしたい」に一晩で変わった男の歌が百人一首にある！？ #shorts #古文 #あるある  #vtuber #和歌 #百人一首' },
   { id: 'F4vkQe5nJaU', title: '古典系Vtuberによる古典解説：混乱する古典単語「あさまし」 #shorts #古文 #あるある  #vtuber' },
   { id: '-WRAIThEz4o', title: '古典系Vtuberによる古典解説：混乱する古典単語「やさし」 #shorts #古文 #あるある  #vtuber' },
-  { id: '0EHBhTy8Dvw', title: '【古文解説】藤原道長は「望月」が見えていなかった #shorts #古文 #あるある  #vtuber #和歌 #中秋の名月' },
-  { id: 'OPSaFDKsWuY', title: '古典系Vtuberによる古典解説：混乱する古典単語「はづかし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'UYewN9wjTmM', title: '【古文解説】大江山〜の歌はレスバソングだった？！ #shorts #古文 #あるある  #vtuber #百人一首' },
-  { id: 'AZZAAvwwwsk', title: '古典系Vtuberによる古典解説：混乱する古典単語「有り難し」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'wGIsy0Ll4gU', title: '古典系Vtuberによる古典解説：混乱する古典単語「さうざうし」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
