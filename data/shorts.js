@@ -15,6 +15,10 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'WC07LUHQjGg', title: '古典系Vtuberによる古典解説：混乱する古典単語「きよら」と「きよげ」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'AIIzn-5bavY', title: '浦島太郎、箱を開けたあとに続きがあった #古文 #昔話 #vtuber #浦島太郎 #御伽草子' },
+  { id: 'Bcm5KYNzrP4', title: '「好きすぎて滅」、1300年前の万葉集にもあった #古文 #雑学 #vtuber #万葉集 #恋ひ死ぬ' },
+  { id: 'm4LLC95obUg', title: '「春はあけぼの」の四季、使う感覚がちがう？ #古文 #雑学 #vtuber #枕草子 #清少納言' },
   { id: 'iV_zHBeQ-0E', title: '古典系Vtuberによる古典解説：混乱する古典単語「心づくし」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'LNfalcLS2hk', title: '道長の「この世をば」、本人の日記には書いてない！？ #古文 #日本史 #vtuber #和歌 #藤原道長' },
   { id: 'woC8WLMwbTQ', title: '一寸法師が家を出た、切ない理由 #古文 #昔話 #vtuber #一寸法師 #御伽草子' },
@@ -111,9 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'gjHLg75BIfw', title: '【百人一首57番：めぐりあひて】平安時代も友達との時間はあっという間！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'kpruprHlMfY', title: '古典系Vtuberによる古典解説：混乱する古典単語「ためらふ」 #shorts #古文 #あるある  #vtuber' },
   { id: 'u-sF032Pa38', title: '中秋の名月(十五夜)だけど、満月じゃない！？ #shorts #古文 #あるある  #vtuber #中秋の名月 #十五夜' },
-  { id: 'zFZvHzDrdZ4', title: '【古文解説】平安時代に月を見るのは縁起が悪かった!?#shorts #古文 #あるある  #vtuber #中秋の名月' },
-  { id: '0nXiIWUPKao', title: '【古文解説】「あなたのためなら死んでもいい」から「長生きしたい」に一晩で変わった男の歌が百人一首にある！？ #shorts #古文 #あるある  #vtuber #和歌 #百人一首' },
-  { id: 'F4vkQe5nJaU', title: '古典系Vtuberによる古典解説：混乱する古典単語「あさまし」 #shorts #古文 #あるある  #vtuber' },
-  { id: '-WRAIThEz4o', title: '古典系Vtuberによる古典解説：混乱する古典単語「やさし」 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
