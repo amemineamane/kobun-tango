@@ -15,6 +15,10 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'E2YBeEIq5Vc', title: '「儚い女」、古文だとシャレになりません #古文 #雑学 #vtuber #源氏物語 #儚い女' },
+  { id: 'AqiAIdZQ7AI', title: '古文の読み、どのレベルまで読める？①「けふ」〜「後朝」 #shorts #古文 #クイズ #vtuber' },
+  { id: 'FbyN-g3-QzE', title: '舌切り雀の“隣のおばあさん”が怖すぎる #古文 #昔話 #vtuber #舌切り雀 #宇治拾遺物語' },
+  { id: 'T1VuZ2L10DM', title: '千年前のドパガキ、大人になって黒歴史にツッコむ #古文 #雑学 #vtuber #更級日記 #源氏物語' },
   { id: 'WC07LUHQjGg', title: '古典系Vtuberによる古典解説：混乱する古典単語「きよら」と「きよげ」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'AIIzn-5bavY', title: '浦島太郎、箱を開けたあとに続きがあった #古文 #昔話 #vtuber #浦島太郎 #御伽草子' },
   { id: 'Bcm5KYNzrP4', title: '「好きすぎて滅」、1300年前の万葉集にもあった #古文 #雑学 #vtuber #万葉集 #恋ひ死ぬ' },
@@ -111,9 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'ZWK059oK9sQ', title: '【百人一首1番：秋の田の】百人一首は1番から怪しかった！？ #shorts #古文 #あるある  #vtuber' },
   { id: 'qtTiVG51MB0', title: '古典系Vtuberによる古典解説：「さようなら(左様ならば)」#shorts #古文 #vtuber #単語' },
   { id: 'Tz00Yxt4jys', title: '【百人一首97番：来ぬ人を】ちゃっかり自分の歌を百人一首に選んだ選者の話 #shorts #古文 #あるある  #vtuber' },
-  { id: '6t9gSY9WOnk', title: '古典系Vtuberによる古典解説：「たそがれ（誰そ彼）」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'gjHLg75BIfw', title: '【百人一首57番：めぐりあひて】平安時代も友達との時間はあっという間！？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'kpruprHlMfY', title: '古典系Vtuberによる古典解説：混乱する古典単語「ためらふ」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'u-sF032Pa38', title: '中秋の名月(十五夜)だけど、満月じゃない！？ #shorts #古文 #あるある  #vtuber #中秋の名月 #十五夜' },
   /* shorts:end */
 ];
