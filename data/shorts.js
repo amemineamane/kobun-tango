@@ -15,6 +15,11 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'Ea3NKIXNhPc', title: '「言語化」、1100年前に紀貫之がもう説明していた #古文 #雑学 #vtuber #古今和歌集 #言語化' },
+  { id: 'nnO3_7hPvwc', title: '天皇に褒められた紫式部、同僚に陰口とあだ名をつけられる #古文 #雑学 #vtuber #紫式部日記 #フレネミー' },
+  { id: '4TffNigEjgM', title: 'かちかち山のたぬきが、おじいさんに食べさせたもの #古文 #昔話 #vtuber #かちかち山 #赤本' },
+  { id: 'mEPsggBFP-A', title: '一寸法師、好きな子に濡れ衣を着せていた #古文 #昔話 #vtuber #一寸法師 #御伽草子' },
+  { id: 'HVawdIJt7gU', title: '古典系Vtuberあるある：この漢字の読み方⑰「東風」「後世」 #shorts #古文 #あるある #vtuber' },
   { id: 'E2YBeEIq5Vc', title: '「儚い女」、古文だとシャレになりません #古文 #雑学 #vtuber #源氏物語 #儚い女' },
   { id: 'AqiAIdZQ7AI', title: '古文の読み、どのレベルまで読める？①「けふ」〜「後朝」 #shorts #古文 #クイズ #vtuber' },
   { id: 'FbyN-g3-QzE', title: '舌切り雀の“隣のおばあさん”が怖すぎる #古文 #昔話 #vtuber #舌切り雀 #宇治拾遺物語' },
@@ -110,10 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'SrjjKgTRGU4', title: '古典系Vtuberによる古典解説：混乱する古典単語「うしろめたし」 #shorts #古文 #あるある  #vtuber' },
   { id: 'bpkDJopU3Ec', title: '古典系Vtuberによる古典解説：「たまげる(魂消る)」#shorts #古文 #vtuber #単語' },
   { id: 'aUx_uwCkzLc', title: '古典系Vtuberによる古典解説：「衣替え（更衣）」#shorts #古文 #vtuber #単語' },
-  { id: 'UFL8LXWGTTE', title: '古典系Vtuberによる古典解説：混乱する古典単語「おぼつかなし」 #shorts #古文 #あるある  #vtuber' },
-  { id: '479NwaTd0OU', title: '【古文解説】平安時代の恋の始まりは通報案件！？#shorts #古文 #あるある  #vtuber  #垣間見' },
-  { id: 'ZWK059oK9sQ', title: '【百人一首1番：秋の田の】百人一首は1番から怪しかった！？ #shorts #古文 #あるある  #vtuber' },
-  { id: 'qtTiVG51MB0', title: '古典系Vtuberによる古典解説：「さようなら(左様ならば)」#shorts #古文 #vtuber #単語' },
-  { id: 'Tz00Yxt4jys', title: '【百人一首97番：来ぬ人を】ちゃっかり自分の歌を百人一首に選んだ選者の話 #shorts #古文 #あるある  #vtuber' },
   /* shorts:end */
 ];
