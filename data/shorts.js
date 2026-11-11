@@ -15,6 +15,14 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'QD_57EkMDTo', title: '『風立ちぬ』は「風が立たない」じゃない！古文の「ぬ」は2種類 #古文 #古典文法 #vtuber #定期テスト' },
+  { id: 'QUZJ0gKWk9c', title: '古典系Vtuberあるある：この漢字の読み方⑱「女御」「御息所」 #shorts #古文 #あるある #vtuber' },
+  { id: 'WZlhlfjYjJQ', title: '古文単語テスト 何問わかる？「年ごろ」「いぎたなし」「やさし」 #shorts #古文 #古文単語 #クイズ #vtuber' },
+  { id: 'CpWDH9i8wS4', title: '昔話の原作、知らない方がよかった3選 #古文 #昔話 #vtuber #御伽草子 #宇治拾遺物語' },
+  { id: 'ZQPLV9mYJB0', title: '優しいかちかち山は、わりと最近の形 #古文 #昔話 #vtuber #かちかち山 #昭和' },
+  { id: 'mMu_quNTlCQ', title: '古典系Vtuberあるある：なぜか普通に読める⑦「かはづ」「けしやう」 #shorts #古文 #あるある #歴史的仮名遣い #vtuber' },
+  { id: 'EUYclWbEKlE', title: '「いじめられた亀を助ける」は原作にはなかった #古文 #昔話 #vtuber #浦島太郎 #御伽草子' },
+  { id: 'S_9tjeywR_E', title: 'かちかち山のうさぎ、仕返しが容赦ない #古文 #昔話 #vtuber #かちかち山 #仇討ち' },
   { id: 'Ea3NKIXNhPc', title: '「言語化」、1100年前に紀貫之がもう説明していた #古文 #雑学 #vtuber #古今和歌集 #言語化' },
   { id: 'nnO3_7hPvwc', title: '天皇に褒められた紫式部、同僚に陰口とあだ名をつけられる #古文 #雑学 #vtuber #紫式部日記 #フレネミー' },
   { id: '4TffNigEjgM', title: 'かちかち山のたぬきが、おじいさんに食べさせたもの #古文 #昔話 #vtuber #かちかち山 #赤本' },
@@ -107,13 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'NjiKqj9U-xU', title: '古典系Vtuberによる古典解説：混乱する古典単語「めざまし」 #shorts #古文 #あるある  #vtuber' },
   { id: '3irOdl8NFKc', title: '平安貴族のダイエット、医者に匙を投げられた理由とは？ #歴史 #雑学 #古文 #vtuber  #ダイエット' },
   { id: '8tBfOzTISvo', title: '歌いすぎて喉崩壊！平安時代のカラオケ狂 #歴史 #雑学 #歌 #梁塵秘抄 #後白河法皇' },
-  { id: 'CxY-opHME2s', title: '古典系Vtuberによる古典解説：混乱する古典単語「うるせし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'nUnwljwJkAc', title: '古典系Vtuberによる古典解説：混乱する古典単語「あきらむ」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'vTBRPKlvhI4', title: '【百人一首20番：わびぬれば】恋が盲目なのは今も昔も同じ！？ #shorts #古文 #あるある  #vtuber' },
-  { id: '5d5NtvBafDs', title: '古典系Vtuberによる古典解説：混乱する古典単語「あからさま」 #shorts #古文 #あるある  #vtuber' },
-  { id: '3DSpraQZ5xg', title: '古典系Vtuberによる古典解説：「映え映えし」#shorts #古文 #vtuber #単語 #映え' },
-  { id: 'SrjjKgTRGU4', title: '古典系Vtuberによる古典解説：混乱する古典単語「うしろめたし」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'bpkDJopU3Ec', title: '古典系Vtuberによる古典解説：「たまげる(魂消る)」#shorts #古文 #vtuber #単語' },
-  { id: 'aUx_uwCkzLc', title: '古典系Vtuberによる古典解説：「衣替え（更衣）」#shorts #古文 #vtuber #単語' },
   /* shorts:end */
 ];
