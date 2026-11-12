@@ -15,6 +15,10 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'UyjNj2CM8Jc', title: '古典系Vtuberによる古典解説：混乱する古典単語「用意」 #shorts #古文 #古文単語 #vtuber' },
+  { id: 'pOY1ENh1Ogc', title: '紅葉狩りで狩った紅葉、頭に挿していた！ #古文 #万葉集 #紅葉狩り #vtuber #雑学' },
+  { id: 'ykkVFIv03LE', title: '古文単語テスト 何問わかる？「ありがたし」「かたはらいたし」「便なし」 #shorts #古文 #古文単語 #クイズ #vtuber' },
+  { id: 'WpaBjJLX0ME', title: '平安のマッチングアプリ、プロフィールは「噂」 #shorts #古文 #平安時代 #恋愛 #vtuber' },
   { id: 'QD_57EkMDTo', title: '『風立ちぬ』は「風が立たない」じゃない！古文の「ぬ」は2種類 #古文 #古典文法 #vtuber #定期テスト' },
   { id: 'QUZJ0gKWk9c', title: '古典系Vtuberあるある：この漢字の読み方⑱「女御」「御息所」 #shorts #古文 #あるある #vtuber' },
   { id: 'WZlhlfjYjJQ', title: '古文単語テスト 何問わかる？「年ごろ」「いぎたなし」「やさし」 #shorts #古文 #古文単語 #クイズ #vtuber' },
@@ -111,9 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'n9_5ykQEqrM', title: '古典クイズ：お歯黒をしていたのは？ #歴史 #クイズ #日本史 #古文 #vtuber' },
   { id: 'vXR6dHAZNx8', title: '古典系Vtuberによる古典解説：混乱する古典単語「ものがたり」 #shorts #古文 #あるある  #vtuber' },
   { id: 'Ho87lYlW0Fk', title: '千年前の推し活がレベチ！？源氏物語オタクがヤバすぎる！ #歴史 #雑学 #古文 #vtuber  #推し活' },
-  { id: 'VpdZlQ9PrP0', title: '物忌みは最強の欠席連絡！？ #歴史 #雑学 #古文 #vtuber  #占い' },
-  { id: 'NjiKqj9U-xU', title: '古典系Vtuberによる古典解説：混乱する古典単語「めざまし」 #shorts #古文 #あるある  #vtuber' },
-  { id: '3irOdl8NFKc', title: '平安貴族のダイエット、医者に匙を投げられた理由とは？ #歴史 #雑学 #古文 #vtuber  #ダイエット' },
-  { id: '8tBfOzTISvo', title: '歌いすぎて喉崩壊！平安時代のカラオケ狂 #歴史 #雑学 #歌 #梁塵秘抄 #後白河法皇' },
   /* shorts:end */
 ];
