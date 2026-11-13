@@ -15,6 +15,9 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'zeqfO1MKOeA', title: '土佐日記の1行目に「なり」が2回！古文の「なり」は2種類 #古文 #古典文法 #vtuber #定期テスト' },
+  { id: '6Zq9CJ8VIb0', title: '古文単語テスト 何問わかる？「なかなか」「さうざうし」「みそかなり」 #shorts #古文 #古文単語 #クイズ #vtuber' },
+  { id: '6dy66DEIsio', title: '平安のマッチングアプリ、顔写真は載せられません #shorts #古文 #平安時代 #恋愛 #vtuber' },
   { id: 'UyjNj2CM8Jc', title: '古典系Vtuberによる古典解説：混乱する古典単語「用意」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'pOY1ENh1Ogc', title: '紅葉狩りで狩った紅葉、頭に挿していた！ #古文 #万葉集 #紅葉狩り #vtuber #雑学' },
   { id: 'ykkVFIv03LE', title: '古文単語テスト 何問わかる？「ありがたし」「かたはらいたし」「便なし」 #shorts #古文 #古文単語 #クイズ #vtuber' },
@@ -112,8 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'pjrEAH6SVKI', title: 'フレネミーの元祖は紫式部！？ #歴史 #雑学 #古文 #vtuber  #フレネミー' },
   { id: 'DvBXzJxn-58', title: '今とは真逆！？平安美人の基準３選 #歴史 #雑学 #古文 #vtuber  #美人' },
   { id: '47H7kgpo78w', title: 'ドパガキ、平安時代は地獄行きだった！？ #歴史 #雑学 #古文 #vtuber  #ドパガキ' },
-  { id: 'n9_5ykQEqrM', title: '古典クイズ：お歯黒をしていたのは？ #歴史 #クイズ #日本史 #古文 #vtuber' },
-  { id: 'vXR6dHAZNx8', title: '古典系Vtuberによる古典解説：混乱する古典単語「ものがたり」 #shorts #古文 #あるある  #vtuber' },
-  { id: 'Ho87lYlW0Fk', title: '千年前の推し活がレベチ！？源氏物語オタクがヤバすぎる！ #歴史 #雑学 #古文 #vtuber  #推し活' },
   /* shorts:end */
 ];
