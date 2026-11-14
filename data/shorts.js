@@ -15,6 +15,10 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'cdtrhIv327A', title: '古典系Vtuberあるある：この漢字の読み方⑲「透垣」「大殿油」 #shorts #古文 #あるある #vtuber' },
+  { id: 'EXOzzIANrq4', title: '「すごい」の正体は「ぞっと」！古文の「すごし」 #古文 #古文単語 #vtuber #定期テスト' },
+  { id: 'b37t2tFOpmM', title: '古文単語テスト 何問わかる？「つとめて」「心なし」「おぼろけなり」 #shorts #古文 #古文単語 #クイズ #vtuber' },
+  { id: '4TMOhFMzzIA', title: '平安のマッチングアプリ、「いいね」は和歌の手紙 #shorts #古文 #平安時代 #恋愛 #vtuber' },
   { id: 'zeqfO1MKOeA', title: '土佐日記の1行目に「なり」が2回！古文の「なり」は2種類 #古文 #古典文法 #vtuber #定期テスト' },
   { id: '6Zq9CJ8VIb0', title: '古文単語テスト 何問わかる？「なかなか」「さうざうし」「みそかなり」 #shorts #古文 #古文単語 #クイズ #vtuber' },
   { id: '6dy66DEIsio', title: '平安のマッチングアプリ、顔写真は載せられません #shorts #古文 #平安時代 #恋愛 #vtuber' },
@@ -111,9 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '8jaUZFdFEYc', title: '陰陽師安倍晴明は実は公務員だった！？ #歴史 #雑学 #古文 #vtuber #安倍晴明 #陰陽師' },
   { id: '_kGpAnAusFY', title: '古典系Vtuberによる古典解説：混乱する古典単語「つれなし」 #shorts #古文 #古文単語 #vtuber' },
   { id: '4I3BYaDC6u8', title: '『世の中が辛い』は失恋の愚痴だった！？ #古典 #Vtuber #shorts' },
-  { id: 'gTHbTHOZMFw', title: 'この動画はやがて終わります #古典 #Vtuber #shorts' },
-  { id: 'pjrEAH6SVKI', title: 'フレネミーの元祖は紫式部！？ #歴史 #雑学 #古文 #vtuber  #フレネミー' },
-  { id: 'DvBXzJxn-58', title: '今とは真逆！？平安美人の基準３選 #歴史 #雑学 #古文 #vtuber  #美人' },
-  { id: '47H7kgpo78w', title: 'ドパガキ、平安時代は地獄行きだった！？ #歴史 #雑学 #古文 #vtuber  #ドパガキ' },
   /* shorts:end */
 ];
