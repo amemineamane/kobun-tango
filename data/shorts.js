@@ -15,6 +15,11 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'v5VJ53Wq-FY', title: '「にわか」の意味って知っていますか？ 800年前の方丈記にも出てきます #古文 #古文単語 #方丈記 #vtuber #定期テスト' },
+  { id: 'CMzC00cmCX0', title: '平安貴族が起きて最初にすること、スマホじゃない #shorts #古文 #平安時代 #雑学 #vtuber' },
+  { id: 'enzUjip8SQE', title: '古文単語テスト 何問わかる？「ときめく」「わりなし」「あてなり」 #shorts #古文 #古文単語 #クイズ #vtuber' },
+  { id: 'iQC_2p9R5rU', title: '炎上した七五三、知っていますか？光源氏の「袴着」 #shorts #古文 #源氏物語 #七五三 #vtuber' },
+  { id: 'yhTBRnTs5K8', title: '平安のマッチングアプリ、返信したのは本人じゃない #shorts #古文 #平安時代 #恋愛 #vtuber' },
   { id: 'cdtrhIv327A', title: '古典系Vtuberあるある：この漢字の読み方⑲「透垣」「大殿油」 #shorts #古文 #あるある #vtuber' },
   { id: 'EXOzzIANrq4', title: '「すごい」の正体は「ぞっと」！古文の「すごし」 #古文 #古文単語 #vtuber #定期テスト' },
   { id: 'b37t2tFOpmM', title: '古文単語テスト 何問わかる？「つとめて」「心なし」「おぼろけなり」 #shorts #古文 #古文単語 #クイズ #vtuber' },
@@ -110,10 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '5P6uYqZPg9M', title: '古典系Vtuberあるある：この漢字の読み方⑦「五十日」「後朝」 #shorts #古文 #あるある #漢字 #vtuber' },
   { id: 'Kfg5vzqSQAk', title: '方角が悪い夜、光源氏は人妻の部屋にいました #古文 #源氏物語 #雑学 #vtuber #方違え' },
   { id: '6Fv6HngYBv8', title: '平安時代の大地震は天皇の責任!? #歴史 #雑学 #古文 #vtuber #貞観地震' },
-  { id: 'P-phxkCd6Sw', title: '古典系Vtuberによる古典解説：混乱する古典単語「なかなか」 #shorts #古文 #古文単語 #vtuber' },
-  { id: 'z5Twc1UqBcg', title: '毛虫がメロすぎる平安のお姫様がいました！！ #歴史 #雑学 #古文 #vtuber #メロい #虫めづる姫君' },
-  { id: '8jaUZFdFEYc', title: '陰陽師安倍晴明は実は公務員だった！？ #歴史 #雑学 #古文 #vtuber #安倍晴明 #陰陽師' },
-  { id: '_kGpAnAusFY', title: '古典系Vtuberによる古典解説：混乱する古典単語「つれなし」 #shorts #古文 #古文単語 #vtuber' },
-  { id: '4I3BYaDC6u8', title: '『世の中が辛い』は失恋の愚痴だった！？ #古典 #Vtuber #shorts' },
   /* shorts:end */
 ];
