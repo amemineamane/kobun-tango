@@ -15,6 +15,11 @@ window.KOBUN.site = window.KOBUN.site || {};
 window.KOBUN.site.author = window.KOBUN.site.author || {};
 window.KOBUN.site.author.youtubeShorts = [
   /* shorts:begin */
+  { id: 'qa1xxEKwwRw', title: '「さかな」は、もともと魚のことじゃない！「酒のさかな」の本当の意味 #古文 #古文単語 #徒然草 #vtuber #雑学' },
+  { id: '7rd3Efx0Ttk', title: '平安貴族、爪を切れるのは12日に1回だけ #shorts #古文 #平安時代 #雑学 #vtuber' },
+  { id: 'bJqdTaX8Akk', title: '「情けは人のためならず」の意味、逆に覚えていませんか？ #古文 #ことわざ #古典文法 #vtuber #定期テスト' },
+  { id: 'Mte6fE1UVF8', title: '古文単語テスト 何問わかる？「あきらむ」「はしたなし」「おどろおどろし」 #shorts #古文 #古文単語 #クイズ #vtuber' },
+  { id: 'j7ADGbTgKKY', title: '平安のマッチングアプリ、初デートは夜、相手の家で #shorts #古文 #平安時代 #恋愛 #vtuber' },
   { id: 'v5VJ53Wq-FY', title: '「にわか」の意味って知っていますか？ 800年前の方丈記にも出てきます #古文 #古文単語 #方丈記 #vtuber #定期テスト' },
   { id: 'CMzC00cmCX0', title: '平安貴族が起きて最初にすること、スマホじゃない #shorts #古文 #平安時代 #雑学 #vtuber' },
   { id: 'enzUjip8SQE', title: '古文単語テスト 何問わかる？「ときめく」「わりなし」「あてなり」 #shorts #古文 #古文単語 #クイズ #vtuber' },
@@ -110,10 +115,5 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: 'wEbwt0O0UXU', title: '古典系Vtuberによる古典解説：混乱する古典単語「なまめかし」 #shorts #古文 #古文単語 #vtuber' },
   { id: '-HQIWn-mZoE', title: '古典系Vtuberによる古典解説：混乱する古典単語「さながら」 #shorts #古文 #古文単語 #vtuber' },
   { id: 'NnZz32ovC4c', title: '古典系Vtuberあるある：この漢字の読み方⑧「妹」「妻」 #shorts #古文 #あるある #漢字 #vtuber' },
-  { id: 'drC0zP_gUWk', title: '朝3時に起きて朝ごはんは10時!? 平安貴族の1日① #歴史 #雑学 #古文 #vtuber #平安時代' },
-  { id: '1yKXU2Lmt48', title: '古典系Vtuberによる古典解説：混乱する古典単語「せめて」 #shorts #古文 #古文単語 #vtuber' },
-  { id: '5P6uYqZPg9M', title: '古典系Vtuberあるある：この漢字の読み方⑦「五十日」「後朝」 #shorts #古文 #あるある #漢字 #vtuber' },
-  { id: 'Kfg5vzqSQAk', title: '方角が悪い夜、光源氏は人妻の部屋にいました #古文 #源氏物語 #雑学 #vtuber #方違え' },
-  { id: '6Fv6HngYBv8', title: '平安時代の大地震は天皇の責任!? #歴史 #雑学 #古文 #vtuber #貞観地震' },
   /* shorts:end */
 ];
