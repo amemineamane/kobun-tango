@@ -114,5 +114,6 @@ window.KOBUN.site.author.youtubeShorts = [
   { id: '_wOBGt3-ipg', title: '「聞く」なのに「言う」って意味の古典単語があるってホント？？#shorts #古文 #vtuber #解説 #雑学' },
   { id: 'pKomFvfh6fs', title: '【古文 助動詞】「む・むず」仮定・婉曲の見分け方 #古文 #古典 #助動詞 #古典文法 #vtuber' },
   { id: 'muRSr7EHiSA', title: '「にわか」の意味って知っていますか？ #shorts #古文 #vtuber #助動詞 #解説 #文法 #にわかファン #ワールドカップ #w杯' },
+  { id: 'vt0w7F8pfik', title: '「む・むず」意思の判別方法 #shorts #古文 #vtuber #助動詞 #解説 #文法' },
   /* shorts:end */
 ];
